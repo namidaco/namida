@@ -1503,6 +1503,7 @@ extension RouteUtils on NamidaRoute {
 
   Widget? toTitle(BuildContext context) {
     final textTheme = context.textTheme;
+    final routeData = this.routeData;
     Widget getTextWidget(String t) => Text(t, style: textTheme.titleLarge);
     Widget? finalWidget;
     bool displaySettingSearch = false;
@@ -1515,11 +1516,22 @@ extension RouteUtils on NamidaRoute {
         displaySettingSearch = true;
         finalWidget = getTextWidget(name ?? '');
         break;
-      case RouteType.SEARCH_albumResults || RouteType.SEARCH_albumCustomResults:
-        finalWidget = getTextWidget(lang.albums);
+      case RouteType.SEARCH_albumResults:
+        finalWidget = ObxO(
+          rx: SearchSortController.inst.albumSearchTemp,
+          builder: (context, albums) => getTextWidget("${lang.albums} • ${albums.length}"),
+        );
+        break;
+      case RouteType.SEARCH_albumCustomResults:
+        if (routeData is List<AlbumIdentifierWrapper>) finalWidget = getTextWidget("${lang.albums} • ${routeData.length}");
         break;
       case RouteType.SEARCH_artistResults:
-        finalWidget = getTextWidget(lang.artists);
+        if (routeData is RxList<String>) {
+          finalWidget = ObxO(
+            rx: routeData,
+            builder: (context, artists) => getTextWidget("${lang.artists} • ${artists.length}"),
+          );
+        }
         break;
       case RouteType.PAGE_queue:
         finalWidget = ObxO(
@@ -1534,7 +1546,7 @@ extension RouteUtils on NamidaRoute {
         );
         break;
       case RouteType.PAGE_discover:
-        finalWidget = getTextWidget(lang.discover);
+        finalWidget = getTextWidget(lang.discoverPage);
         break;
       case RouteType.PAGE_artistsMap:
         finalWidget = getTextWidget(lang.artistsMap);

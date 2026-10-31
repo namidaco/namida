@@ -259,6 +259,7 @@ class CustomListTile extends StatelessWidget {
   /// takes the place of [subtitle].
   final Widget? subtitleWidget;
   final bool subtitleAbove;
+  final bool reserveSubtitleHeight;
   final Widget? trailing;
   final Widget? trailingRaw;
   final String? trailingText;
@@ -283,6 +284,7 @@ class CustomListTile extends StatelessWidget {
     this.subtitle,
     this.subtitleWidget,
     this.subtitleAbove = false,
+    this.reserveSubtitleHeight = false,
     this.trailing,
     this.trailingRaw,
     this.trailingText,
@@ -312,7 +314,8 @@ class CustomListTile extends StatelessWidget {
 
     final baseHeight = 6.0 + VisualDensity.compact.baseSizeAdjustment.dy;
     var oneLineHeight = baseHeight + (dense ? 50.0 : 56.0);
-    var minTileHeight = hasSubtitle ? baseHeight + (dense ? 60.0 : 62.0) : oneLineHeight;
+    final useSubtitleHeight = hasSubtitle || reserveSubtitleHeight;
+    var minTileHeight = useSubtitleHeight ? baseHeight + (dense ? 60.0 : 62.0) : oneLineHeight;
     var verticalPadding = 8.0;
     var borderR = this.borderR;
     var iconSize = 24.0;

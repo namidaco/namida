@@ -89,11 +89,9 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                   isCurrentlyReversed: sortReverse,
                   onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !sortReverse),
                 ),
-                textField: CustomTextField(
-                  textFieldController: libraryTab.textSearchControllerR,
-                  textFieldHintText: lang.filterLanguages,
-                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.language),
-                ),
+                textFieldController: libraryTab.textSearchControllerR,
+                textFieldHintText: lang.filterLanguages,
+                onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.language),
               ),
               page: NamidaScrollbar(
                 controller: scrollController,

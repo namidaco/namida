@@ -187,11 +187,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                     SearchSortController.inst.sortMedia(MediaType.track, reverse: !sortReverse);
                   },
                 ),
-                textField: CustomTextField(
-                  textFieldController: libraryTab.textSearchControllerR,
-                  textFieldHintText: lang.filterTracks,
-                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
-                ),
+                textFieldController: libraryTab.textSearchControllerR,
+                textFieldHintText: lang.filterTracks,
+                onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
               );
             },
           ),

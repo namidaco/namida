@@ -70,6 +70,8 @@ class NamidaPopupWrapper extends StatelessWidget {
     return childrenDefault.map(
       (e) {
         final titleStyle = NText.medium.of(context).copyWith(color: e.enabled ? null : NText.medium.of(context).color?.withOpacityExt(0.4));
+        // -- only shows when the title wraps, a single line stays under the item min height
+        final textPadding = e.subtitle == '' ? const EdgeInsets.symmetric(vertical: 7.0) : EdgeInsets.zero;
         final plainIcon = Icon(
           e.icon,
           size: 20.0,
@@ -102,22 +104,25 @@ class NamidaPopupWrapper extends StatelessWidget {
                     ),
               const SizedBox(width: 6.0),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    e.titleBuilder?.call(titleStyle) ??
-                        Text(
-                          e.title,
-                          style: titleStyle,
+                child: Padding(
+                  padding: textPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      e.titleBuilder?.call(titleStyle) ??
+                          Text(
+                            e.title,
+                            style: titleStyle,
+                          ),
+                      if (e.subtitle != '')
+                        NamidaText(
+                          e.subtitle,
+                          style: NText.small,
+                          maxLines: e.oneLinedSub ? 1 : null,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    if (e.subtitle != '')
-                      NamidaText(
-                        e.subtitle,
-                        style: NText.small,
-                        maxLines: e.oneLinedSub ? 1 : null,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               if (e.trailing != null) const SizedBox(width: 12.0),

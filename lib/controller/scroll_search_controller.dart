@@ -230,10 +230,14 @@ class ScrollSearchController {
     globalFocusNode?.unfocus();
   }
 
-  // -- requestFocus alone is a no-op on a focused field whose keyboard was dismissed
   void focusKeyboard() {
     final globalSearchState = searchBarKey.currentState;
     final focusNode = globalSearchState != null && isGlobalSearchMenuShown.value ? globalSearchState.focusNode : _searchFocusNodes.lastOrNull;
+    requestKeyboardOf(focusNode);
+  }
+
+  // -- requestFocus alone is a no-op on a focused field whose keyboard was dismissed
+  void requestKeyboardOf(FocusNode? focusNode) {
     final editableTextState = focusNode?.context?.findAncestorStateOfType<EditableTextState>();
     editableTextState?.requestKeyboard();
   }
@@ -266,7 +270,6 @@ class ScrollSearchController {
 
   void _openTextController(LibraryTab libraryTab) {
     _textSearchControllers[libraryTab] ??= TextEditingController();
-    focusKeyboard();
   }
 
   void clearSearchTextField(LibraryTab libraryTab) {

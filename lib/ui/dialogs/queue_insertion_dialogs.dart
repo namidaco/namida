@@ -456,19 +456,21 @@ class _FilterTile extends StatelessWidget {
     required this.onValueChanged,
   });
 
-  List<Widget> _buildSortChoices() {
+  List<NamidaPopupItem> _buildSortChoices() {
     return [
       if (allowNone)
-        _FilterSortChoice(
-          sort: null,
-          isActive: sort == null,
-          onSortChanged: onSortChanged,
+        NamidaPopupItem(
+          icon: Broken.forbidden_2,
+          title: lang.none,
+          selected: sort == null,
+          onTap: () => onSortChanged(null),
         ),
       ...TrackMinimum.supportedSorts.map(
-        (e) => _FilterSortChoice(
-          sort: e,
-          isActive: e == sort,
-          onSortChanged: onSortChanged,
+        (e) => NamidaPopupItem(
+          icon: e.toIcon(),
+          title: e.toText(),
+          selected: e == sort,
+          onTap: () => onSortChanged(e),
         ),
       ),
     ];
@@ -494,7 +496,7 @@ class _FilterTile extends StatelessWidget {
             text: valueText,
           );
     return NamidaPopupWrapper(
-      children: _buildSortChoices,
+      childrenDefault: _buildSortChoices,
       childBuilder: (openMenu) => CustomListTile(
         icon: Broken.filter,
         title: lang.filterBy,
@@ -502,34 +504,6 @@ class _FilterTile extends StatelessWidget {
         trailing: wheelWidget,
         onTap: openMenu,
       ),
-    );
-  }
-}
-
-class _FilterSortChoice extends StatelessWidget {
-  final SortType? sort;
-  final bool isActive;
-  final void Function(SortType? sort) onSortChanged;
-
-  const _FilterSortChoice({
-    required this.sort,
-    required this.isActive,
-    required this.onSortChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final sort = this.sort;
-    return SmallListTile(
-      borderRadius: 12.0,
-      visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-      title: sort?.toText() ?? lang.none,
-      trailingIcon: sort?.toIcon() ?? Broken.forbidden_2,
-      active: isActive,
-      onTap: () {
-        onSortChanged(sort);
-        NamidaNavigator.inst.popMenu();
-      },
     );
   }
 }

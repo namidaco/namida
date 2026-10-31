@@ -1100,22 +1100,17 @@ class _TrackItemSmallBox extends StatelessWidget {
     required this.text,
   });
 
-  Iterable<Widget> _getChildren() {
+  Iterable<NamidaPopupItem> _getChildren() {
+    final selectedItem = settings.trackItem.value[position];
     return TrackTileItem.values.map(
-      (e) => ObxO(
-        rx: settings.trackItem,
-        builder: (context, trackItemMap) => SmallListTile(
-          borderRadius: 12.0,
-          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-          title: e.toText(),
-          trailingIcon: e.toIcon(),
-          active: trackItemMap[position] == e,
-          onTap: () {
-            settings.trackItem.update((items) => items[position] = e);
-            TrackTileManager.onTrackItemPropChange();
-            NamidaNavigator.inst.popMenu();
-          },
-        ),
+      (e) => NamidaPopupItem(
+        icon: e.toIcon(),
+        title: e.toText(),
+        selected: e == selectedItem,
+        onTap: () {
+          settings.trackItem.update((items) => items[position] = e);
+          TrackTileManager.onTrackItemPropChange();
+        },
       ),
     );
   }
@@ -1124,7 +1119,7 @@ class _TrackItemSmallBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = this.text;
     return NamidaPopupWrapper(
-      children: _getChildren,
+      childrenDefault: _getChildren,
       child: NDecoratedBox(
         decoration: (colors) => BoxDecoration(
           color: colors.surface.withOpacityExt(0.63),

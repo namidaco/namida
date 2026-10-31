@@ -211,11 +211,9 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
             isCurrentlyReversed: sortReverse,
             onReverseIconTap: () => SearchSortController.inst.sortMedia(type, reverse: !sortReverse),
           ),
-          textField: CustomTextField(
-            textFieldController: libraryTab.textSearchControllerR,
-            textFieldHintText: hintText,
-            onTextFieldValueChanged: _onSearchChanged,
-          ),
+          textFieldController: libraryTab.textSearchControllerR,
+          textFieldHintText: hintText,
+          onTextFieldValueChanged: _onSearchChanged,
         ),
       );
     }

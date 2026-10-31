@@ -228,7 +228,6 @@ class _FoldersPageState<T extends Track, F extends Folder> extends State<Folders
                           mediaType: mediaType,
                           label: headerLabel,
                           textEditingController: textEditingController,
-                          focusNode: focusNode,
                           onSearchBoxVisibilityChange: onSearchBoxVisibilityChange,
                           onCloseButtonPressed: _onSearchClosed,
                           onSearchChanged: _onSearchChanged,
@@ -311,7 +310,6 @@ class _FoldersExpandableBox extends StatelessWidget {
   final MediaType mediaType;
   final String label;
   final TextEditingController textEditingController;
-  final FocusNode? focusNode;
   final bool Function(bool newShow) onSearchBoxVisibilityChange;
   final VoidCallback onCloseButtonPressed;
   final void Function(String value) onSearchChanged;
@@ -321,7 +319,6 @@ class _FoldersExpandableBox extends StatelessWidget {
     required this.mediaType,
     required this.label,
     required this.textEditingController,
-    required this.focusNode,
     required this.onSearchBoxVisibilityChange,
     required this.onCloseButtonPressed,
     required this.onSearchChanged,
@@ -359,12 +356,9 @@ class _FoldersExpandableBox extends StatelessWidget {
             isCurrentlyReversed: sortReverse,
             onReverseIconTap: () => SearchSortController.inst.sortMedia(mediaType, reverse: !sortReverse),
           ),
-          textField: CustomTextField(
-            focusNode: focusNode,
-            textFieldController: textEditingController,
-            textFieldHintText: lang.search,
-            onTextFieldValueChanged: onSearchChanged,
-          ),
+          textFieldController: textEditingController,
+          textFieldHintText: lang.search,
+          onTextFieldValueChanged: onSearchChanged,
         );
       },
     );
@@ -421,6 +415,7 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
           subtitle: subtitle,
           subtitleWidget: subtitleWidget,
           subtitleAbove: true,
+          reserveSubtitleHeight: true,
           onTap: () => widget.foldersController.stepOut(),
           trailingRaw: Row(
             mainAxisSize: MainAxisSize.min,
@@ -671,41 +666,38 @@ class _FoldersHierarchyButton extends StatelessWidget {
     required this.config,
   });
 
-  List<Widget> _getMenuChildren() {
+  List<NamidaPopupItem> _getMenuChildren() {
+    final enableFoldersHierarchy = config.enableFoldersHierarchy.value;
+    final skipSingleSubfolder = config.skipSingleSubfolder.value;
     return [
-      Padding(
-        padding: const EdgeInsets.all(3.0),
-        child: ListTileWithCheckMark(
-          dense: true,
-          icon: Broken.hierarchy_square_2,
-          title: lang.enableFoldersHierarchy,
-          activeRx: config.enableFoldersHierarchy,
-          onTap: config.toggleFoldersHierarchy,
+      NamidaPopupItem(
+        icon: Broken.hierarchy_square_2,
+        title: lang.enableFoldersHierarchy,
+        selected: enableFoldersHierarchy,
+        onTap: config.toggleFoldersHierarchy,
+        trailing: NamidaCheckMark(
+          active: enableFoldersHierarchy,
+          size: 14.0,
         ),
       ),
-      ObxO(
-        rx: config.enableFoldersHierarchy,
-        builder: (context, enableFoldersHierarchy) => AnimatedShow(
-          show: enableFoldersHierarchy,
-          child: Padding(
-            padding: const EdgeInsets.all(3.0),
-            child: ListTileWithCheckMark(
-              dense: true,
-              icon: Broken.forward,
-              title: lang.skipSingleSubfolders,
-              activeRx: config.skipSingleSubfolder,
-              onTap: config.toggleSkipSingleSubfolder,
-            ),
+      if (enableFoldersHierarchy)
+        NamidaPopupItem(
+          icon: Broken.forward,
+          title: lang.skipSingleSubfolders,
+          selected: skipSingleSubfolder,
+          onTap: config.toggleSkipSingleSubfolder,
+          trailing: NamidaCheckMark(
+            active: skipSingleSubfolder,
+            size: 14.0,
           ),
         ),
-      ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     return NamidaPopupWrapper(
-      children: _getMenuChildren,
+      childrenDefault: _getMenuChildren,
       childBuilder: (openMenu) => NamidaIconButton(
         verticalPadding: 8.0,
         horizontalPadding: 6.0,

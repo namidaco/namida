@@ -132,14 +132,16 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
   }
 
   bool _isSearchBoxShown = false;
+  final _searchFocusNode = FocusNode();
 
   void _toggleSearchBox(bool show) {
     if (show) {
       setState(() => _isSearchBoxShown = true);
-      WidgetsBinding.instance.addPostFrameCallback((_) => onSearchBoxVisibilityChange(true)); // -- focuses the field once it's built
+      WidgetsBinding.instance.addPostFrameCallback((_) => ScrollSearchController.inst.requestKeyboardOf(_searchFocusNode)); // -- focuses the field once it's built
     } else {
       clearSearch();
       onSearchBoxVisibilityChange(false);
+      _searchFocusNode.unfocus();
       setState(() => _isSearchBoxShown = false);
     }
   }
@@ -187,6 +189,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
     HistoryController.inst.historyMap.removeListener(_onHistoryChanged);
     final isReplacedByHistoryPage = NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks;
     if (!isReplacedByHistoryPage) NamidaOnTaps.historyListensNavigation.value = null;
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -297,7 +300,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                     sliver: SliverToBoxAdapter(
                       child: CustomTextField(
-                        focusNode: focusNode,
+                        focusNode: _searchFocusNode,
                         textFieldController: textEditingController,
                         textFieldHintText: lang.search,
                         onTextFieldValueChanged: searchTracks,

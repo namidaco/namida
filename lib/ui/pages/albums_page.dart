@@ -32,8 +32,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
   final RxList<AlbumIdentifierWrapper>? albumIdentifiers;
   final CountPerRow countPerRow;
-  final bool enableGridIconButton;
-  final bool enableHeader;
   final bool animateTiles;
   final bool enableHero;
 
@@ -41,8 +39,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     super.key,
     this.albumIdentifiers,
     required this.countPerRow,
-    this.enableGridIconButton = true,
-    this.enableHeader = true,
     this.animateTiles = true,
     this.enableHero = true,
   });
@@ -68,68 +64,14 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
       child: AnimationLimiter(
         child: ObxO(
           rx: albumIdentifiers ?? SearchSortController.inst.albumSearchList,
-          builder: (context, finalAlbums) => ExpandableBoxColumn(
-            tab: libraryTab,
-            header: Obx(
-              (context) {
-                final sorting = settings.groupSortingOfR(MediaType.album);
-                final sort = sorting.entries.first.type;
-                final sortReverse = sorting.reverse;
-                final sortByMenu = isCustomList
-                    ? null
-                    : SortByMenu(
-                        title: sort.toText(),
-                        popupMenuChild: const SortByMenuAlbums(),
-                        isCurrentlyReversed: sortReverse,
-                        onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !sortReverse),
-                      );
-
-                final finalAlbumsLength = finalAlbums.length;
-                final totalAlbumsLength = Indexer.inst.mainMapAlbums.valueR.length;
-                String leftText = finalAlbumsLength != totalAlbumsLength ? '$finalAlbumsLength/${totalAlbumsLength.displayAlbumKeyword}' : finalAlbumsLength.displayAlbumKeyword;
-
-                return ExpandableBox(
-                  enableHero: enableHero,
-                  enableSearch: enableHeader,
-                  gridWidget: enableGridIconButton && enableHeader
-                      ? ChangeGridCountWidget(
-                          tab: libraryTab,
-                          forStaggered: settings.useAlbumStaggeredGridView.valueR,
-                        )
-                      : null,
-                  isBarVisible: libraryTab.isBarVisible.valueR,
-                  leftText: enableHeader ? '' : leftText,
-                  leftTextIcon: MediaType.album.toIcon(),
-                  leftWidgets: [
-                    if (enableHeader)
-                      NamidaPopupWrapper(
-                        children: _getSinglesAndAlbumsToggles,
-                        childBuilder: (openMenu) => ExpandableBoxChip(
-                          icon: MediaType.album.toIcon(),
-                          label: leftText,
-                          showArrow: true,
-                          onTap: openMenu,
-                        ),
-                      ),
-                  ],
-                  onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                  sortByMenuWidget: sortByMenu,
-                  textField: CustomTextField(
-                    textFieldController: libraryTab.textSearchControllerR,
-                    textFieldHintText: lang.filterAlbums,
-                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
-                  ),
-                );
-              },
-            ),
-            page: NamidaScrollbar(
+          builder: (context, finalAlbums) {
+            final pageWidget = NamidaScrollbar(
               controller: scrollController,
               thumbLabel: isCustomList ? null : _createThumbLabel,
               child: SmoothCustomScrollView(
                 controller: scrollController,
                 slivers: [
-                  const SliverToBoxAdapter(child: listHeader),
+                  if (!isCustomList) const SliverToBoxAdapter(child: listHeader),
                   Obx(
                     (context) {
                       final albumTileExtent = settings.albumListTileHeight.valueR + 4.0 * 5;
@@ -232,39 +174,89 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                   kBottomPaddingWidgetSliver,
                 ],
               ),
-            ),
-          ),
+            );
+            if (isCustomList) return pageWidget;
+
+            return ExpandableBoxColumn(
+              tab: libraryTab,
+              header: Obx(
+                (context) {
+                  final sorting = settings.groupSortingOfR(MediaType.album);
+                  final sort = sorting.entries.first.type;
+                  final sortReverse = sorting.reverse;
+                  final sortByMenu = SortByMenu(
+                    title: sort.toText(),
+                    popupMenuChild: const SortByMenuAlbums(),
+                    isCurrentlyReversed: sortReverse,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !sortReverse),
+                  );
+
+                  final finalAlbumsLength = finalAlbums.length;
+                  final totalAlbumsLength = Indexer.inst.mainMapAlbums.valueR.length;
+                  final leftText = finalAlbumsLength != totalAlbumsLength ? '$finalAlbumsLength/${totalAlbumsLength.displayAlbumKeyword}' : finalAlbumsLength.displayAlbumKeyword;
+
+                  return ExpandableBox(
+                    enableHero: enableHero,
+                    gridWidget: ChangeGridCountWidget(
+                      tab: libraryTab,
+                      forStaggered: settings.useAlbumStaggeredGridView.valueR,
+                    ),
+                    isBarVisible: libraryTab.isBarVisible.valueR,
+                    leftText: '',
+                    leftTextIcon: MediaType.album.toIcon(),
+                    leftWidgets: [
+                      NamidaPopupWrapper(
+                        childrenDefault: _getSinglesAndAlbumsToggles,
+                        childBuilder: (openMenu) => ExpandableBoxChip(
+                          icon: MediaType.album.toIcon(),
+                          label: leftText,
+                          showArrow: true,
+                          onTap: openMenu,
+                        ),
+                      ),
+                    ],
+                    onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
+                    onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
+                    sortByMenuWidget: sortByMenu,
+                    textFieldController: libraryTab.textSearchControllerR,
+                    textFieldHintText: lang.filterAlbums,
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
+                  );
+                },
+              ),
+              page: pageWidget,
+            );
+          },
         ),
       ),
     );
   }
 
-  List<Widget> _getSinglesAndAlbumsToggles() {
-    Widget buildTile(AlbumType type, IconData icon, String title) {
+  List<NamidaPopupItem> _getSinglesAndAlbumsToggles() {
+    final activeAlbumTypes = settings.activeAlbumTypes.value;
+    NamidaPopupItem buildItem(AlbumType type, IconData icon, String title) {
+      final isActive = activeAlbumTypes[type] ?? true;
       void onTap() {
-        final wasActive = settings.activeAlbumTypes.value[type] ?? true;
-        settings.activeAlbumTypes.update((types) => types[type] = !wasActive);
+        settings.activeAlbumTypes.update((types) => types[type] = !isActive);
         SearchSortController.inst.searchMedia(LibraryTab.albums.textSearchController?.text ?? '', MediaType.album);
       }
 
-      return Padding(
-        padding: const EdgeInsets.all(3.0),
-        child: ObxO(
-          rx: settings.activeAlbumTypes,
-          builder: (context, activeAlbumTypes) => ListTileWithCheckMark(
-            icon: icon,
-            title: title,
-            active: activeAlbumTypes[type] ?? true,
-            onTap: onTap,
-          ),
+      return NamidaPopupItem(
+        icon: icon,
+        title: title,
+        selected: isActive,
+        onTap: onTap,
+        trailing: NamidaCheckMark(
+          active: isActive,
+          size: 14.0,
         ),
       );
     }
 
     return [
-      buildTile(AlbumType.single, Broken.music_square, lang.singles),
-      buildTile(AlbumType.ep, Broken.music_playlist, lang.eps),
-      buildTile(AlbumType.normal, Broken.music_dashboard, lang.albums),
+      buildItem(AlbumType.single, Broken.music_square, lang.singles),
+      buildItem(AlbumType.ep, Broken.music_playlist, lang.eps),
+      buildItem(AlbumType.normal, Broken.music_dashboard, lang.albums),
     ];
   }
 }

@@ -838,7 +838,6 @@ class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
     return AlbumsPage(
       albumIdentifiers: SearchSortController.inst.albumSearchTemp,
       countPerRow: settings.mediaGridCounts.value.get(LibraryTab.albums),
-      enableGridIconButton: false,
     );
   }
 }
@@ -846,6 +845,9 @@ class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
 class AlbumCustomResultsPage extends StatefulWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SEARCH_albumCustomResults;
+
+  @override
+  List<AlbumIdentifierWrapper> get routeData => albumIdentifiers;
 
   final List<AlbumIdentifierWrapper> albumIdentifiers;
   const AlbumCustomResultsPage({super.key, required this.albumIdentifiers});
@@ -874,8 +876,6 @@ class _AlbumCustomResultsPageState extends State<AlbumCustomResultsPage> {
     return AlbumsPage(
       albumIdentifiers: _albumIdentifiersRx,
       countPerRow: settings.mediaGridCounts.value.get(LibraryTab.albums),
-      enableGridIconButton: false,
-      enableHeader: false,
     );
   }
 }
@@ -883,6 +883,9 @@ class _AlbumCustomResultsPageState extends State<AlbumCustomResultsPage> {
 class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SEARCH_artistResults;
+
+  @override
+  RxList<String> get routeData => artists;
 
   final RxList<String> artists;
   final MediaType type;
@@ -894,7 +897,6 @@ class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
       enableHero: false,
       artists: artists,
       countPerRow: settings.mediaGridCounts.value.get(LibraryTab.artists),
-      enableGridIconButton: false,
       customType: type,
     );
   }

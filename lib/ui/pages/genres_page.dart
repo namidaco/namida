@@ -125,11 +125,9 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                   isCurrentlyReversed: sortReverse,
                   onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !sortReverse),
                 ),
-                textField: CustomTextField(
-                  textFieldController: libraryTab.textSearchControllerR,
-                  textFieldHintText: lang.filterGenres,
-                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeGenreType.value),
-                ),
+                textFieldController: libraryTab.textSearchControllerR,
+                textFieldHintText: lang.filterGenres,
+                onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeGenreType.value),
               ),
               page: NamidaScrollbar(
                 controller: scrollController,
