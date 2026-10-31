@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -32,6 +33,9 @@ enum _CacheSorting { recommended, size, listenCount, accessTime }
 
 class StorageCacheManager {
   const StorageCacheManager();
+
+  static const _kListensHalfLifeDays = 90;
+  static const _kListensDecayPerMS = math.ln2 / (_kListensHalfLifeDays * Duration.millisecondsPerDay);
 
   Future<void> trimExtraFiles() async {
     final priorityDbFileInfo = VideoController.inst.videosPriorityManager.cacheVideosPriorityDB.fileInfo;
@@ -167,32 +171,55 @@ class StorageCacheManager {
 
     final prioritiesMap = await VideoController.inst.videosPriorityManager.getAllVideosPriorities();
     final itemsPerPriority = <CacheVideoPriority, List<T>>{};
+    final priorityByPath = <String, CacheVideoPriority>{};
     for (final item in allFiles.value) {
       final id = itemToYtId(item);
-      itemsPerPriority.addForce((id == null ? null : prioritiesMap[id]) ?? CacheVideoPriority.normal, item);
+      final priority = (id == null ? null : prioritiesMap[id]) ?? CacheVideoPriority.normal;
+      itemsPerPriority.addForce(priority, item);
+      priorityByPath[itemToPath(item)] = priority;
     }
     final prioritiesWithItems = CacheVideoPriority.values.where(itemsPerPriority.containsKey).toFixedList();
     final selectedPriorities = <CacheVideoPriority>{}.obs;
 
     final localIdTrackMap = includeLocalTracksListens ? Indexer.inst.allTracksMappedByYTID : <String, List<Track>>{};
+    final localListensMap = HistoryController.inst.topTracksMapListens.value;
+    final ytListensMap = YoutubeHistoryController.inst.topTracksMapListens.value;
+    final nowMS = DateTime.now().millisecondsSinceEpoch;
 
-    int getTotalListensForIDLength(String id) {
-      final correspondingTracks = localIdTrackMap[id];
-      int localCount = 0;
-      int ytCount = 0;
-      if (correspondingTracks != null && correspondingTracks.isNotEmpty) {
-        for (final t in correspondingTracks) {
-          localCount += HistoryController.inst.topTracksMapListens.value[t]?.length ?? 0;
-        }
+    double decayedListensOf(List<int> listens) {
+      double decayed = 0.0;
+      for (final listenMS in listens) {
+        decayed += math.exp((listenMS - nowMS) * _kListensDecayPerMS);
       }
-      ytCount = YoutubeHistoryController.inst.topTracksMapListens.value[id]?.length ?? 0;
-      return localCount + ytCount;
+      return decayed;
     }
 
     final listensMap = <String?, int>{};
+    final decayedListensMap = <String, double>{};
+
+    void fillListensForID(String id) {
+      int listensCount = 0;
+      double decayedListens = 0.0;
+      final correspondingTracks = localIdTrackMap[id];
+      if (correspondingTracks != null) {
+        for (final t in correspondingTracks) {
+          final listens = localListensMap[t];
+          if (listens == null) continue;
+          listensCount += listens.length;
+          decayedListens += decayedListensOf(listens);
+        }
+      }
+      final ytListens = ytListensMap[id];
+      if (ytListens != null) {
+        listensCount += ytListens.length;
+        decayedListens += decayedListensOf(ytListens);
+      }
+      listensMap[id] = listensCount;
+      decayedListensMap[id] = decayedListens;
+    }
+
     final sizesMap = <String, int>{};
     final accessTimeMap = <String, int>{};
-    int maxListenCount = 0;
 
     await allFiles.value.loopConcurrent((e) async {
       final path = itemToPath(e);
@@ -204,32 +231,51 @@ class StorageCacheManager {
       accessTimeMap[path] = finalMS;
 
       final videoId = itemToYtId(e);
-      if (videoId != null) {
-        final listensCount = getTotalListensForIDLength(videoId);
-        listensMap[videoId] = listensCount;
-        if (maxListenCount < listensCount) maxListenCount = listensCount;
-      }
+      if (videoId != null) fillListensForID(videoId);
     });
+
+    final hasVipItems = itemsPerPriority.containsKey(CacheVideoPriority.VIP);
+
+    int priorityIndexOf(T e) => priorityByPath[itemToPath(e)]!.index;
+    int vipLastKeyOf(T e) => priorityByPath[itemToPath(e)] == CacheVideoPriority.VIP ? 1 : 0;
+    int sizeOf(T e) => sizesMap[itemToPath(e)] ?? 0;
+
+    double keepScoreOf(T e) {
+      final id = itemToYtId(e);
+      final decayedListens = id == null ? 0.0 : decayedListensMap[id] ?? 0.0;
+      final sizeInMB = sizeOf(e) / (1024 * 1024);
+      final sizeWeight = 1 + LogScaledRatio.logScaleOf(sizeInMB);
+      return LogScaledRatio.logScaleOf(decayedListens) / sizeWeight;
+    }
+
+    void sortKeepingVipLast(List<T> files, Comparable Function(T e) key, {bool reverse = false}) {
+      if (hasVipItems) {
+        files.sortByAltsPrecomputed(
+          [vipLastKeyOf, key],
+          alternativesReverse: [false, reverse],
+        );
+      } else {
+        files.sortByPrecomputed(key, reverse: reverse);
+      }
+    }
 
     void sortBy(_CacheSorting type) {
       currentSort.value = type;
+      final files = allFiles.value;
       switch (type) {
         case _CacheSorting.recommended:
-          final maxLastAccess = DateTime.now().millisecondsSinceEpoch;
-          allFiles.sortBy((e) {
-            final accessTime = accessTimeMap[itemToPath(e)] ?? 0;
-            final listenCount = listensMap[itemToYtId(e)] ?? 0;
-            final normalizedAccessTime = (accessTime / maxLastAccess);
-            final normalizedListenCount = maxListenCount > 0 ? listenCount / maxListenCount : 0.0;
-            return normalizedAccessTime * 0.3 + normalizedListenCount * 0.7;
-          });
+          files.sortByAltsPrecomputed(
+            [priorityIndexOf, keepScoreOf, sizeOf],
+            alternativesReverse: [true, false, true],
+          );
         case _CacheSorting.size:
-          allFiles.sortByReverse((e) => sizesMap[itemToPath(e)] ?? 0);
+          sortKeepingVipLast(files, sizeOf, reverse: true);
         case _CacheSorting.accessTime:
-          allFiles.sortBy((e) => accessTimeMap[itemToPath(e)] ?? 0);
+          sortKeepingVipLast(files, (e) => accessTimeMap[itemToPath(e)] ?? 0);
         case _CacheSorting.listenCount:
-          allFiles.sortBy((e) => listensMap[itemToYtId(e)] ?? 0);
+          sortKeepingVipLast(files, (e) => listensMap[itemToYtId(e)] ?? 0);
       }
+      allFiles.refresh();
     }
 
     Widget getChipButton({

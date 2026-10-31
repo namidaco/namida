@@ -1479,6 +1479,17 @@ extension ClamperExtDouble on double {
   }
 }
 
+/// log scaled ratio of a count to a [reference] count (max, average..), so few huge counts don't push the rest to ~0.
+class LogScaledRatio {
+  final double _inverseLogReference;
+
+  LogScaledRatio(num reference) : _inverseLogReference = 1 / logScaleOf(reference);
+
+  double of(num value) => logScaleOf(value) * _inverseLogReference;
+
+  static double logScaleOf(num value) => math.log(1 + value);
+}
+
 extension ThemeModeExtensions on ThemeMode {
   bool checkIsLight(Brightness? platformBrightness) {
     final mode = this;

@@ -250,8 +250,9 @@ class _SimilarTracksScorer {
   void _addFromHistory(Map<Track, int> historyListens, double weight) {
     if (historyListens.isEmpty) return;
     final maxListens = historyListens.values.reduce(math.max);
+    final listensRatio = LogScaledRatio(maxListens);
     for (final e in historyListens.entries) {
-      _add(e.key, weight * e.value / maxListens);
+      _add(e.key, weight * listensRatio.of(e.value));
     }
   }
 
