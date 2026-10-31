@@ -287,19 +287,14 @@ hooks:
   user_defines:
     sqlite3:
       source: sqlite3mc
-    # Prebuilt waveform library dir (windows & linux):
-    # - built by external/ffmpeg_build/build_waveform.sh with a static decode-only FFmpeg (no system deps).
-    # - if missing, builds from source against system FFmpeg (dev only, not for release).
-    # - Android, iOS & macOS: ignored, links the libffmpegkit ffmpeg_kit_extended_flutter ships.
-    namida_waveform:
-      prebuilt_dir: external/ffmpeg_build
-    # -- libffmpegkit bundles kept in external/ffmpeg_build by its fetch_ffmpegkit.sh, so nothing is downloaded while building
+    # -- libffmpegkit bundles kept in external/ffmpeg_build by its fetch_ffmpegkit.sh, so nothing is downloaded while building.
+    # -- not-small (built for speed), see "Built for speed" in external/ffmpeg_build/README.md
     ffmpeg_kit_extended_flutter:
-      android: external/ffmpeg_build/ffmpegkit/bundle-namida-shared-small-lgpl-release.aar
-      ios: external/ffmpeg_build/ffmpegkit/bundle-namida-ios-universal-small-lgpl.xcframework.zip
-      macos: external/ffmpeg_build/ffmpegkit/bundle-namida-macos-universal-small-lgpl.xcframework.zip
-      linux: external/ffmpeg_build/ffmpegkit/bundle-namida-linux-x86_64-shared-small-lgpl.zip
-      windows: external/ffmpeg_build/ffmpegkit/bundle-namida-windows-x86_64-shared-small-lgpl.zip
+      android: external/ffmpeg_build/ffmpegkit/bundle-namida-shared-lgpl-release.aar
+      ios: external/ffmpeg_build/ffmpegkit/bundle-namida-ios-universal-lgpl.xcframework.zip
+      macos: external/ffmpeg_build/ffmpegkit/bundle-namida-macos-universal-lgpl.xcframework.zip
+      linux: external/ffmpeg_build/ffmpegkit/bundle-namida-linux-x86_64-shared-lgpl.zip
+      windows: external/ffmpeg_build/ffmpegkit/bundle-namida-windows-x86_64-shared-lgpl.zip
 
 flutter_native_splash:
   image: assets/namida_icon.png

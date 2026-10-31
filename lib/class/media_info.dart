@@ -475,6 +475,7 @@ class MIStreamTags {
   final String? album;
   final String? albumArtist;
   final String? track;
+  final String? comment;
 
   const MIStreamTags({
     required this.handlerName,
@@ -484,6 +485,7 @@ class MIStreamTags {
     required this.album,
     required this.albumArtist,
     required this.track,
+    required this.comment,
   });
 
   factory MIStreamTags.fromMap(Map<String, dynamic> map) => MIStreamTags(
@@ -494,6 +496,7 @@ class MIStreamTags {
     album: map["Album"] ?? map.getOrUpperCase("album"),
     albumArtist: map["AlbumArtist"] ?? map.getOrUpperCase("albumArtist") ?? map.getOrUpperCase("album_artist"),
     track: map["Track"] ?? map.getOrUpperCase("track"),
+    comment: map.getOrUpperCase("comment"),
   );
 
   Map<dynamic, dynamic> toMap() => {
@@ -504,6 +507,7 @@ class MIStreamTags {
     "album": album,
     "album_artist": albumArtist,
     "track": track,
+    "comment": comment,
   };
 }
 

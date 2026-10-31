@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -91,61 +92,27 @@ class NamidaFFMPEG {
       originalFile.path,
     ];
 
-    final oldTagsToApply = <String, String>{};
     final oldMetadata = await ffmpegExtractMetadata(originalFile.path);
 
-    // -- not all of them but always one of them
-    const opusEtcFormats = {'opus', 'ogg', 'oga', 'ogx', 'flac', 'alac'};
-
-    bool isOpusEtc() {
-      if (oldMetadata == null) return false;
-      final formatName = oldMetadata.format?.formatName;
-      if (formatName != null && opusEtcFormats.contains(formatName.toLowerCase())) {
-        return true;
-      }
-      final oldMetadataStreams = oldMetadata.streams;
-      if (oldMetadataStreams != null) {
-        for (final stream in oldMetadataStreams) {
-          final streamName = stream.codecName;
-          if (streamName != null && opusEtcFormats.contains(streamName.toLowerCase())) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    if (isOpusEtc()) {
-      // -- overwriting tags for opus is not supported, we need to remove all first (-map_metadata -1) and write all combined
-      final tags = oldMetadata?.toFAudioModel(artwork: null).tags;
-      if (tags != null) {
-        final oldTags = FFMPEGTagField.createTagsMapfromFTag(tags);
-        for (final e in oldTags.entries) {
-          if (tagsMap[e.key] != null) continue;
-
-          final val = e.value;
-          if (val != null) {
-            oldTagsToApply[e.key] = val;
-          }
-        }
-      }
-
-      if (oldTagsToApply.isNotEmpty) {
-        params.addAll(
-          [
-            '-map_metadata',
-            '-1',
-            '-disposition:v',
-            'attached_pic',
-          ],
-        );
+    // -- ogg keeps tags on the audio stream, global ones never overwrite them
+    final isOgg = oldMetadata?.format?.formatName == 'ogg';
+    final metadataOption = isOgg ? '-metadata:s:a' : '-metadata';
+    if (isOgg) {
+      params.addAll(_kOggStreamsMapping);
+      final coverStream = _OggPicture.pickCoverStream(oldMetadata?.streams);
+      if (coverStream != null) {
+        final picture = await _extractOggPicture(originalFile.path, coverStream);
+        if (picture == null) return false;
+        final pictureTag = picture.toMetadataTag();
+        params.add(metadataOption);
+        params.add(pictureTag);
       }
     }
 
-    for (final e in tagsMap.entries.followedBy(oldTagsToApply.entries)) {
+    for (final e in tagsMap.entries) {
       final val = e.value;
       if (val != null) {
-        params.add('-metadata');
+        params.add(metadataOption);
         params.add('${e.key}=$val');
       }
     }
@@ -207,7 +174,7 @@ class NamidaFFMPEG {
 
     final isVideoFile = NamidaFileExtensionsWrapper.video.isExtensionValid(ext);
     final cacheFile = FileParts.join(AppDirs.APP_CACHE, "${audioPath.hashCode}.$ext");
-    final didSuccess = await _executer.ffmpegExecute([
+    bool didSuccess = await _executer.ffmpegExecute([
       '-i',
       audioPath,
       '-i',
@@ -227,6 +194,7 @@ class NamidaFFMPEG {
       '-y',
       cacheFile.path,
     ]);
+    if (!didSuccess) didSuccess = await _editOggPicture(audioPath: audioPath, thumbnailPath: thumbnailPath, outputPath: cacheFile.path);
 
     return await _ensureFileValidBeforeMovingBack(
       didSuccess,
@@ -234,6 +202,55 @@ class NamidaFFMPEG {
       cacheFile,
       originalStats,
     );
+  }
+
+  /// ffmpeg reads ogg pictures as cover streams but can't mux them back, so they go in as a tag.
+  static const _kOggStreamsMapping = ['-map', '0:a', '-map', '0:V?'];
+
+  Future<_OggPicture?> _extractOggPicture(String path, MIStream coverStream) async {
+    final streamIndex = coverStream.index;
+    final mime = _OggPicture.mimeOfCodec(coverStream.codecName);
+    if (streamIndex == null || mime == null) return null;
+
+    final coverFile = FileParts.join(AppDirs.APP_CACHE, ".ogg_cover_${path.hashCode}");
+    try {
+      final didExtract = await _executer.ffmpegExecute(['-i', path, '-map', '0:$streamIndex', '-c', 'copy', '-f', 'image2', '-y', coverFile.path]);
+      if (!didExtract) return null;
+      final coverBytes = await coverFile.readAsBytes();
+      final coverTags = coverStream.tags;
+      return _OggPicture(
+        type: _OggPicture.typeOfName(coverTags?.comment),
+        mime: mime,
+        description: coverTags?.title ?? '',
+        width: coverStream.width ?? 0,
+        height: coverStream.height ?? 0,
+        data: coverBytes,
+      );
+    } finally {
+      coverFile.tryDeleting();
+    }
+  }
+
+  Future<bool> _editOggPicture({required String audioPath, required String thumbnailPath, required String outputPath}) async {
+    final audioInfo = await ffmpegExtractMetadata(audioPath);
+    if (audioInfo?.format?.formatName != 'ogg') return false;
+
+    final imageInfo = await ffmpegExtractMetadata(thumbnailPath);
+    final imageStream = imageInfo?.streams?.firstOrNull;
+    final mime = _OggPicture.mimeOfCodec(imageStream?.codecName);
+    if (imageStream == null || mime == null) return false;
+
+    final imageBytes = await File(thumbnailPath).readAsBytes();
+    final picture = _OggPicture(
+      type: _OggPicture.kFrontCoverType,
+      mime: mime,
+      description: '',
+      width: imageStream.width ?? 0,
+      height: imageStream.height ?? 0,
+      data: imageBytes,
+    );
+    final pictureTag = picture.toMetadataTag();
+    return _executer.ffmpegExecute(['-i', audioPath, ..._kOggStreamsMapping, '-metadata:s:a', pictureTag, '-c', 'copy', '-y', outputPath]);
   }
 
   Future<bool> _ensureFileValidBeforeMovingBack(bool didSuccess, File originalFile, File cacheFile, FileStat? originalStats) async {
@@ -911,4 +928,97 @@ enum _ImageKind {
 
   final String outputExtension;
   const _ImageKind({required this.outputExtension});
+}
+
+// by claude
+class _OggPicture {
+  static const kFrontCoverType = 3;
+
+  /// the name ffmpeg gives each picture type, in type order.
+  static const _kTypeNames = [
+    'Other', "32x32 pixels 'file icon'", 'Other file icon', 'Cover (front)', 'Cover (back)', 'Leaflet page', //
+    'Media (e.g. label side of CD)', 'Lead artist/lead performer/soloist', 'Artist/performer', 'Conductor', //
+    'Band/Orchestra', 'Composer', 'Lyricist/text writer', 'Recording Location', 'During recording', //
+    'During performance', 'Movie/video screen capture', 'A bright coloured fish', 'Illustration', //
+    'Band/artist logotype', 'Publisher/Studio logotype', //
+  ];
+  static const _kBlockHeaderLength = 32;
+  static const _kUnknownColorDepth = 0;
+  static const _kNotIndexedColorsCount = 0;
+
+  final int type;
+  final String mime;
+  final String description;
+  final int width;
+  final int height;
+  final Uint8List data;
+
+  const _OggPicture({
+    required this.type,
+    required this.mime,
+    required this.description,
+    required this.width,
+    required this.height,
+    required this.data,
+  });
+
+  /// `-metadata` holds one value per key, so only one picture is kept, the front cover when there is one.
+  static MIStream? pickCoverStream(List<MIStream>? streams) {
+    if (streams == null) return null;
+    final frontCoverName = _kTypeNames[kFrontCoverType];
+    MIStream? coverStream;
+    for (final stream in streams) {
+      if (!stream.isCoverArt) continue;
+      if (stream.tags?.comment == frontCoverName) return stream;
+      coverStream ??= stream;
+    }
+    return coverStream;
+  }
+
+  static int typeOfName(String? name) {
+    if (name == null) return kFrontCoverType;
+    final type = _kTypeNames.indexOf(name);
+    return type == -1 ? kFrontCoverType : type;
+  }
+
+  static String? mimeOfCodec(String? codecName) => switch (codecName) {
+    'mjpeg' => 'image/jpeg',
+    'png' => 'image/png',
+    'webp' => 'image/webp',
+    'gif' => 'image/gif',
+    'bmp' => 'image/bmp',
+    _ => null,
+  };
+
+  /// a flac picture block, the way ogg stores pictures.
+  String toMetadataTag() {
+    final mimeBytes = utf8.encode(mime);
+    final descriptionBytes = utf8.encode(description);
+    final block = Uint8List(_kBlockHeaderLength + mimeBytes.length + descriptionBytes.length + data.length);
+    final blockData = ByteData.sublistView(block);
+    int offset = 0;
+
+    void addUint32(int value) {
+      blockData.setUint32(offset, value);
+      offset += 4;
+    }
+
+    void addBytes(List<int> bytes) {
+      block.setAll(offset, bytes);
+      offset += bytes.length;
+    }
+
+    addUint32(type);
+    addUint32(mimeBytes.length);
+    addBytes(mimeBytes);
+    addUint32(descriptionBytes.length);
+    addBytes(descriptionBytes);
+    addUint32(width);
+    addUint32(height);
+    addUint32(_kUnknownColorDepth);
+    addUint32(_kNotIndexedColorsCount);
+    addUint32(data.length);
+    addBytes(data);
+    return 'METADATA_BLOCK_PICTURE=${base64Encode(block)}';
+  }
 }
