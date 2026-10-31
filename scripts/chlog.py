@@ -42,7 +42,7 @@ absorb puts hunks edited after grouping into the one group whose lines they touc
 CHANGELOG_PREFIXES = ("feat", "core", "perf", "chore", "fix")
 OTHER_PREFIXES = ("code", "build", "github", "docs", "test")
 ALL_PREFIXES = CHANGELOG_PREFIXES + OTHER_PREFIXES
-PLATFORMS = ("android", "desktop", "linux", "windows", "macos", "ios")
+PLATFORMS = ("android", "desktop", "linux", "windows", "apple", "macos", "ios")
 SECTIONS = ("core", "perf", "chore", "fix")
 DEFAULT_SCORES = {"feat": 3, "core": 2, "perf": 2, "chore": 2, "fix": 2}
 TRAILER_KEYS = ("topic", "score", "closes", "ref", "amends", "changelog")

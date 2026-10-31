@@ -1,14 +1,18 @@
 // by claude
+#if os(iOS)
 import Flutter
+#else
+import FlutterMacOS
+#endif
 import Foundation
 
-/// the `namida/bonjour` channel: ios lets only the system send multicast, so sync & party advertise and browse through bonjour.
+/// the `namida/bonjour` channel: sync & party advertise and browse through the system's bonjour, for both the ios and macos runners.
+/// ios lets only the system send multicast, and macos's mDNSResponder already holds port 5353.
 final class NamidaBonjourPlugin: NSObject, FlutterPlugin {
   private static let domain = "local."
 
   private let channel: FlutterMethodChannel
   private var registrations: [Int: BonjourRegistration] = [:]
-  private var nextRegistrationId = 0
   private var queries: [Int: BonjourQuery] = [:]
 
   private init(channel: FlutterMethodChannel) {
@@ -16,7 +20,12 @@ final class NamidaBonjourPlugin: NSObject, FlutterPlugin {
   }
 
   static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "namida/bonjour", binaryMessenger: registrar.messenger())
+    #if os(iOS)
+    let messenger = registrar.messenger()
+    #else
+    let messenger = registrar.messenger
+    #endif
+    let channel = FlutterMethodChannel(name: "namida/bonjour", binaryMessenger: messenger)
     registrar.addMethodCallDelegate(NamidaBonjourPlugin(channel: channel), channel: channel)
   }
 
@@ -24,11 +33,13 @@ final class NamidaBonjourPlugin: NSObject, FlutterPlugin {
     let args = call.arguments as? [String: Any] ?? [:]
     switch call.method {
     case "register":
+      let registrationId = args["registrationId"] as? Int ?? -1
       let type = args["type"] as? String ?? ""
       let name = args["name"] as? String ?? ""
       let port = args["port"] as? Int ?? 0
       let txt = args["txt"] as? [String: String] ?? [:]
-      register(type: type, name: name, port: port, txt: txt, result: result)
+      register(registrationId: registrationId, type: type, name: name, port: port, txt: txt)
+      result(nil)
 
     case "unregister":
       let registrationId = args["registrationId"] as? Int ?? -1
@@ -47,21 +58,18 @@ final class NamidaBonjourPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  /// answered once published, a denied local network access fails here instead of advertising nothing.
-  private func register(type: String, name: String, port: Int, txt: [String: String], result: @escaping FlutterResult) {
+  /// publishing can wait on the local network prompt for as long as the user takes, so dart gets each state as it comes.
+  private func register(registrationId: Int, type: String, name: String, port: Int, txt: [String: String]) {
     let service = NetService(domain: Self.domain, type: Self.serviceType(type), name: name, port: Int32(port))
     let txtData = txt.mapValues { Data($0.utf8) }
     let txtRecord = NetService.data(fromTXTRecord: txtData)
     service.setTXTRecord(txtRecord)
-    let registrationId = nextRegistrationId
-    nextRegistrationId += 1
     let registration = BonjourRegistration(service: service) { [weak self] error in
-      guard let error else {
-        result(registrationId)
-        return
+      var arguments: [String: Any] = ["registrationId": registrationId]
+      if let error {
+        arguments["error"] = error
       }
-      self?.registrations.removeValue(forKey: registrationId)
-      result(FlutterError(code: "publish_failed", message: error, details: nil))
+      self?.channel.invokeMethod("onRegistrationUpdate", arguments: arguments)
     }
     registrations[registrationId] = registration
     registration.publish()
@@ -85,46 +93,44 @@ final class NamidaBonjourPlugin: NSObject, FlutterPlugin {
   }
 }
 
-/// one published service, reports whether publishing went through.
+/// one published service, reports each publishing state. `nil` = published.
 private final class BonjourRegistration: NSObject, NetServiceDelegate {
-  /// an unanswered local network prompt leaves publishing pending without a callback.
-  private static let publishTimeout: TimeInterval = 10
+  /// an unanswered local network prompt or a denied access leaves publishing pending without a callback.
+  private static let slowPublishDelay: TimeInterval = 10
 
   private let service: NetService
-  private var onPublished: ((String?) -> Void)?
+  private let onUpdate: (String?) -> Void
+  private var isSettled = false
 
-  init(service: NetService, onPublished: @escaping (String?) -> Void) {
+  init(service: NetService, onUpdate: @escaping (String?) -> Void) {
     self.service = service
-    self.onPublished = onPublished
+    self.onUpdate = onUpdate
   }
 
   func publish() {
     service.delegate = self
     service.publish()
-    DispatchQueue.main.asyncAfter(deadline: .now() + Self.publishTimeout) { [weak self] in
-      guard let self, self.onPublished != nil else { return }
-      self.service.stop()
-      self.complete(error: "bonjour publish timed out, local network access may be pending or denied")
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.slowPublishDelay) { [weak self] in
+      guard let self, !self.isSettled else { return }
+      self.onUpdate("bonjour publish is still waiting, local network access may be pending or denied")
     }
   }
 
+  /// the delegate isn't retained by the service, it's cleared before this registration is dropped.
   func stop() {
+    service.delegate = nil
     service.stop()
   }
 
   func netServiceDidPublish(_ sender: NetService) {
-    complete(error: nil)
+    isSettled = true
+    onUpdate(nil)
   }
 
   func netService(_ sender: NetService, didNotPublish errorDict: [String: NSNumber]) {
+    isSettled = true
     let code = errorDict[NetService.errorCode]?.intValue ?? -1
-    complete(error: "bonjour publish failed (\(code)), local network access may be denied")
-  }
-
-  private func complete(error: String?) {
-    let onPublished = self.onPublished
-    self.onPublished = nil
-    onPublished?(error)
+    onUpdate("bonjour publish failed (\(code)), local network access may be denied")
   }
 }
 
@@ -194,11 +200,14 @@ private final class BonjourQuery: NSObject, NetServiceBrowserDelegate, NetServic
     ])
   }
 
+  /// delegates aren't retained by the browser & services, they're cleared before this query is dropped.
   private func finish(error: String?) {
     guard !isDone else { return }
     isDone = true
+    browser.delegate = nil
     browser.stop()
     for service in resolving {
+      service.delegate = nil
       service.stop()
     }
     resolving.removeAll()

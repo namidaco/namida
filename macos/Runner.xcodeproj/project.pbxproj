@@ -30,6 +30,7 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		3EC6497C2DCE152B57830513 /* NamidaOpenedUrls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0087DC02254FE0AD5096E57C /* NamidaOpenedUrls.swift */; };
+		A47C3E91B2D85F6E0C9A1B37 /* NamidaBonjourPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B2E9A1C7D4F3E8A6C1B0D92 /* NamidaBonjourPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +85,7 @@
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		0087DC02254FE0AD5096E57C /* NamidaOpenedUrls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NamidaOpenedUrls.swift; path = ../darwin/NamidaOpenedUrls.swift; sourceTree = SOURCE_ROOT; };
+		5B2E9A1C7D4F3E8A6C1B0D92 /* NamidaBonjourPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NamidaBonjourPlugin.swift; path = ../darwin/NamidaBonjourPlugin.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +176,7 @@
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				07C817B19266400A91CBC997 /* NamidaPlugin.swift */,
 				0087DC02254FE0AD5096E57C /* NamidaOpenedUrls.swift */,
+				5B2E9A1C7D4F3E8A6C1B0D92 /* NamidaBonjourPlugin.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
@@ -364,6 +367,7 @@
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				8E13FC3C4EAD047A6028CCAD /* NamidaPlugin.swift in Sources */,
 				3EC6497C2DCE152B57830513 /* NamidaOpenedUrls.swift in Sources */,
+				A47C3E91B2D85F6E0C9A1B37 /* NamidaBonjourPlugin.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

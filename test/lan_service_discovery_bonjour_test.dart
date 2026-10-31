@@ -32,10 +32,7 @@ void main() {
     calls = [];
     messenger.setMockMethodCallHandler(const MethodChannel(channelName), (call) async {
       calls.add(call);
-      return switch (call.method) {
-        'register' => 7,
-        _ => null,
-      };
+      return null;
     });
   });
 
@@ -58,7 +55,9 @@ void main() {
 
     final advertisement = await discovery.advertise(service, networkInterface: null);
     expect(calls.single.method, 'register');
+    final registrationId = (calls.single.arguments as Map)['registrationId'] as int;
     expect(calls.single.arguments, {
+      'registrationId': registrationId,
       'type': '_namida-server._tcp',
       'name': 'My Phone',
       'port': 62310,
@@ -67,7 +66,24 @@ void main() {
 
     await advertisement.stop();
     expect(calls.last.method, 'unregister');
-    expect(calls.last.arguments, {'registrationId': 7});
+    expect(calls.last.arguments, {'registrationId': registrationId});
+  });
+
+  test('publishing states reach the advertisement error until it stops', () async {
+    final service = await MDNSService.create(instance: 'My Phone', service: '_namida-server._tcp', port: 62310);
+    final advertisement = await discovery.advertise(service, networkInterface: null);
+    final registrationId = (calls.single.arguments as Map)['registrationId'] as int;
+    expect(advertisement.error.value, isNull);
+
+    await sendFromNative('onRegistrationUpdate', {'registrationId': registrationId, 'error': 'bonjour publish is still waiting'});
+    expect(advertisement.error.value, 'bonjour publish is still waiting');
+
+    await sendFromNative('onRegistrationUpdate', {'registrationId': registrationId});
+    expect(advertisement.error.value, isNull);
+
+    await advertisement.stop();
+    await sendFromNative('onRegistrationUpdate', {'registrationId': registrationId, 'error': 'late'});
+    expect(advertisement.error.value, isNull);
   });
 
   test('a query streams every resolved service and closes when native is done', () async {

@@ -10,6 +10,7 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     NamidaPlugin.register(with: flutterViewController.registrar(forPlugin: "NamidaPlugin"))
+    NamidaBonjourPlugin.register(with: flutterViewController.registrar(forPlugin: "NamidaBonjourPlugin"))
 
     super.awakeFromNib()
   }

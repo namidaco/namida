@@ -123,7 +123,12 @@ class _ServerSide extends RxNotifier {
   /// every open client socket, trusted or still in its handshake.
   final _sessions = <_PairingSession>{};
 
-  Future<void> startServer() async {
+  Future<void>? _startingServer;
+
+  /// joins a start in progress, binding the port twice fails.
+  Future<void> startServer() => _startingServer ??= _startServer().whenComplete(() => _startingServer = null);
+
+  Future<void> _startServer() async {
     await stopServer(andRefresh: false);
 
     final serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, SyncUtils.kDefaultNamidaPort);
@@ -139,6 +144,7 @@ class _ServerSide extends RxNotifier {
       rethrow;
     }
     _serverWrapper = serverWrapper;
+    serverWrapper.broadcast?.error.addListener(_refresh);
     SyncDiscovery.serverRunning.value = true;
     SyncDiscovery._updateMulticastLock();
 
@@ -183,6 +189,7 @@ class _ServerSide extends RxNotifier {
     }
     final sw = _serverWrapper;
     _serverWrapper = null;
+    sw?.broadcast?.error.removeListener(_refresh);
     SyncDiscovery.serverRunning.value = false;
     SyncDiscovery._updateMulticastLock();
     if (andRefresh) _refresh();

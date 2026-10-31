@@ -28,6 +28,9 @@ class SyncUtils {
 
   static final currentDeviceId = _fetchDeviceId();
 
+  /// apple blocks discovery until the user allows local network access, elsewhere it's mostly the adapter.
+  static String get discoveryFailedHint => Platform.isIOS || Platform.isMacOS ? lang.discoveryFailedAllowLocalNetworkAccess : lang.discoveryFailedTryReenablingNetworkAdapter;
+
   static Future<BaseMessageInfo> createMessageInfo(MessageActionType action) async {
     return BaseMessageInfo(
       action: action,

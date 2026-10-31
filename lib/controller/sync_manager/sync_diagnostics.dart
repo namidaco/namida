@@ -77,6 +77,8 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     final serverSocket = wrapper.serverSocket;
     final advertised = wrapper.info.ips.map((e) => e.address).join(', ');
     report.writeln('tcp ${serverSocket.address.address}:${serverSocket.port} | advertising: $advertised | clients: ${SyncDiscovery.server._clientsSockets.length}');
+    final discoveryError = wrapper.discoveryError;
+    if (discoveryError != null) report.writeln('! not discoverable: $discoveryError');
     _writeLog(report, _serverStartLog);
   }
 

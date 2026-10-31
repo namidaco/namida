@@ -97,7 +97,7 @@
 		1C76E97627F8082EB8966BFE /* NamidaWidgets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = NamidaWidgets.xcconfig; sourceTree = "<group>"; };
 		345C28671C7ED12B921DE9E2 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		EE97559B2BD978A73B66D334 /* NamidaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NamidaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		C9B9AF831DCE4E227CC27C98 /* NamidaBonjourPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamidaBonjourPlugin.swift; sourceTree = "<group>"; };
+		C9B9AF831DCE4E227CC27C98 /* NamidaBonjourPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NamidaBonjourPlugin.swift; path = ../darwin/NamidaBonjourPlugin.swift; sourceTree = SOURCE_ROOT; };
 		F0D7AA8DAF76AB52F2AEC62A /* NamidaStoragePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamidaStoragePlugin.swift; sourceTree = "<group>"; };
 		07C817B19266400A91CBC997 /* NamidaPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamidaPlugin.swift; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };

@@ -295,7 +295,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                       CustomListTile(
                         icon: Broken.global_search,
                         title: lang.search,
-                        subtitle: client.lastDiscoveryError == null ? null : '${lang.discoveryFailedTryReenablingNetworkAdapter}\n${client.lastDiscoveryError}',
+                        subtitle: client.lastDiscoveryError == null ? null : '${SyncUtils.discoveryFailedHint}\n${client.lastDiscoveryError}',
                         onTap: client.startSearchForServers,
                         trailing: client.allowAutoRetryDiscovery
                             ? NamidaButton(

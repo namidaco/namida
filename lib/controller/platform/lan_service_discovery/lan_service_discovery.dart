@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import 'package:mdns_dart/mdns_dart.dart';
+import 'package:nampack/reactive/reactive.dart';
 
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/extensions.dart';

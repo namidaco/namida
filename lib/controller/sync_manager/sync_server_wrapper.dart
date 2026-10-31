@@ -1,15 +1,20 @@
 part of 'sync_manager.dart';
 
 class ServerWrapper {
-  final LanServiceAdvertisement broadcast;
+  final LanServiceAdvertisement? broadcast;
+  final Object? broadcastStartError;
   final ServerSocket serverSocket;
   final MDNSService info;
 
   const ServerWrapper({
     required this.broadcast,
+    required this.broadcastStartError,
     required this.serverSocket,
     required this.info,
   });
+
+  /// why other devices can't find this server, they can still connect by its address.
+  Object? get discoveryError => broadcastStartError ?? broadcast?.error.value;
 
   static Future<ServerWrapper> startBroadcast(ServerSocket serverSocket) async {
     final preferredInterface = await SyncUtils.getPreferredInterface();
@@ -30,30 +35,40 @@ class ServerWrapper {
 
     SyncDiagnostics._serverStartLog.clear();
     SyncDiagnostics._isServerStarting = true;
-    final LanServiceAdvertisement broadcast;
+    LanServiceAdvertisement? broadcast;
+    Object? broadcastStartError;
     try {
       broadcast = await LanServiceDiscovery.inst.advertise(
         service,
         networkInterface: preferredInterface,
         logger: SyncDiagnostics._onServerLog,
       );
+    } catch (e) {
+      // -- the tcp server works without it, devices connect by address
+      broadcastStartError = e;
     } finally {
       SyncDiagnostics._isServerStarting = false;
     }
 
     return ServerWrapper(
       broadcast: broadcast,
+      broadcastStartError: broadcastStartError,
       serverSocket: serverSocket,
       info: service,
     );
   }
 
   Future<void> stopAll() async {
-    await broadcast.stop();
+    await broadcast?.stop();
     await serverSocket.close();
   }
 
-  String buildText({required String? deviceName, bool simple = true}) => info.buildText(deviceName: deviceName, simple: simple);
+  String buildText({required String? deviceName, bool simple = true}) {
+    final text = info.buildText(deviceName: deviceName, simple: simple);
+    final discoveryError = this.discoveryError;
+    if (discoveryError == null) return text;
+    return '$text\n${SyncUtils.discoveryFailedHint}\n$discoveryError';
+  }
 }
 
 extension on MDNSService {

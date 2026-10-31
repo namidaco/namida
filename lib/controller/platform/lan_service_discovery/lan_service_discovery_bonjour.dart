@@ -2,6 +2,7 @@ part of 'lan_service_discovery.dart';
 
 // by claude
 /// ios only lets apps with an apple-granted entitlement send multicast themselves, the system's bonjour service does it for them.
+/// macos's mDNSResponder holds port 5353, bonjour avoids sharing it.
 /// interfaces & loggers are mdns_dart concerns, bonjour picks the interfaces on its own.
 class _LanServiceDiscoveryBonjour extends LanServiceDiscovery {
   _LanServiceDiscoveryBonjour() {
@@ -10,19 +11,25 @@ class _LanServiceDiscoveryBonjour extends LanServiceDiscovery {
 
   static const _channel = MethodChannel('namida/bonjour');
 
+  final _registrations = <int, _BonjourAdvertisement>{};
+  int _nextRegistrationId = 0;
+
   final _queries = <int, StreamController<ServiceEntry>>{};
   int _nextQueryId = 0;
 
   Future<void> _onMethodCall(MethodCall call) async {
     final args = call.arguments as Map;
-    final queryId = args['queryId'] as int;
-    final controller = _queries[queryId];
-    if (controller == null) return;
     switch (call.method) {
+      case 'onRegistrationUpdate':
+        final registrationId = args['registrationId'] as int;
+        _registrations[registrationId]?.error.value = args['error'] as String?;
       case 'onServiceFound':
-        controller.add(_entryFromMap(args));
+        final queryId = args['queryId'] as int;
+        _queries[queryId]?.add(_entryFromMap(args));
       case 'onQueryDone':
-        _queries.remove(queryId);
+        final queryId = args['queryId'] as int;
+        final controller = _queries.remove(queryId);
+        if (controller == null) return;
         final error = args['error'] as String?;
         if (error != null) controller.addError(StateError(error));
         controller.close();
@@ -43,20 +50,30 @@ class _LanServiceDiscoveryBonjour extends LanServiceDiscovery {
     );
   }
 
+  /// returns right away, publishing may wait on the local network prompt and reports through [LanServiceAdvertisement.error].
   @override
   Future<LanServiceAdvertisement> advertise(
     MDNSService service, {
     required NetworkInterface? networkInterface,
     void Function(String message)? logger,
   }) async {
+    final registrationId = _nextRegistrationId++;
+    final advertisement = _BonjourAdvertisement(this, registrationId);
+    _registrations[registrationId] = advertisement;
     final txt = MDNSService.parseTXTRecords(service.txt);
-    final registrationId = await _channel.invokeMethod<int>('register', {
-      'type': service.service,
-      'name': service.instance,
-      'port': service.port,
-      'txt': txt,
-    });
-    return _BonjourAdvertisement(registrationId!);
+    try {
+      await _channel.invokeMethod('register', {
+        'registrationId': registrationId,
+        'type': service.service,
+        'name': service.instance,
+        'port': service.port,
+        'txt': txt,
+      });
+    } catch (_) {
+      _registrations.remove(registrationId);
+      rethrow;
+    }
+    return advertisement;
   }
 
   @override
@@ -85,11 +102,13 @@ class _LanServiceDiscoveryBonjour extends LanServiceDiscovery {
 }
 
 class _BonjourAdvertisement extends LanServiceAdvertisement {
+  final _LanServiceDiscoveryBonjour _discovery;
   final int _registrationId;
-  _BonjourAdvertisement(this._registrationId);
+  _BonjourAdvertisement(this._discovery, this._registrationId);
 
   @override
   Future<void> stop() {
+    _discovery._registrations.remove(_registrationId);
     return _LanServiceDiscoveryBonjour._channel.invokeMethod('unregister', {'registrationId': _registrationId});
   }
 }
