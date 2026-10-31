@@ -144,7 +144,7 @@ Future<void> showGeneralPopupDialog(
     iconColor.value = Color.alphaBlend(color.withOpacityExt(0.47), namida.textTheme.displayMedium!.color!);
   }
 
-  onColorsObtained(CurrentColor.inst.color);
+  onColorsObtained(NamidaNavigator.inst.inheritedColor);
 
   if (extractColor && trackToExtractColorFrom != null) {
     final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(trackToExtractColorFrom, networkArtworkInfo);
@@ -915,7 +915,7 @@ Future<void> showGeneralPopupDialog(
               )
             : null;
 
-        return NTheme(
+        return NamidaDialogTheme(
           data: theme,
           child: _ThemedDialog(
             insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 24.0),

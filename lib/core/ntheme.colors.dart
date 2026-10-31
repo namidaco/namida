@@ -12,9 +12,9 @@ sealed class NColors {
   /// a color computed from several roles, ex. an alpha blend.
   static NColors custom(Color Function(NColorsData colors) resolve) => _CustomNColors(resolve);
 
-  /// the default icon color: [mainColor] (the current color by default) tinting [secondaryColor] (onSurface by default).
+  /// the default icon color: [mainColor] (the theme accent, else the current color) tinting [secondaryColor] (onSurface by default).
   static NColors defaultIcon({Color? mainColor, Color? secondaryColor, double? opacity}) => _CustomNColors((colors) {
-    final mainColorFinal = mainColor ?? CurrentColor.inst.color;
+    final mainColorFinal = mainColor ?? colors.accent ?? CurrentColor.inst.color;
     final secondaryColorFinal = secondaryColor ?? colors.onSurface;
     final color = Color.alphaBlend(mainColorFinal.withOpacityExt(0.47), secondaryColorFinal);
     return opacity == null ? color : color.withOpacityExt(opacity);
@@ -101,6 +101,9 @@ final class NColorsData {
   final Color textMedium;
   final Color textSmall;
 
+  /// the color the theme was built around, see [NThemeAccent].
+  final Color? accent;
+
   NColorsData._fromTheme(ThemeData theme)
     : card = theme.cardColor,
       cardTheme = theme.cardTheme.color ?? theme.cardColor,
@@ -129,7 +132,8 @@ final class NColorsData {
       icon = theme.iconTheme.color ?? theme.colorScheme.onSurface,
       textLarge = theme.textTheme.displayLarge?.color ?? theme.colorScheme.onSurface,
       textMedium = theme.textTheme.displayMedium?.color ?? theme.colorScheme.onSurface,
-      textSmall = theme.textTheme.displaySmall?.color ?? theme.colorScheme.onSurface;
+      textSmall = theme.textTheme.displaySmall?.color ?? theme.colorScheme.onSurface,
+      accent = theme.extension<NThemeAccent>()?.color;
 
   NColorsData._lerp(NColorsData a, NColorsData b, double t)
     : card = Color.lerp(a.card, b.card, t)!,
@@ -159,7 +163,8 @@ final class NColorsData {
       icon = Color.lerp(a.icon, b.icon, t)!,
       textLarge = Color.lerp(a.textLarge, b.textLarge, t)!,
       textMedium = Color.lerp(a.textMedium, b.textMedium, t)!,
-      textSmall = Color.lerp(a.textSmall, b.textSmall, t)!;
+      textSmall = Color.lerp(a.textSmall, b.textSmall, t)!,
+      accent = Color.lerp(a.accent, b.accent, t);
 
   Color get(NColorRole role) => switch (role) {
     .card => card,
@@ -222,7 +227,8 @@ final class NColorsData {
       other.icon == icon && //
       other.textLarge == textLarge && //
       other.textMedium == textMedium && //
-      other.textSmall == textSmall;
+      other.textSmall == textSmall && //
+      other.accent == accent;
 
   @override
   int get hashCode => Object.hashAll([
@@ -254,6 +260,7 @@ final class NColorsData {
     textLarge,
     textMedium,
     textSmall,
+    accent,
   ]);
 }
 

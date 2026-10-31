@@ -4,7 +4,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -184,7 +183,7 @@ class NamidaPopupWrapper extends StatelessWidget {
 
       if (children != null && childrenAfterChildrenDefault) ..._mapChildren(await children!()),
     ];
-    return ConstrainedBox(
+    final menu = ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: maxWidth,
         maxHeight: maxHeight,
@@ -203,6 +202,8 @@ class NamidaPopupWrapper extends StatelessWidget {
         ),
       ),
     );
+    // ignore: use_build_context_synchronously
+    return NamidaNavigator.inst.captureDialogTheme(context, menu);
   }
 
   void showPopupMenu(BuildContext context) async {
@@ -210,7 +211,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   }
 
   CustomPopup _toCustomPopup(BuildContext context) {
-    final colorScheme = CurrentColor.inst.color /* ?? context.theme.colorScheme.surface */;
+    final colorScheme = NamidaNavigator.inheritedColorOf(context);
     final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
     return CustomPopup(
       controller: controller,

@@ -128,7 +128,7 @@ class CustomSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalColor = passedColor ?? CurrentColor.inst.color;
+    final finalColor = passedColor ?? NamidaNavigator.inheritedColorOf(context);
     final colors = NColorsData.targetOf(context);
     final duration = Duration(milliseconds: durationInMillisecond);
     const curve = Curves.fastEaseInToSlowEaseOut;

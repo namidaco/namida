@@ -50,7 +50,7 @@ Future<void> showTrackInfoDialog(
     color.value = newColor;
   }
 
-  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
+  onColorsObtained(colorScheme ?? NamidaNavigator.inst.inheritedColor);
 
   if (colorScheme == null) {
     final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track, networkArtworkInfo);
@@ -99,7 +99,7 @@ Future<void> showTrackInfoDialog(
         rx: color,
         builder: (context, dialogColor) {
           final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
-          return NTheme(
+          return NamidaDialogTheme(
             data: theme,
             child: CustomBlurryDialog(
               theme: theme,
@@ -209,7 +209,7 @@ Future<void> showTrackInfoDialog(
       rx: color,
       builder: (context, dialogColor) {
         final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
-        return NTheme(
+        return NamidaDialogTheme(
           data: theme,
           child: CustomBlurryDialog(
             theme: theme,

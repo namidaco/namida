@@ -60,7 +60,7 @@ void showListensDialog({
     }
   }
 
-  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
+  onColorsObtained(colorScheme ?? NamidaNavigator.inst.inheritedColor);
 
   if (colorScheme == null) {
     final colorSync = colorSchemeFunctionSync?.call();
@@ -104,7 +104,7 @@ void showListensDialog({
       rx: color,
       builder: (context, dialogColor) {
         final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
-        return NTheme(
+        return NamidaDialogTheme(
           data: theme,
           child: CustomBlurryDialog(
             theme: theme,

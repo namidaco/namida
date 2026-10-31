@@ -10,6 +10,7 @@ import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -58,6 +59,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   final _isLoadingInfo = false.obs;
   final _isLoadingThumbnail = false.obs;
   Color? _themeColor;
+  late final Color? _openedWithColor;
   bool _videoIsMissingOriginalInfo = false;
   VideoPlayabilty? _playablity;
 
@@ -67,6 +69,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   @override
   void initState() {
     super.initState();
+    _openedWithColor = NamidaNavigator.dialogColorOf(context);
     _videoLikeManager.init();
     _fillInfo().then((_) {
       _fillMissingInfoIfRequired().then(
@@ -251,7 +254,8 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     final dateText = dateMS?.dateAndClockFormattedOriginal;
     final dateAgo = dateMS == null ? '' : TimeAgoController.dateMSSEFromNow(dateMS!);
 
-    final theme = AppThemes.inst.getAppTheme(_themeColor);
+    final themeColor = _themeColor ?? _openedWithColor;
+    final theme = AppThemes.inst.getAppTheme(themeColor);
 
     final totalListens = YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
     final firstListenTrack = totalListens.firstOrNull;
@@ -261,7 +265,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
       ...?_playablity?.messages,
     ].joinText(separator: ' - ');
 
-    return NTheme(
+    return NamidaDialogTheme(
       data: theme,
       child: CustomBlurryDialog(
         theme: theme,

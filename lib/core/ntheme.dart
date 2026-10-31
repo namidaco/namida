@@ -147,6 +147,26 @@ class _NThemeFrozenWhileHiddenState extends State<NThemeFrozenWhileHidden> {
   }
 }
 
+/// The color a theme was built around, every theme from `AppThemes` carries it.
+///
+/// Colors that used to follow the current color app wide follow it instead, so a dialog or page themed
+/// after something of its own (a track, a thumbnail, the app icon) tints them too.
+class NThemeAccent extends ThemeExtension<NThemeAccent> {
+  final Color color;
+
+  const NThemeAccent(this.color);
+
+  @override
+  NThemeAccent copyWith({Color? color}) => NThemeAccent(color ?? this.color);
+
+  @override
+  NThemeAccent lerp(NThemeAccent? other, double t) {
+    if (other == null) return this;
+    final color = Color.lerp(this.color, other.color, t)!;
+    return NThemeAccent(color);
+  }
+}
+
 class _NThemeLayers extends StatelessWidget {
   final ThemeData data;
   final ValueListenable<NColorsData> colors;

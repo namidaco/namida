@@ -12,7 +12,6 @@ import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/extensions.dart' hide ListUtils;
 
 import 'package:namida/class/file_parts.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -53,7 +52,7 @@ Future<void> showDownloadVideoBottomSheet({
   String? initialGroupName,
   YoutubeDownloadChapter? chapter,
 }) async {
-  colorScheme ??= CurrentColor.inst.color;
+  colorScheme ??= NamidaNavigator.inst.inheritedColor;
 
   originalIndex ??= initialItemConfig?.originalIndex;
   totalLength ??= initialItemConfig?.totalLength;

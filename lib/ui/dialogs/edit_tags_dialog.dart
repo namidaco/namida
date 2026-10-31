@@ -285,7 +285,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
     color.value = newColor;
   }
 
-  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
+  onColorsObtained(colorScheme ?? NamidaNavigator.inst.inheritedColor);
 
   if (colorScheme == null) {
     final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track, null);
@@ -469,7 +469,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       rx: color,
       builder: (context, color) {
         final theme = AppThemes.inst.getAppTheme(color, null, false);
-        return NTheme(
+        return NamidaDialogTheme(
           data: theme,
           child: Form(
             key: formKey,

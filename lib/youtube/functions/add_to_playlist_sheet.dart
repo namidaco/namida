@@ -14,7 +14,6 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -123,7 +122,7 @@ void showAddToPlaylistSheet({
                           const SizedBox(width: 18.0),
                           Expanded(
                             child: NamidaInkWell(
-                              bgColor: NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.16)),
+                              bgColor: NColors.fixed(NamidaNavigator.inheritedColorOf(context).withOpacityExt(0.16)),
                               height: 48.0,
                               borderRadius: 12.0,
                               onTap: YTUtils.showCreateLocalYTPlaylistSheet,
@@ -538,7 +537,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
             const SizedBox(width: 18.0),
             Expanded(
               child: NamidaInkWell(
-                bgColor: NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.16)),
+                bgColor: NColors.fixed(NamidaNavigator.inheritedColorOf(context).withOpacityExt(0.16)),
                 height: 48.0,
                 borderRadius: 12.0,
                 child: Row(

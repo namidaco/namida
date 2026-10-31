@@ -4,6 +4,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 
 class AppThemes {
@@ -157,6 +158,7 @@ class AppThemes {
     return ThemeData(
       brightness: brightness,
       useMaterial3: true,
+      extensions: [NThemeAccent(color)],
       colorScheme: colorScheme,
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
