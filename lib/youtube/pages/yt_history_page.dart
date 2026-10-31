@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:sticky_headers/sticky_headers.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/base/history_days_rebuilder.dart';
@@ -18,6 +17,7 @@ import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/history_days_sliver.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -49,7 +49,6 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
   @override
   Widget build(BuildContext context) {
     const cardExtent = Dimensions.youtubeCardItemExtent;
-    const dayHeaderExtent = kYoutubeHistoryDayHeaderHeightWithPadding;
 
     const dayHeaderHeight = kYoutubeHistoryDayHeaderHeight;
 
@@ -84,15 +83,18 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                     rx: YoutubeHistoryController.inst.historyMap,
                     builder: (context, history) => ObxO(
                       rx: YoutubeHistoryController.inst.highlightedItem,
-                      builder: (context, highlightedItem) => SliverVariedExtentList.builder(
-                        key: ValueKey(daysLength), // rebuild after adding/removing day
-                        itemExtentBuilder: (index, dimensions) {
-                          final day = historyDays[index];
-                          return YoutubeHistoryController.inst.dayToSectionExtent(day, cardExtent, dayHeaderExtent);
+                      builder: (context, highlightedItem) => HistoryDaysSliver(
+                        daysCount: daysLength,
+                        dayItemsCount: (dayIndex) {
+                          final day = historyDays[dayIndex];
+                          return history[day]?.length ?? 0;
                         },
-                        itemCount: daysLength,
-                        itemBuilder: (context, index) {
-                          final day = historyDays[index];
+                        itemExtent: cardExtent,
+                        headerExtent: dayHeaderHeight,
+                        itemsTopPadding: kYoutubeHistoryDayListTopPadding,
+                        itemsBottomPadding: kYoutubeHistoryDayListBottomPadding,
+                        headerBuilder: (context, dayIndex) {
+                          final day = historyDays[dayIndex];
                           final dayInMs = super.dayToMillis(day);
                           final videos = history[day] ?? [];
                           final dayTitle = [
@@ -116,44 +118,35 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                             ),
                           );
 
-                          return StickyHeader(
-                            key: ValueKey(index),
-                            header: NBuilder(
-                              builder: (context, colors) {
-                                final dayHeaderBgColor = Color.alphaBlend(colors.card.withOpacityExt(0.39), colors.scaffold);
-                                final dayHeaderShadowColor = Color.alphaBlend(colors.shadow.withOpacityExt(0.63), colors.scaffold).withOpacityExt(0.4);
-                                return NamidaHistoryDayHeaderBox(
-                                  height: dayHeaderHeight,
-                                  title: dayTitle,
-                                  sideColor: CurrentColor.inst.color,
-                                  bgColor: dayHeaderBgColor,
-                                  shadowColor: dayHeaderShadowColor,
-                                  menu: dayMenu,
-                                );
-                              },
-                            ),
-                            content: SuperSmoothListView.builder(
-                              padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
-                              primary: false,
-                              shrinkWrap: false,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemExtent: Dimensions.youtubeCardItemExtent,
-                              itemCount: videos.length,
-                              itemBuilder: (context, i) {
-                                final watch = videos[i];
-                                final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle, topRightRadius: YTHistoryVideoCardBase.kDefaultBorderRadius);
-                                final isHighlighted = highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList;
-                                return YTHistoryVideoCard(
-                                  properties: properties,
-                                  videos: videos,
-                                  index: i,
-                                  day: day,
-                                  isJumpHighlighted: isHighlighted,
-                                  isImportantInCache: false, // long old history is lowkey useless
-                                  topRightWidget: topRightWidget,
-                                );
-                              },
-                            ),
+                          return NBuilder(
+                            builder: (context, colors) {
+                              final dayHeaderBgColor = Color.alphaBlend(colors.card.withOpacityExt(0.39), colors.scaffold);
+                              final dayHeaderShadowColor = Color.alphaBlend(colors.shadow.withOpacityExt(0.63), colors.scaffold).withOpacityExt(0.4);
+                              return NamidaHistoryDayHeaderBox(
+                                height: dayHeaderHeight,
+                                title: dayTitle,
+                                sideColor: CurrentColor.inst.color,
+                                bgColor: dayHeaderBgColor,
+                                shadowColor: dayHeaderShadowColor,
+                                menu: dayMenu,
+                              );
+                            },
+                          );
+                        },
+                        itemBuilder: (context, dayIndex, itemIndex) {
+                          final day = historyDays[dayIndex];
+                          final videos = history[day]!;
+                          final watch = videos[itemIndex];
+                          final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle, topRightRadius: YTHistoryVideoCardBase.kDefaultBorderRadius);
+                          final isHighlighted = highlightedItem != null && day == highlightedItem.dayToHighLight && itemIndex == highlightedItem.indexOfSmallList;
+                          return YTHistoryVideoCard(
+                            properties: properties,
+                            videos: videos,
+                            index: itemIndex,
+                            day: day,
+                            isJumpHighlighted: isHighlighted,
+                            isImportantInCache: false, // long old history is lowkey useless
+                            topRightWidget: topRightWidget,
                           );
                         },
                       ),

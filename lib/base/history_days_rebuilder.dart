@@ -34,21 +34,13 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   void initState() {
     _updateDays();
     historyManager.modifiedDays.addListener(_updateDaysAndRefresh);
-    historyManager.totalHistoryItemsCount.addListener(_onItemCountChange);
     super.initState();
   }
 
   @override
   void dispose() {
     historyManager.modifiedDays.removeListener(_updateDaysAndRefresh);
-    historyManager.totalHistoryItemsCount.removeListener(_onItemCountChange);
     super.dispose();
-  }
-
-  void _onItemCountChange() {
-    try {
-      historyManager.scrollController.positions.lastOrNull?.notifyListeners(); // re-adjust eepy header
-    } catch (_) {}
   }
 
   void _updateDaysAndRefresh() {
@@ -62,6 +54,8 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     _historyYears = historyManager.getHistoryYears();
   }
 
+  ({DateTime anchorDate, DateTime landedDate})? _lastYearJump;
+
   void onYearTap(int year, double itemExtent, double dayHeaderExtent, {required bool addJumpPadding}) {
     setState(() => _currentActiveYear = year);
 
@@ -71,8 +65,17 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
       itemExtentAndDayHeaderExtent: () => (dayHeaderExtent: dayHeaderExtent, itemExtent: itemExtent),
     );
     final currentDate = dayJumper.getCurrentDateFromScrollPosition();
-    final newDate = currentDate?.copyWith(year: year);
-    if (newDate != null) dayJumper.scrollToDate(newDate);
+    if (currentDate == null) return;
+
+    // -- reuse the first tap's date, landed days drift when that date has no listens
+    final lastYearJump = _lastYearJump;
+    final isAtLastYearJump = lastYearJump != null && lastYearJump.landedDate == currentDate;
+    final anchorDate = isAtLastYearJump ? lastYearJump.anchorDate : currentDate;
+    final newDate = anchorDate.copyWith(year: year);
+    dayJumper.scrollToDate(newDate);
+
+    final landedDate = dayJumper.getCurrentDateFromScrollPosition();
+    _lastYearJump = landedDate == null ? null : (anchorDate: anchorDate, landedDate: landedDate);
   }
 
   double get yearsRowHeight => 32.0;
