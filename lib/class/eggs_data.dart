@@ -120,6 +120,7 @@ enum NamidaEgg {
   goodnight(1),
   twins(1),
   deathLoop(1),
+  sixSeven(1),
   colorful(1),
   ;
 
@@ -132,7 +133,7 @@ enum EggUnlockable {
   crossfade(3),
   partyMode(3),
   starfield(2),
-  galaxy(2),
+  galaxy(3),
   aurora(2),
   fireworks(2),
   deepOcean(2),

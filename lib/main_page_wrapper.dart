@@ -34,6 +34,7 @@ import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/mascots/mascots.dart';
@@ -225,6 +226,7 @@ class NamidaDrawer extends StatelessWidget {
                         sleepAfterItems: tracksRx.value,
                         isAnchoredToItem: didChangeTracks ? false : null,
                       );
+                      EggHunt.onSleepTimerStarted(minutesRx.value);
                     }
                     NamidaNavigator.inst.closeDialog();
                   },

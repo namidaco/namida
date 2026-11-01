@@ -17,6 +17,7 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
   static const _kWaveGap = Duration(seconds: 5);
   static const _kSlotSpacing = 8.0;
   static const _kFirstRowShare = 2 / 3;
+  static const _kAlwaysPlaySixSeven = true;
 
   // -- where Curves.bounceOut first touches the ground
   static const _kLandingPoint = 1 / 2.75;
@@ -33,6 +34,10 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
   late final _gainController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
+  );
+  late final _sixSevenController = AnimationController(
+    vsync: this,
+    duration: _SixSevenGesture._kDuration,
   );
 
   final _shown = <NamidaEgg>{};
@@ -53,6 +58,7 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
     _revealController.addListener(_landEggs);
     _waveController.addStatusListener(_onWaveStatusChanged);
     settings.eggs.addListener(_revealNewlyCollected);
+    if (_kAlwaysPlaySixSeven) _sixSevenController.repeat();
   }
 
   @override
@@ -63,6 +69,7 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
     _waveController.dispose();
     _wiggleController.dispose();
     _gainController.dispose();
+    _sixSevenController.dispose();
     super.dispose();
   }
 
@@ -119,13 +126,25 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
     VibratorController.light();
     _lastGain = egg.worth;
     _gainController.forward(from: 0.0);
+    if (egg == NamidaEgg.sixSeven) _playSixSeven();
     widget.onEggLanded?.call();
+  }
+
+  void _onEggTapped(NamidaEgg egg) {
+    final isShownSixSeven = egg == NamidaEgg.sixSeven && _shown.contains(egg);
+    if (isShownSixSeven) {
+      _playSixSeven();
+      return;
+    }
+    _wiggle(egg);
   }
 
   void _wiggle(NamidaEgg egg) {
     setState(() => _wigglingEgg = egg);
     _wiggleController.forward(from: 0.0);
   }
+
+  void _playSixSeven() => _sixSevenController.forward(from: 0.0);
 
   int _unlandedWorth(EggsData data) {
     int worth = 0;
@@ -175,7 +194,8 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
           hop: _waveController.drive(_HopOffset(index)),
           shine: egg.isShiny ? shine : null,
           wiggle: _wigglingEgg == egg ? _wiggleController : kAlwaysDismissedAnimation,
-          onTap: () => _wiggle(egg),
+          sixSeven: egg == NamidaEgg.sixSeven ? _sixSevenController : null,
+          onTap: () => _onEggTapped(egg),
         ),
     ];
     final shelf = LayoutWidthProvider(
@@ -230,6 +250,7 @@ class _EggSlot extends StatelessWidget {
   final Animation<Offset> hop;
   final Animation<double>? shine;
   final Animation<double> wiggle;
+  final Animation<double>? sixSeven;
   final void Function() onTap;
 
   const _EggSlot({
@@ -240,6 +261,7 @@ class _EggSlot extends StatelessWidget {
     required this.hop,
     required this.shine,
     required this.wiggle,
+    required this.sixSeven,
     required this.onTap,
   });
 
@@ -273,6 +295,14 @@ class _EggSlot extends StatelessWidget {
         child: questionMark,
       ),
     );
+    final sixSeven = this.sixSeven;
+    if (sixSeven != null && (isCollected || _EggsStageState._kAlwaysPlaySixSeven)) {
+      eggWidget = _SixSevenGesture(
+        progress: sixSeven,
+        color: color,
+        child: eggWidget,
+      );
+    }
     final fall = this.fall;
     if (fall != null) {
       eggWidget = Stack(
@@ -452,18 +482,33 @@ class _PoppingEgg extends StatefulWidget {
   State<_PoppingEgg> createState() => _PoppingEggState();
 }
 
-class _PoppingEggState extends State<_PoppingEgg> with SingleTickerProviderStateMixin {
+class _PoppingEggState extends State<_PoppingEgg> with TickerProviderStateMixin {
   late final _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
-  )..forward();
+  );
+  AnimationController? _sixSevenController;
 
   static final _scale = CurveTween(curve: Curves.elasticOut);
   static final _burst = CurveTween(curve: const Interval(0.15, 0.8));
 
   @override
+  void initState() {
+    super.initState();
+    final popped = _controller.forward();
+    if (widget.egg != NamidaEgg.sixSeven) return;
+    final sixSevenController = AnimationController(
+      vsync: this,
+      duration: _SixSevenGesture._kDuration,
+    );
+    _sixSevenController = sixSevenController;
+    popped.then((_) => sixSevenController.forward());
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
+    _sixSevenController?.dispose();
     super.dispose();
   }
 
@@ -472,6 +517,18 @@ class _PoppingEggState extends State<_PoppingEgg> with SingleTickerProviderState
     final egg = widget.egg;
     final colorScheme = context.theme.colorScheme;
     final color = egg.colorOf(colorScheme);
+    Widget eggWidget = CustomPaint(
+      size: const Size(17.0, 22.0),
+      painter: _EggPainter(color: color, isFilled: true, isRainbow: egg.isRainbow),
+    );
+    final sixSevenController = _sixSevenController;
+    if (sixSevenController != null) {
+      eggWidget = _SixSevenGesture(
+        progress: sixSevenController,
+        color: color,
+        child: eggWidget,
+      );
+    }
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.center,
@@ -483,12 +540,49 @@ class _PoppingEggState extends State<_PoppingEgg> with SingleTickerProviderState
         ),
         ScaleTransition(
           scale: _controller.drive(_scale),
-          child: CustomPaint(
-            size: const Size(17.0, 22.0),
-            painter: _EggPainter(color: color, isFilled: true, isRainbow: egg.isRainbow),
-          ),
+          child: eggWidget,
         ),
       ],
+    );
+  }
+}
+
+class _SixSevenGesture extends StatelessWidget {
+  final Animation<double> progress;
+  final Color color;
+  final Widget child;
+
+  const _SixSevenGesture({required this.progress, required this.color, required this.child});
+
+  static const _kDuration = Duration(milliseconds: 1400);
+  static const _kSwings = 3;
+  static const _kInShare = 0.12;
+  static const _kOutShare = 0.15;
+  static const _tilt = _SixSevenTilt();
+
+  static double presenceOf(double t) {
+    if (t <= 0.0 || t >= 1.0) return 0.0;
+    if (t < _kInShare) return t / _kInShare;
+    const outStart = 1.0 - _kOutShare;
+    if (t > outStart) return (1.0 - t) / _kOutShare;
+    return 1.0;
+  }
+
+  /// positive lifts the left hand and lowers the right one.
+  static double swingOf(double t) => math.sin(t * _kSwings * 2 * math.pi);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: _SixSevenHandsPainter(progress: progress, color: color),
+      child: RotationTransition(
+        turns: progress.drive(_tilt),
+        alignment: Alignment.bottomCenter,
+        child: CustomPaint(
+          foregroundPainter: _SixSevenFacePainter(progress: progress, color: color),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -523,5 +617,19 @@ class _WiggleTurns extends Animatable<double> {
     if (t <= 0.0 || t >= 1.0) return 0.0;
     final swing = math.sin(t * _kSwings * 2 * math.pi);
     return swing * _kMaxTurns * (1.0 - t);
+  }
+}
+
+class _SixSevenTilt extends Animatable<double> {
+  const _SixSevenTilt();
+
+  static const _kMaxTurns = 0.02;
+
+  @override
+  double transform(double t) {
+    final presence = _SixSevenGesture.presenceOf(t);
+    if (presence <= 0.0) return 0.0;
+    final swing = _SixSevenGesture.swingOf(t);
+    return swing * _kMaxTurns * presence;
   }
 }

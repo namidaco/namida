@@ -189,6 +189,203 @@ class _BurstPainter extends CustomPainter {
   bool shouldRepaint(_BurstPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
 }
 
+/// geometry is in hand units, scaled by the egg width. palm up: thumb out, index and pinky curled down, two fingertips facing the viewer.
+class _SixSevenHandsPainter extends CustomPainter {
+  final Animation<double> progress;
+  final Color color;
+
+  _SixSevenHandsPainter({required this.progress, required this.color}) : super(repaint: progress);
+
+  static const _kHandY = 0.8;
+  static const _kLift = 0.16;
+  static const _kSpread = 0.45;
+  static const _kSpreadGrowth = 0.25;
+  static const _kOutlineWidth = 0.035;
+  static const _kPalm = Rect.fromLTRB(-0.3, -0.19, 0.3, 0.23);
+  static const _kThumb = (Offset(0.12, -0.09), Offset(0.34, -0.14), 0.15);
+  static const _kIndex = (Offset(0.245, 0.04), Offset(0.345, 0.18), 0.1);
+  static const _kPinky = (Offset(-0.255, 0.07), Offset(-0.305, 0.17), 0.085);
+  static const _kCurledFingers = [_kIndex, _kPinky];
+  static const _kFingertip = Rect.fromLTRB(-0.04, -0.11, 0.04, 0.11);
+  static const _kFingertips = [(Offset(0.1, 0.25), -0.35), (Offset(-0.1, 0.25), -0.2)];
+  static const _kHeldEggSize = Size(0.42, 0.55);
+  static const _kHeldEggInwardShift = 0.02;
+  static const _kHeldEggBottomY = 0.06;
+  static const _kHeldEggOutlineWidth = 0.05;
+  static const _kDigitWidth = 0.09;
+  static const _kSixColor = Color(0xFF7A99D2);
+  static const _kSevenColor = Color(0xFFD6859C);
+
+  static final _palmOutline = _kPalm.inflate(_kOutlineWidth);
+  static final _fingertipOutline = _kFingertip.inflate(_kOutlineWidth);
+  static final _heldEggShell = _EggBrush.shellOf(_kHeldEggSize);
+  static final _digitBox = Rect.fromCenter(
+    center: Offset(_kHeldEggSize.width / 2, _kHeldEggSize.height * 0.58),
+    width: _kHeldEggSize.height * 0.32,
+    height: _kHeldEggSize.height * 0.5,
+  );
+  static final _sixPath = _sixPathOf(_digitBox);
+  static final _sevenPath = _sevenPathOf(_digitBox);
+  static final _six = _HeldEgg(_kSixColor, _sixPath);
+  static final _seven = _HeldEgg(_kSevenColor, _sevenPath);
+  static final _digitPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = _kDigitWidth
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round
+    ..color = Colors.white;
+
+  late final _handLineColor = Color.alphaBlend(Colors.black.withOpacityExt(0.35), color);
+  late final _handFillColor = Color.alphaBlend(Colors.white.withOpacityExt(0.72), color);
+  late final _outlineStrokePaint = Paint()
+    ..strokeCap = StrokeCap.round
+    ..color = _handLineColor;
+  late final _outlineFillPaint = Paint()..color = _handLineColor;
+  late final _fillStrokePaint = Paint()
+    ..strokeCap = StrokeCap.round
+    ..color = _handFillColor;
+  late final _fillPaint = Paint()..color = _handFillColor;
+
+  static Path _sixPathOf(Rect box) {
+    final radius = box.height * 0.27;
+    final loopCenter = Offset(box.center.dx, box.bottom - radius);
+    final loopLeft = loopCenter.dx - radius;
+    final loop = Rect.fromCircle(center: loopCenter, radius: radius);
+    return Path()
+      ..moveTo(box.right - box.width * 0.1, box.top)
+      ..cubicTo(box.left + box.width * 0.2, box.top, loopLeft, loopCenter.dy - radius, loopLeft, loopCenter.dy)
+      ..addOval(loop);
+  }
+
+  static Path _sevenPathOf(Rect box) {
+    return Path()
+      ..moveTo(box.left, box.top)
+      ..lineTo(box.right, box.top)
+      ..lineTo(box.left + box.width * 0.4, box.bottom);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = progress.value;
+    final presence = _SixSevenGesture.presenceOf(t);
+    if (presence <= 0.0) return;
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final handY = h * _kHandY;
+    final lift = _SixSevenGesture.swingOf(t) * _kLift * h;
+    final spread = w * (_kSpread + _kSpreadGrowth * presence);
+    final unit = w * presence;
+    _paintHand(canvas, Offset(cx - spread, handY - lift), side: -1.0, unit: unit, heldEgg: _six);
+    _paintHand(canvas, Offset(cx + spread, handY + lift), side: 1.0, unit: unit, heldEgg: _seven);
+  }
+
+  void _paintHand(Canvas canvas, Offset palmCenter, {required double side, required double unit, required _HeldEgg heldEgg}) {
+    canvas.save();
+    canvas.translate(palmCenter.dx, palmCenter.dy);
+    canvas.scale(unit);
+
+    canvas.save();
+    canvas.scale(side, 1.0);
+    _paintPalm(canvas);
+    canvas.restore();
+
+    final heldEggX = -side * _kHeldEggInwardShift - _kHeldEggSize.width / 2;
+    final heldEggY = _kHeldEggBottomY - _kHeldEggSize.height;
+    canvas.save();
+    canvas.translate(heldEggX, heldEggY);
+    _EggBrush.paintShell(canvas, _kHeldEggSize, _heldEggShell, heldEgg.color, isFilled: true, opacity: 1.0);
+    canvas.drawPath(_heldEggShell, heldEgg.outlinePaint);
+    canvas.drawPath(heldEgg.digitPath, _digitPaint);
+    canvas.restore();
+
+    canvas.scale(side, 1.0);
+    _paintFrontFingers(canvas);
+    canvas.restore();
+  }
+
+  void _paintPalm(Canvas canvas) {
+    final (thumbStart, thumbEnd, thumbWidth) = _kThumb;
+    _outlineStrokePaint.strokeWidth = thumbWidth + _kOutlineWidth * 2;
+    canvas.drawLine(thumbStart, thumbEnd, _outlineStrokePaint);
+    canvas.drawOval(_palmOutline, _outlineFillPaint);
+    _fillStrokePaint.strokeWidth = thumbWidth;
+    canvas.drawLine(thumbStart, thumbEnd, _fillStrokePaint);
+    canvas.drawOval(_kPalm, _fillPaint);
+  }
+
+  void _paintFrontFingers(Canvas canvas) {
+    for (final (center, angle) in _kFingertips) {
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(angle);
+      canvas.drawOval(_fingertipOutline, _outlineFillPaint);
+      canvas.drawOval(_kFingertip, _fillPaint);
+      canvas.restore();
+    }
+    for (final (start, end, width) in _kCurledFingers) {
+      _outlineStrokePaint.strokeWidth = width + _kOutlineWidth * 2;
+      canvas.drawLine(start, end, _outlineStrokePaint);
+      _fillStrokePaint.strokeWidth = width;
+      canvas.drawLine(start, end, _fillStrokePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SixSevenHandsPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
+}
+
+/// squeezed `> <` eyes, `ω` mouth and the tongue out.
+class _SixSevenFacePainter extends CustomPainter {
+  final Animation<double> progress;
+  final Color color;
+
+  _SixSevenFacePainter({required this.progress, required this.color}) : super(repaint: progress);
+
+  static const _kTongueColor = Color(0xFFFF7A9C);
+  static const _kEyeWidth = 0.085;
+  static const _kMouthWidth = 0.07;
+
+  late final _inkColor = Color.alphaBlend(Colors.black.withOpacityExt(0.6), color);
+  _SixSevenFacePaths? _paths;
+
+  _SixSevenFacePaths _pathsOf(Size size) {
+    final cached = _paths;
+    if (cached != null && cached.size == size) return cached;
+    final built = _SixSevenFacePaths.of(size);
+    _paths = built;
+    return built;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final presence = _SixSevenGesture.presenceOf(progress.value);
+    if (presence <= 0.0) return;
+    final w = size.width;
+    final paths = _pathsOf(size);
+    final ink = _inkColor.withOpacityExt(presence);
+    final eyesPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * _kEyeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = ink;
+    final mouthPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * _kMouthWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = ink;
+    final tonguePaint = Paint()..color = _kTongueColor.withOpacityExt(presence);
+    canvas.drawPath(paths.eyes, eyesPaint);
+    canvas.drawPath(paths.tongue, tonguePaint);
+    canvas.drawPath(paths.mouth, mouthPaint);
+  }
+
+  @override
+  bool shouldRepaint(_SixSevenFacePainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
+}
+
 class _GlintPainter extends CustomPainter {
   final NamidaFloatClock clock;
 
@@ -513,4 +710,64 @@ List<Offset> _directionsOf(int count) {
     },
     growable: false,
   );
+}
+
+class _HeldEgg {
+  final Color color;
+  final Path digitPath;
+  final Paint outlinePaint;
+
+  _HeldEgg(this.color, this.digitPath)
+    : outlinePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _SixSevenHandsPainter._kHeldEggOutlineWidth
+        ..color = Color.alphaBlend(Colors.black.withOpacityExt(0.25), color);
+}
+
+class _SixSevenFacePaths {
+  final Size size;
+  final Path eyes;
+  final Path mouth;
+  final Path tongue;
+
+  const _SixSevenFacePaths._(this.size, this.eyes, this.mouth, this.tongue);
+
+  static const _kLeftEye = [Offset(0.22, 0.37), Offset(0.38, 0.43), Offset(0.22, 0.49)];
+  static const _kRightEye = [Offset(0.78, 0.37), Offset(0.62, 0.43), Offset(0.78, 0.49)];
+  static const _kMouth = [
+    Offset(0.39, 0.64), Offset(0.4, 0.69), Offset(0.47, 0.7), Offset(0.5, 0.655), //
+    Offset(0.53, 0.7), Offset(0.6, 0.69), Offset(0.61, 0.64), //
+  ];
+  static const _kTongue = [
+    Offset(0.45, 0.652), Offset(0.588, 0.557), Offset(0.83, 0.574), Offset(0.796, 0.712), //
+    Offset(0.761, 0.85), Offset(0.553, 0.816), Offset(0.467, 0.695), //
+  ];
+
+  static _SixSevenFacePaths of(Size size) {
+    final leftEye = _scaledOf(_kLeftEye, size);
+    final rightEye = _scaledOf(_kRightEye, size);
+    final mouthPoints = _scaledOf(_kMouth, size);
+    final tonguePoints = _scaledOf(_kTongue, size);
+    final eyes = Path()
+      ..addPolygon(leftEye, false)
+      ..addPolygon(rightEye, false);
+    final mouth = _cubicsOf(mouthPoints);
+    final tongue = _cubicsOf(tonguePoints)..close();
+    return _SixSevenFacePaths._(size, eyes, mouth, tongue);
+  }
+
+  static List<Offset> _scaledOf(List<Offset> points, Size size) => points.map((point) => point.scale(size.width, size.height)).toFixedList();
+
+  /// [points] is a start followed by (control, control, end) triples.
+  static Path _cubicsOf(List<Offset> points) {
+    final start = points.first;
+    final path = Path()..moveTo(start.dx, start.dy);
+    for (int i = 1; i + 2 < points.length; i += 3) {
+      final c1 = points[i];
+      final c2 = points[i + 1];
+      final end = points[i + 2];
+      path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, end.dx, end.dy);
+    }
+    return path;
+  }
 }

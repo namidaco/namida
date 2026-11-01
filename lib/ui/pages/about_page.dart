@@ -649,7 +649,8 @@ class _IssueReporter {
 
   static Future<String?> _prepareLogsZipAndGetUnrevealedPath() async {
     final canReveal = NamidaChannel.inst.canOpenFileInExplorer;
-    final outputDirectory = canReveal ? null : _exportedLogsDirectory;
+    final canRevealTemporaryFile = canReveal && NamidaFeaturesVisibility.temporaryFilesVisibleInFileExplorer;
+    final outputDirectory = canRevealTemporaryFile ? null : _exportedLogsDirectory;
 
     if (outputDirectory != null) {
       final granted = await requestManageStoragePermission(directoryToCreate: outputDirectory);

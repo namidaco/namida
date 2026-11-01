@@ -1735,5 +1735,6 @@ class NamidaFeaturesVisibility {
 
   static final isStoragePermissionNotRequired = !_isAndroid;
   static final fileBrowserPrefersSystemPicker = !_isAndroid; // -- ios folders outside the app are only reachable through the system picker
+  static final temporaryFilesVisibleInFileExplorer = !_isIOS; // -- the files app shows only the documents folder
   static final recieveDragAndDrop = _isDesktop;
 }

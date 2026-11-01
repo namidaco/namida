@@ -41,13 +41,18 @@ abstract class EggHunt {
   }
 
   static void onSettingsSearchSubmitted(String text) {
-    if (!EggsController.inst.isSecretWord(text)) return;
-    collect(NamidaEgg.secretWord);
+    final egg = EggsController.inst.eggOfSettingsSearch(text);
+    if (egg != null) collect(egg);
   }
 
   static void onAddToPlaylistDialogOpened(int openedDialogsCount) {
     if (!EggsController.inst.isDeathLoopDepth(openedDialogsCount)) return;
     collect(NamidaEgg.deathLoop);
+  }
+
+  static void onSleepTimerStarted(int sleepMinutes) {
+    if (!EggsController.inst.isSixSevenMinutes(sleepMinutes)) return;
+    collect(NamidaEgg.sixSeven);
   }
 
   static void announceFound(List<NamidaEgg> eggs) {
@@ -498,6 +503,7 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.goodnight => 'Goodnight',
     NamidaEgg.twins => 'Twins',
     NamidaEgg.deathLoop => 'Death loop',
+    NamidaEgg.sixSeven => 'Six seven',
     NamidaEgg.colorful => 'Colorful',
   };
 
@@ -512,19 +518,20 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.newYear => 'spend new year\'s eve with namida, watch the top bar',
     NamidaEgg.birthday => 'namida was born on a cold january day',
     NamidaEgg.anniversary => 'namida grew up one october',
-    NamidaEgg.economy => 'buy, sell, buy, sell... five trades and the market notices',
+    NamidaEgg.economy => 'buy, sell, buy, sell... keep trading until the market notices',
     NamidaEgg.nightOwl => '3am and still listening? go to sleep',
     NamidaEgg.veteran => 'a whole year of memories in your history',
-    NamidaEgg.chipmunk => 'faster.. no, faster.. or squeakier',
-    NamidaEgg.broke => 'spend every last egg',
-    NamidaEgg.hoarder => 'save up five eggs without cracking any',
-    NamidaEgg.tears => 'namida means tears, got a song about them?',
+    NamidaEgg.chipmunk => 'what if the song inhaled helium',
+    NamidaEgg.broke => 'spend ur whole egg wealth and join the broke',
+    NamidaEgg.hoarder => 'save the eggs like there is no tomorrow',
+    NamidaEgg.tears => 'namida is tears, listen to tears',
     NamidaEgg.creep => 'staring at the eggs for a whole minute... creepy',
     NamidaEgg.lucky => 'sometimes she just feels generous',
-    NamidaEgg.goodnight => 'let the sleep timer tuck you in',
-    NamidaEgg.twins => 'sync with another device',
+    NamidaEgg.goodnight => 'fall asleep to namida, she\'ll turn the music off for u',
+    NamidaEgg.twins => 'introduce namida to her other sync twin',
     NamidaEgg.deathLoop => 'playlist in a playlist in a playlist in a pl-',
-    NamidaEgg.colorful => 'find every other egg',
+    NamidaEgg.sixSeven => 'six seven',
+    NamidaEgg.colorful => 'find all.. and by all we mean all',
   };
 }
 

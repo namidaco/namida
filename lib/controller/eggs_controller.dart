@@ -33,7 +33,9 @@ class EggsController {
   static const _kChipmunkPitch = 1.5;
   static const _kLuckyOneIn = 50;
   static const _kDeathLoopDepth = 4;
+  static const _kSixSeven = 67;
   static const _kSecretWords = {'uwu', 'kechi', 'baka', 'sussy baka'};
+  static const _kSixSevenWords = {'67', 'six seven'};
   static final _tearsRegex = RegExp('namida|tears|涙|なみだ|ナミダ', caseSensitive: false);
   static final _luckyRandom = math.Random();
 
@@ -82,6 +84,7 @@ class EggsController {
     check(NamidaEgg.veteran, _isVeteran);
     check(NamidaEgg.chipmunk, _isChipmunk);
     check(NamidaEgg.tears, _hasTearsTrack);
+    check(NamidaEgg.sixSeven, _hasSixSevenTrack);
     check(NamidaEgg.lucky, _rollLucky);
     final dateEgg = pendingDateEgg.value;
     if (dateEgg != null) check(dateEgg, () => true);
@@ -106,12 +109,16 @@ class EggsController {
     return isEarned;
   }
 
-  bool isSecretWord(String text) {
-    final word = text.trim().toLowerCase();
-    return _kSecretWords.contains(word);
+  NamidaEgg? eggOfSettingsSearch(String searchText) {
+    final word = searchText.trim().toLowerCase();
+    if (_kSecretWords.contains(word)) return NamidaEgg.secretWord;
+    if (_kSixSevenWords.contains(word)) return NamidaEgg.sixSeven;
+    return null;
   }
 
   bool isDeathLoopDepth(int openedDialogsCount) => openedDialogsCount == _kDeathLoopDepth;
+
+  bool isSixSevenMinutes(int sleepMinutes) => sleepMinutes == _kSixSeven;
 
   bool unlock(EggUnlockable item) {
     final data = settings.eggs.value;
@@ -245,6 +252,16 @@ class EggsController {
   bool _hasTearsTrack() {
     for (final tr in Indexer.inst.allTracksMappedByPath.values) {
       if (_tearsRegex.hasMatch(tr.title)) return true;
+    }
+    return false;
+  }
+
+  // -- sorted by listens, most first
+  bool _hasSixSevenTrack() {
+    for (final listens in HistoryController.inst.topTracksMapListens.value.values) {
+      final listensCount = listens.length;
+      if (listensCount == _kSixSeven) return true;
+      if (listensCount < _kSixSeven) return false;
     }
     return false;
   }
