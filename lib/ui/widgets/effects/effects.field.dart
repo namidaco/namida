@@ -743,6 +743,7 @@ class _EffectFieldPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     final opacity = this.opacity * fade.value;
     brush.paint(canvas, size, time: field.time, isDark: isDark, opacity: opacity);
     field.paint(canvas, size, tint: tint, ink: ink, isDark: isDark, opacity: opacity);

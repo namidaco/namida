@@ -199,6 +199,7 @@ class _GlintPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    clock.markPainted();
     final phase = clock.seconds % _kPeriodSeconds;
     if (phase >= _kFlashSeconds) return;
     final intensity = math.sin(phase / _kFlashSeconds * math.pi);
@@ -250,6 +251,7 @@ class _FestiveFramePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    clock.markPainted();
     final seconds = clock.seconds;
     _paintBorder(canvas, size, seconds);
     _paintBunting(canvas, size, seconds);
@@ -407,6 +409,7 @@ class _HeartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    clock.markPainted();
     final phase = clock.seconds % _kBeatSeconds;
     final scale = 1.0 + 0.16 * _pulseOf(phase, 0.0) + 0.1 * _pulseOf(phase, _kSecondBeatDelay);
     final center = size.center(Offset.zero);
@@ -445,6 +448,7 @@ class _GlitterPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    clock.markPainted();
     final seconds = clock.seconds;
     final phase = seconds % _kPeriodSeconds;
     if (phase >= _kFlashSeconds) return;

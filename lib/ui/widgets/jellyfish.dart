@@ -416,6 +416,7 @@ class _JellyFieldPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     final tint = this.tint;
     _paintJellySwarm(
       canvas,
@@ -1050,6 +1051,7 @@ class _JellydaScenePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     if (size.isEmpty || !NamidaJellys.layersReady) return;
     // -- cover, keeping the art's own aspect: it overflows the short side and gets clipped
     final cover = math.max(size.width / _kJellyArtSize.width, size.height / _kJellyArtSize.height) * _zoom;

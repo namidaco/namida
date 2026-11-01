@@ -194,6 +194,7 @@ class _NamiweenScenePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     if (size.isEmpty) return;
     final cover = math.max(size.width / _artSize.width, size.height / _artSize.height) * _zoom;
     final dest = alignment.inscribe(_artSize * cover, Offset.zero & size);

@@ -257,6 +257,7 @@ class _MeshGradientPainter extends _AmbientPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     if (size.isEmpty) return;
     if (_meshSize != size) _buildMesh(size);
 
@@ -349,6 +350,7 @@ class _AmbientLightsPainter extends _AmbientPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     if (size.isEmpty) return;
     final colors = scene.colors;
     final isDark = scene.isDark;
@@ -476,6 +478,7 @@ class _BokehPainter extends _AmbientPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
     if (size.isEmpty) return;
     final colors = scene.colors;
     final isDark = scene.isDark;

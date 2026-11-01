@@ -285,7 +285,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final forceMiniplayerTrackColor = _key('forceMiniplayerTrackColor', false);
   late final isTrackPlayedSecondsCount = _key('isTrackPlayedSecondsCount', isKuru ? 25 : 40);
   late final isTrackPlayedPercentageCount = _key('isTrackPlayedPercentageCount', isKuru ? 25 : 40);
-  late final waveformTotalBars = _key('waveformTotalBars', isDesktop ? 100 : (isKuru ? 111 : 80), sync: false);
+  late final waveformTotalBars = _key('waveformTotalBars', isDesktop ? 100 : 80, sync: false);
   late final videosMaxCacheInMB = _key('videosMaxCacheInMB', isDesktop ? 24 * 1024 : (isKuru ? -1 : 8 * 1024), sync: false);
   late final audiosMaxCacheInMB = _key('audiosMaxCacheInMB', isDesktop ? 12 * 1024 : (isKuru ? -1 : 4 * 1024), sync: false);
   late final serversMaxCacheInMB = _key('serversMaxCacheInMB', isDesktop ? 12 * 1024 : (isKuru ? -1 : 4 * 1024), sync: false);
