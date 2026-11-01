@@ -18,20 +18,25 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'assets' / 'docs.tar.xz'
 DEFAULT_SITE = ROOT.parent / 'namida_docs' / 'site'
 
-# -- unused (mermaid, other themes), online only (ai, analytics, llms, okf) or never shown in a webview (favicon)
-EXCLUDED_DIRS = {'okf'}
+# -- unused (mermaid, other themes), online only (ai, analytics, llms, okf) or never shown in a webview (favicon).
+# -- previews, the screens map and the tour (embed/) show cdn shots, like the screenshots below
+EXCLUDED_DIRS = {'okf', 'embed'}
 EXCLUDED_FILES = {
     'assets/js/init-mermaid.js', 'assets/js/docmd-ai.js', 'assets/css/docmd-ai.css', 'assets/js/goatcounter.js',
     'assets/css/docmd-theme-retro.css', 'assets/css/docmd-theme-ruby.css', 'assets/css/docmd-theme-sky.css',
     'assets/favicon.ico', 'assets/css/index.ts', 'llms.txt', 'llms-full.txt', 'llms.json', 'sitemap.xml', 'robots.txt', '.nojekyll',
-    # -- previews and the screens map show cdn shots, like the screenshots below
-    'docs-shots-previews.json', 'docs-shots-screens.json',
+    'docs-shots-previews.json', 'docs-shots-screens.json', 'assets/js/docs-shots-screens.js',
 }
-EXCLUDED_REF_REGEX = re.compile(r'<script\b[^>]*(?:docmd-ai|goatcounter)\.js[^>]*>\s*</script>|<link\b[^>]*(?:docmd-ai\.css|favicon\.ico)[^>]*>')
+EXCLUDED_REF_REGEX = re.compile(
+    r'<script\b[^>]*(?:docmd-ai|goatcounter|docs-shots-screens|embed/tour)\.js[^>]*>\s*</script>'
+    r'|<link\b[^>]*(?:docmd-ai\.css|embed/tour\.css|favicon\.ico)[^>]*>'
+)
 
 ONLINE_DOCS_URL = 'https://docs.namida.app'
 # -- docs screenshots load from a cdn, the offline copy links to them instead of having the app reach out
 SCREENSHOTS_REGEX = re.compile(r'<(figure|details) class="docs-shots[^"]*" data-href="([^"]*)">.*?</\1>', re.DOTALL)
+SHOTS_VIEW_REGEX = re.compile(r'<div class="docs-(tour|screens)" data-docs-\1></div>')
+SHOTS_VIEW_LABELS = {'tour': 'Tour', 'screens': 'Screens map'}
 NOT_FOUND_PAGE = '404.html'
 BANNER_ANCHOR = '<header class="summer-topbar"'
 BODY_CLASS_PREFIX = '<body class="'
@@ -85,12 +90,19 @@ def link_screenshots_online(match: re.Match) -> str:
     return f'<p class="docs-shots-offline"><a href="{online_href}" target="_blank" rel="noopener">Screenshots in the online docs ↗</a></p>'
 
 
+def link_shots_view_online(match: re.Match, relative_path: str) -> str:
+    page_path = relative_path.removesuffix('index.html')
+    label = SHOTS_VIEW_LABELS[match.group(1)]
+    return f'<p class="docs-shots-offline"><a href="{ONLINE_DOCS_URL}/{page_path}" target="_blank" rel="noopener">{label} in the online docs ↗</a></p>'
+
+
 def read_content(path: Path, relative_path: str, offline_banner: str) -> bytes:
     if not relative_path.endswith('.html'):
         return path.read_bytes()
     html = path.read_text(encoding='utf-8')
     html = EXCLUDED_REF_REGEX.sub('', html)
     html = SCREENSHOTS_REGEX.sub(link_screenshots_online, html)
+    html = SHOTS_VIEW_REGEX.sub(lambda match: link_shots_view_online(match, relative_path), html)
     if relative_path != NOT_FOUND_PAGE:
         html = add_offline_banner(html, relative_path, offline_banner)
     return html.encode('utf-8')

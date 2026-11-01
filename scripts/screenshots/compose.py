@@ -342,13 +342,14 @@ def reset_dir(directory: Path):
     directory.mkdir(parents=True)
 
 
-def save_webp(source: Path, out: Path, quality: int, max_width: int | None = None):
+def save_webp(source: Path, out: Path, quality: int, max_width: int | None = None) -> tuple[int, int]:
     out.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(source) as image:
         rgb = image.convert('RGB')
     if max_width is not None and rgb.width > max_width:
         rgb = rgb.resize((max_width, round(rgb.height * max_width / rgb.width)), Image.Resampling.LANCZOS)
     rgb.save(out, 'WEBP', quality=quality, method=6)
+    return rgb.size
 
 
 def export_readme(browser: str, browser_dir: Path, android_shots_dir: Path, readme_dir: Path):
@@ -376,19 +377,22 @@ def export_docs(out_dir: Path, docs_dir: Path):
     reset_dir(docs_dir)
     # -- what exists per platform and theme, the docs build only places variants that are there
     index = {}
+    sizes = {}
     regions = {'tiles': {}, 'texts': {}}
     for platform in DOCS_PLATFORMS:
         for png in sorted((out_dir / platform).glob('*/*.png')):
             theme = png.parent.name
             if theme == 'manual' or png.name.endswith('.device.png'):
                 continue
-            save_webp(png, docs_dir / platform / theme / f'{png.stem}.webp', DOCS_WEBP_QUALITY, DOCS_MAX_WIDTH)
+            size = save_webp(png, docs_dir / platform / theme / f'{png.stem}.webp', DOCS_WEBP_QUALITY, DOCS_MAX_WIDTH)
             index.setdefault(platform, {}).setdefault(theme, []).append(png.stem)
+            sizes.setdefault(platform, {}).setdefault(theme, {})[png.stem] = size
             for kind, label_key in REGION_KINDS:
                 shot_regions = read_region_fractions(png, kind, label_key)
                 if shot_regions is not None:
                     regions[kind].setdefault(platform, {}).setdefault(theme, {})[png.stem] = shot_regions
     (docs_dir / 'index.json').write_text(json.dumps(index, indent=1), encoding='utf-8')
+    (docs_dir / 'sizes.json').write_text(json.dumps(sizes, separators=(',', ':')), encoding='utf-8')
     for kind, _ in REGION_KINDS:
         (docs_dir / f'{kind}.json').write_text(json.dumps(regions[kind], ensure_ascii=False), encoding='utf-8')
     export_screens(out_dir, docs_dir)

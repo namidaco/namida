@@ -51,6 +51,9 @@ RUN_TIMEOUT_SECONDS = 60 * 60
 
 DART_DEFINES = ['--dart-define=NAMIDA_SCREENSHOTS=true']
 WINDOWS_BUILD_DIR = ROOT / 'build' / 'windows' / 'x64' / 'runner' / 'Profile'
+# -- the youtube sign in's webview2 outlives the app for a moment and deletes this once it lets go of its profile
+WINDOWS_WEBVIEW_LOCK_PATH = Path('Youtube', 'Youtipie', 'webview2', 'EBWebView', 'lockfile')
+WINDOWS_WEBVIEW_EXIT_TIMEOUT_SECONDS = 30
 LINUX_BUILD_DIR = ROOT / 'build' / 'linux' / 'x64' / 'profile' / 'bundle'
 LINUX_APP_ID = 'com.msob7y.namida'
 # -- pixels, roomy for the biggest window at the smallest scale plus its shadow. flathub allows 2000x1400 for hidpi, the
@@ -255,12 +258,20 @@ def shoot_windows(args, work: Path):
     if args.interactive:
         environment = {**os.environ, 'NAMIDA_SCREENSHOTS_INTERACTIVE': '1'}
         subprocess.run([exe], env=environment)
+        wait_for_webview_exit(data_dir)
         copy_paths(data_dir, work / 'windows' / 'keep', KEEP_PATHS)
         harvest_videos(work, data_dir)
         return None, out_dir
     done = launch_and_wait([exe], out_dir)
     harvest_videos(work, data_dir)
     return done, out_dir
+
+
+def wait_for_webview_exit(data_dir: Path):
+    webview_lock = data_dir / WINDOWS_WEBVIEW_LOCK_PATH
+    deadline = time.time() + WINDOWS_WEBVIEW_EXIT_TIMEOUT_SECONDS
+    while webview_lock.exists() and time.time() < deadline:
+        time.sleep(CAPTURE_POLL_SECONDS)
 
 
 def local_music_dir(work: Path, override: str | None) -> str:

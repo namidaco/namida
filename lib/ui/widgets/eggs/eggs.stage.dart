@@ -17,7 +17,7 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
   static const _kWaveGap = Duration(seconds: 5);
   static const _kSlotSpacing = 8.0;
   static const _kFirstRowShare = 2 / 3;
-  static const _kAlwaysPlaySixSeven = true;
+  static const _kAlwaysPlaySixSeven = false;
 
   // -- where Curves.bounceOut first touches the ground
   static const _kLandingPoint = 1 / 2.75;
