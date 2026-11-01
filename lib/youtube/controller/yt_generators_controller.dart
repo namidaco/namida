@@ -105,12 +105,13 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   @override
   IsolateFunctionReturnBuild<YTGeneratorIsolateParams> isolateFunction(SendPort port) {
     final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.value.values) pl.name: pl.tracks};
+    final mostplayedIds = YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue.toFixedList();
     final params = (
       databasesDir: AppDirs.YOUTIPIE_CACHE,
       sensitiveDataDir: AppDirs.YOUTIPIE_DATA,
       sensitiveDataKey: SensitiveDataKey.current,
       statsDir: AppDirs.YT_STATS,
-      mostplayedPlaylist: YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue,
+      mostplayedPlaylist: mostplayedIds,
       favouritesPlaylist: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
       playlists: playlists,
       sendPort: port,
@@ -320,7 +321,7 @@ typedef YTGeneratorIsolateParams = ({
   String sensitiveDataDir,
   String? sensitiveDataKey,
   String statsDir,
-  Iterable<String> mostplayedPlaylist,
+  List<String> mostplayedPlaylist,
   List<YoutubeID> favouritesPlaylist,
   Map<String, List<YoutubeID>> playlists,
   SendPort sendPort,

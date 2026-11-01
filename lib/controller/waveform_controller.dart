@@ -21,16 +21,16 @@ class WaveformController {
 
   late final currentWaveformUIRx = List<double>.filled(_defaultUserBarsCount, -1, growable: false).obs;
 
-  List<double> _currentWaveform = [];
+  Float32List _currentWaveform = _emptyWaveformData;
 
-  var _currentScaleLookup = <double>[];
+  Float32List _currentScaleLookup = _emptyWaveformData;
   int _currentScaleMaxIndex = -1;
 
   bool get isDummy => _currentWaveform.isEmpty;
 
   void resetWaveform() {
-    _currentWaveform = [];
-    _currentScaleLookup = [];
+    _currentWaveform = _emptyWaveformData;
+    _currentScaleLookup = _emptyWaveformData;
     _currentScaleMaxIndex = -1;
     _isWaveformUIEnabled.value = false;
     SpectrumController.inst.reset();
@@ -44,26 +44,22 @@ class WaveformController {
       scaleFactor: 0.4,
     );
 
-    Float32List waveformData = _emptyWaveformData;
+    const maxWaveformCount = 2000;
+    final numberOfScales = duration.inMilliseconds ~/ _positionDividor;
+    final targetSizes = [maxWaveformCount, numberOfScales];
+
+    List<Float32List> waveforms = const [];
     await Future.wait([
       _waveformExtractor
-          .extractWaveformData(path, samplesPerSecond: samplePerSecond)
-          .then((value) => waveformData = value) //
-          .catchError((_) => waveformData = _emptyWaveformData),
+          .extractDownscaledWaveforms(path, samplesPerSecond: samplePerSecond, targetSizes: targetSizes)
+          .then((value) => waveforms = value) //
+          .catchError((_) => waveforms = const <Float32List>[]),
       Future.delayed(const Duration(milliseconds: 800)),
     ]);
 
-    if (waveformData.isNotEmpty && stillPlaying(path)) {
-      // ----- Updating [_currentWaveform]
-      const maxWaveformCount = 2000;
-      final numberOfScales = duration.inMilliseconds ~/ _positionDividor;
-      final downscaledLists = _downscaledWaveformLists(
-        targetSizes: [maxWaveformCount, numberOfScales],
-        original: waveformData,
-      );
-
-      _currentWaveform = downscaledLists[maxWaveformCount] ?? [];
-      _currentScaleLookup = downscaledLists[numberOfScales] ?? [];
+    if (waveforms.isNotEmpty && stillPlaying(path)) {
+      _currentWaveform = waveforms[0];
+      _currentScaleLookup = waveforms[1];
       _currentScaleMaxIndex = _currentScaleLookup.length - 1;
 
       calculateUIWaveform();
@@ -93,23 +89,6 @@ class WaveformController {
       enforceClampToMax: (minValue, maxValue) => false,
     );
     return downscaled;
-  }
-
-  static Map<num, List<double>> _downscaledWaveformLists({required List<num> original, required List<int> targetSizes}) {
-    final newLists = <num, List<double>>{};
-    const maxClamping = 64.0;
-    for (var targetSize in targetSizes) {
-      newLists[targetSize] = original.changeListSize(
-        targetSize: targetSize,
-        clampToMax: maxClamping,
-        enforceClampToMax: (minValue, maxValue) {
-          // -- checking if max value is greater than `maxClamping`;
-          // -- since clamping tries to normalize among all lists variations
-          return maxValue > maxClamping * 2.0;
-        },
-      );
-    }
-    return newLists;
   }
 
   static const _positionDividor = 50;

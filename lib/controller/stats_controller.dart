@@ -112,7 +112,7 @@ class StatsController {
       totalListenSeconds += listenTimeMap?[k] ?? 0;
     }
 
-    final snapshot = HistoryStatsSnapshot.compute(
+    final snapshot = await HistoryStatsSnapshot.compute(
       history: history,
       resolver: resolver,
       firstDay: firstDay,

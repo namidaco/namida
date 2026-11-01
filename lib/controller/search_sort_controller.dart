@@ -971,8 +971,7 @@ class SearchSortController extends SearchPortsProvider {
   List<TrackSearchFilter>? _trackPortsFilters;
 
   TracksSearchParams generateTrackSearchIsolateParams(SendPort sendPort, ListensSortedMap<Track> topTracksMapListens, {required List<TrackSearchFilter> filters}) {
-    final tracks = _tracksInfoList.value.map((e) => e.toTrackExt());
-    return TracksSearchWrapper.generateParams(sendPort, tracks, topTracksMapListens, filters: filters);
+    return TracksSearchWrapper.generateParams(sendPort, _tracksInfoList.value, topTracksMapListens, filters: filters);
   }
 
   Future<SendPort?> _preparePlaylistPorts() async {

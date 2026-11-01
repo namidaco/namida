@@ -67,7 +67,7 @@ class RhythmController {
   );
 
   final _analyzer = _RhythmIsolateManager();
-  final _rhythms = <String, _Rhythm>{};
+  var _rhythms = <String, _Rhythm>{};
   Future<void>? _loading;
 
   final _urgentJobs = <String, _RhythmJob>{};
@@ -105,15 +105,33 @@ class RhythmController {
 
   Future<void> _load() async {
     try {
-      final rows = await _db.loadEverythingKeyedResult();
-      for (final e in rows.entries) {
-        try {
-          _rhythms[e.key] ??= _Rhythm.fromMap(e.value);
-        } catch (_) {}
-      }
+      final loaded = await _loadAllSync.thready(AppPaths.TRACKS_RHYTHM_DB_INFO);
+      // -- analyses made while loading are newer
+      loaded.addAll(_rhythms);
+      _rhythms = loaded;
     } catch (e, st) {
       logger.error('RhythmController._load', e: e, st: st);
     }
+  }
+
+  static Map<String, _Rhythm> _loadAllSync(DbWrapperFileInfo dbInfo) {
+    final rhythms = <String, _Rhythm>{};
+    final db = DBWrapper.openFromInfoSync(
+      fileInfo: dbInfo,
+      config: const DBConfig(createIfNotExist: true, autoDisposeTimerDuration: null),
+    );
+    try {
+      db.loadEverythingKeyed(
+        (key, value) {
+          try {
+            rhythms[key] = _Rhythm.fromMap(value);
+          } catch (_) {}
+        },
+      );
+    } finally {
+      db.close();
+    }
+    return rhythms;
   }
 
   /// null when [item] has no steady beat grid to match.

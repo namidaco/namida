@@ -945,6 +945,9 @@ extension TrackExtUtils on TrackExtended {
     return '';
   }
 
+  // -- keep in sync with what [youtubeLink] reads
+  bool hasSameYoutubeLinkSources(TrackExtended other) => comment == other.comment && path == other.path;
+
   String get youtubeID => youtubeLink.getYoutubeID;
 
   DateTime? yearAsDateTime({String? yearString}) {

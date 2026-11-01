@@ -288,8 +288,7 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
     final localTracks = _localIndexOf?.keys ?? const <Track>[];
     _isolateTracksCount = localTracks.length;
-    final tracksExtended = localTracks.map((e) => e.toTrackExt());
-    final params = TracksSearchWrapper.generateParams(port, tracksExtended, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
+    final params = TracksSearchWrapper.generateParams(port, localTracks, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
     return IsolateFunctionReturnBuild(_searchIsolate, params);
   }
 

@@ -65,13 +65,15 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
 
   void _sortStreams(List<StreamInfoItem> streams) {
     if (streams.isEmpty) return; // cuz empty might be const
+    final topTracksMapListens = YoutubeHistoryController.inst.topTracksMapListens.value;
     switch (_sortType) {
       case YTLocalSearchSortType.mostPlayed:
-        streams.sortBy((e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0));
+        streams.sortByPrecomputed((e) => -(topTracksMapListens[e.id]?.length ?? 0));
       case YTLocalSearchSortType.latestPlayed:
-        streams.sortBy((e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0));
+        streams.sortByPrecomputed((e) => -(topTracksMapListens[e.id]?.lastOrNull ?? 0));
       case YTLocalSearchSortType.firstListen:
-        streams.sortBy((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch);
+        final neverListenedMS = DateTime(99999).millisecondsSinceEpoch;
+        streams.sortByPrecomputed((e) => topTracksMapListens[e.id]?.firstOrNull ?? neverListenedMS);
     }
   }
 

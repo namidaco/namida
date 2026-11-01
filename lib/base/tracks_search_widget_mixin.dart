@@ -193,8 +193,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
-    final tracksExtended = getSearchableTracks().map((e) => e.track.toTrackExt());
-    final params = TracksSearchWrapper.generateParams(port, tracksExtended, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
+    final tracks = getSearchableTracks().tracks;
+    final params = TracksSearchWrapper.generateParams(port, tracks, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
     return IsolateFunctionReturnBuild(_searchTracksIsolate, params);
   }
 }

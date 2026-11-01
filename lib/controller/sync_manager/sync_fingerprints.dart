@@ -1,8 +1,8 @@
 /// fingerprint logic is built by claude code
 part of 'sync_manager.dart';
 
-/// - [fullOf]: all stable tag info, preferred exact match.
-/// - [coreOf]: title + artist + album + duration only, as a fallback.
+/// - [_SyncFingerprintFields.fullAt]: all stable tag info, preferred exact match.
+/// - [_SyncFingerprintFields.coreAt]: title + artist + album + duration only, as a fallback.
 ///
 /// volatile or per-device fields (path, dateAdded/dateModified, size,
 /// bitrate/format/channels, rating) are excluded so the same audio content
@@ -35,33 +35,10 @@ abstract final class SyncTrackFingerprint {
       ..write(_kFieldSeparator);
   }
 
-  static int fullOf(TrackExtended tr) {
-    final b = StringBuffer();
-    _writeText(b, tr.title);
-    _writeText(b, tr.originalArtist);
-    _writeText(b, tr.originalAlbum);
-    _writeText(b, tr.albumArtist);
-    _writeText(b, tr.originalGenre);
-    _writeText(b, tr.originalMood);
-    _writeText(b, tr.composer);
-    _writeText(b, tr.label);
-    _writeText(b, tr.language);
-    _writeNum(b, tr.trackNo);
-    _writeNum(b, tr.trackTo);
-    _writeNum(b, tr.discNo);
-    _writeNum(b, tr.discTo);
-    _writeNum(b, tr.year);
-    _writeNum(b, tr.durationMS ~/ 1000);
-    return _fnv1a(b.toString());
-  }
-
   static int coreOf(TrackExtended tr) {
-    final b = StringBuffer();
-    _writeText(b, tr.title);
-    _writeText(b, tr.originalArtist);
-    _writeText(b, tr.originalAlbum);
-    _writeNum(b, tr.durationMS ~/ 1000);
-    return _fnv1a(b.toString());
+    final fields = _SyncFingerprintFields();
+    fields.add(tr);
+    return fields.coreAt(0);
   }
 }
 
@@ -82,7 +59,12 @@ abstract final class SyncPathResolver {
     final current = _localIndex;
     if (current != null && current.isBuiltFor(source)) return Future.value(current);
 
-    return _localIndexBuild ??= Isolate.run(() => _buildLocalIndexSync(source)).then(
+    final building = _localIndexBuild;
+    if (building != null) return building;
+    final fields = _SyncFingerprintFields.ofLocalTracks(source);
+    final sourceId = identityHashCode(source);
+    final params = (fields: fields, sourceId: sourceId, sourceCount: source.length);
+    return _localIndexBuild = _buildLocalIndexSync.thready(params).then(
       (index) {
         _localIndex = index;
         _localIndexBuild = null;
@@ -94,16 +76,17 @@ abstract final class SyncPathResolver {
   /// `{coreFingerprint: localTrack}` of the local library.
   static Future<Map<int, Track>> localCoreIndex() => _ensureLocalIndex().then((index) => index.core);
 
-  static _LocalFingerprintIndex _buildLocalIndexSync(Map<String, TrackExtended> source) {
+  static _LocalFingerprintIndex _buildLocalIndexSync(({_SyncFingerprintFields fields, int sourceId, int sourceCount}) params) {
+    final fields = params.fields;
     final full = <int, Track>{};
     final core = <int, Track>{};
     final uniqueByFileName = <String, Track>{};
     final duplicatesByFileName = <String, List<Track>>{};
-    for (final trExt in source.values) {
-      if (trExt.isNetwork) continue; // network paths are universal, no matching needed
-      final track = trExt.asTrack();
-      full[SyncTrackFingerprint.fullOf(trExt)] ??= track;
-      core[SyncTrackFingerprint.coreOf(trExt)] ??= track;
+    final length = fields.length;
+    for (int i = 0; i < length; i++) {
+      final track = fields.trackAt(i);
+      full[fields.fullAt(i)] ??= track;
+      core[fields.coreAt(i)] ??= track;
 
       final fileName = _LocalFingerprintIndex.fileNameKeyOf(track.path);
       final duplicates = duplicatesByFileName[fileName];
@@ -124,8 +107,8 @@ abstract final class SyncPathResolver {
       core: core,
       uniqueByFileName: uniqueByFileName,
       duplicatesByFileName: duplicatesByFileName,
-      builtForSourceId: identityHashCode(source),
-      builtForCount: source.length,
+      builtForSourceId: params.sourceId,
+      builtForCount: params.sourceCount,
     );
   }
 
@@ -137,7 +120,10 @@ abstract final class SyncPathResolver {
     final sourceCount = source.length;
     if (cached != null && _localEntriesCacheSourceId == sourceId && _localEntriesCacheCount == sourceCount) return Future.value(cached);
 
-    return _localEntriesBuild ??= Isolate.run(() => _buildLocalEntriesSync(source)).then(
+    final building = _localEntriesBuild;
+    if (building != null) return building;
+    final fields = _SyncFingerprintFields.ofLocalTracks(source);
+    return _localEntriesBuild = _buildLocalEntriesSync.thready(fields).then(
       (entries) {
         _localEntriesCache = entries;
         _localEntriesCacheSourceId = sourceId;
@@ -178,17 +164,13 @@ abstract final class SyncPathResolver {
         } catch (_) {}
       }
     }
-    return _buildLocalEntriesSync(source);
+    final fields = _SyncFingerprintFields.ofLocalTracks(source);
+    return _buildLocalEntriesSync(fields);
   }
 
-  static List<List<Object>> _buildLocalEntriesSync(Map<String, TrackExtended> source) {
-    final entries = <List<Object>>[];
-    for (final e in source.entries) {
-      final trExt = e.value;
-      if (trExt.isNetwork) continue;
-      entries.add([e.key, SyncTrackFingerprint.fullOf(trExt), SyncTrackFingerprint.coreOf(trExt)]);
-    }
-    return entries;
+  static List<List<Object>> _buildLocalEntriesSync(_SyncFingerprintFields fields) {
+    final paths = fields.paths;
+    return List<List<Object>>.generate(fields.length, (i) => [paths[i], fields.fullAt(i), fields.coreAt(i)], growable: false);
   }
 
   /// builds & caches the senderPath -> localTrack map for [senderDeviceId],
@@ -301,6 +283,85 @@ abstract final class SyncPathResolver {
       queueSource: twd.queueSource,
       source: twd.sourceNull,
     );
+  }
+}
+
+/// fingerprint fields laid out flat, strings are shared between isolates so sending these costs only pointers.
+class _SyncFingerprintFields {
+  static const _kTextsPerTrack = 9;
+  static const _kNumsPerTrack = 6;
+  static const _kCoreTextsCount = 3;
+  static const _kDurationNumOffset = 5;
+
+  final paths = <String>[];
+  final isVideo = <bool>[];
+  final texts = <String>[];
+  final nums = <int>[];
+
+  _SyncFingerprintFields();
+
+  /// network paths are universal, no matching needed.
+  factory _SyncFingerprintFields.ofLocalTracks(Map<String, TrackExtended> source) {
+    final fields = _SyncFingerprintFields();
+    for (final trExt in source.values) {
+      if (trExt.isNetwork) continue;
+      fields.add(trExt);
+    }
+    return fields;
+  }
+
+  int get length => paths.length;
+
+  /// title, artist & album go first, see [_kCoreTextsCount].
+  void add(TrackExtended tr) {
+    paths.add(tr.path);
+    isVideo.add(tr.isVideo);
+    texts
+      ..add(tr.title)
+      ..add(tr.originalArtist)
+      ..add(tr.originalAlbum)
+      ..add(tr.albumArtist)
+      ..add(tr.originalGenre)
+      ..add(tr.originalMood)
+      ..add(tr.composer)
+      ..add(tr.label)
+      ..add(tr.language);
+    nums
+      ..add(tr.trackNo)
+      ..add(tr.trackTo)
+      ..add(tr.discNo)
+      ..add(tr.discTo)
+      ..add(tr.year)
+      ..add(tr.durationMS ~/ 1000);
+  }
+
+  Track trackAt(int index) => Track.decide(paths[index], isVideo[index]);
+
+  int fullAt(int index) {
+    final b = StringBuffer();
+    final textsStart = index * _kTextsPerTrack;
+    final textsEnd = textsStart + _kTextsPerTrack;
+    for (int i = textsStart; i < textsEnd; i++) {
+      SyncTrackFingerprint._writeText(b, texts[i]);
+    }
+    final numsStart = index * _kNumsPerTrack;
+    final numsEnd = numsStart + _kNumsPerTrack;
+    for (int i = numsStart; i < numsEnd; i++) {
+      SyncTrackFingerprint._writeNum(b, nums[i]);
+    }
+    return SyncTrackFingerprint._fnv1a(b.toString());
+  }
+
+  int coreAt(int index) {
+    final b = StringBuffer();
+    final textsStart = index * _kTextsPerTrack;
+    final textsEnd = textsStart + _kCoreTextsCount;
+    for (int i = textsStart; i < textsEnd; i++) {
+      SyncTrackFingerprint._writeText(b, texts[i]);
+    }
+    final durationIndex = index * _kNumsPerTrack + _kDurationNumOffset;
+    SyncTrackFingerprint._writeNum(b, nums[durationIndex]);
+    return SyncTrackFingerprint._fnv1a(b.toString());
   }
 }
 

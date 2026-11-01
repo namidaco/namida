@@ -38,7 +38,7 @@ class TracksSearchWrapper {
 
   static TracksSearchParams generateParams(
     SendPort sendPort,
-    Iterable<TrackExtended> tracks,
+    Iterable<Track> tracks,
     ListensSortedMap<Track> topTracksMapListens, {
     required List<TrackSearchFilter> filters,
   }) {
@@ -50,31 +50,32 @@ class TracksSearchWrapper {
     final addFolder = filters.contains(TrackSearchFilter.folder);
     final lyricsLocations = addLyrics ? LyricsLocations.fromSettings() : null;
     return (
-      tracks: tracks
-          .map(
-            (e) => (
-              title: e.title,
-              artist: e.originalArtist,
-              album: e.originalAlbum,
-              albumArtist: e.albumArtist,
-              genre: e.originalGenre,
-              style: e.originalStyle,
-              composer: e.composer,
-              multiValues: e.multiValues,
-              year: e.year,
-              comment: e.comment,
-              description: addDescription ? e.description : null,
-              lyrics: addLyrics ? e.lyrics : null,
-              moods: addMoods ? e.effectiveMoods : null,
-              tags: addTags ? e.effectiveTags : null,
-              languages: addLanguages ? e.languagesList : null,
-              networkFolderName: addFolder && e.isNetwork ? e.folderName : null,
-              path: e.path,
-              isVideo: e.isVideo,
-              listensCount: topTracksMapListens[e.asTrack()]?.length,
-            ),
-          )
-          .toFixedList(),
+      tracks: tracks.map(
+        (tr) {
+          final e = tr.toTrackExt();
+          return (
+            title: e.title,
+            artist: e.originalArtist,
+            album: e.originalAlbum,
+            albumArtist: e.albumArtist,
+            genre: e.originalGenre,
+            style: e.originalStyle,
+            composer: e.composer,
+            multiValues: e.multiValues,
+            year: e.year,
+            comment: e.comment,
+            description: addDescription ? e.description : null,
+            lyrics: addLyrics ? e.lyrics : null,
+            moods: addMoods ? e.effectiveMoods : null,
+            tags: addTags ? e.effectiveTags : null,
+            languages: addLanguages ? e.languagesList : null,
+            networkFolderName: addFolder && e.isNetwork ? e.folderName : null,
+            path: e.path,
+            isVideo: e.isVideo,
+            listensCount: topTracksMapListens[tr]?.length,
+          );
+        },
+      ).toFixedList(),
       splitConfig: SplitArtistGenreConfigsWrapper.settings(),
       filters: filters,
       cleanup: settings.enableSearchCleanup.value,

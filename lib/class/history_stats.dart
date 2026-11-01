@@ -270,7 +270,10 @@ class HistoryStatsSnapshot<E> {
   static const heavyRotationCount = 10;
   static const maxObsessionsCount = 50;
 
-  static HistoryStatsSnapshot<E> compute<T extends ItemWithDate, E>({
+  static const _kSliceBudgetMS = 8;
+  static const _kSliceCheckItemsMask = 63;
+
+  static Future<HistoryStatsSnapshot<E>> compute<T extends ItemWithDate, E>({
     required HistoryManager<T, E> history,
     required HistoryStatsResolver<E> resolver,
     required int firstDay,
@@ -280,7 +283,7 @@ class HistoryStatsSnapshot<E> {
     required int totalListenSeconds,
     int topCount = 100,
     int? monthlyTopYear,
-  }) {
+  }) async {
     final map = history.historyMap.value;
     final oldestDay = history.oldestDay;
     if (oldestDay != null && oldestDay > firstDay) firstDay = oldestDay;
@@ -324,10 +327,19 @@ class HistoryStatsSnapshot<E> {
       }
     }
 
+    // -- listens added while yielding would break iterating the live map
+    final daysInRange = <MapEntry<int, List<T>>>[];
     for (final entry in map.entries) {
       final day = entry.key;
       if (day > lastDay) continue;
       if (day < firstDay) break;
+      daysInRange.add(entry);
+    }
+
+    final slice = Stopwatch()..start();
+    for (final entry in daysInRange) {
+      if (slice.elapsedMilliseconds >= _kSliceBudgetMS) await _yieldFrame(slice);
+      final day = entry.key;
       final items = entry.value;
       if (items.isEmpty) continue;
 
@@ -420,7 +432,11 @@ class HistoryStatsSnapshot<E> {
     int oldestFavCount = 0;
     final artistsInRange = <String>{};
 
+    int itemIndex = 0;
     for (final e in counts.entries) {
+      final shouldCheckSlice = (itemIndex & _kSliceCheckItemsMask) == 0;
+      itemIndex++;
+      if (shouldCheckSlice && slice.elapsedMilliseconds >= _kSliceBudgetMS) await _yieldFrame(slice);
       final item = e.key;
       final count = e.value;
 
@@ -701,6 +717,11 @@ class HistoryStatsSnapshot<E> {
       resolver: resolver,
       itemListens: counts,
     );
+  }
+
+  static Future<void> _yieldFrame(Stopwatch slice) async {
+    await Future.delayed(Duration.zero);
+    slice.reset();
   }
 
   /// first index whose value >= [value] in an ascending list.
