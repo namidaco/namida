@@ -313,7 +313,9 @@
   "downloadAddToLocalPlaylist": true,
   "downloadAudioOnly": false,
   "downloadOverrideOldFiles": false,
-  "enablePip": true,
+  "pipContents": [
+    "video"
+  ],
   "pickColorsFromDeviceWallpaper": false,
   "trackItem": {
     "row1Item1": "title",

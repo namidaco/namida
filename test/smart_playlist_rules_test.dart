@@ -312,7 +312,7 @@ void main() {
         addTrack('added_d2', dateAdded: d2.millisecondsSinceEpoch),
         addTrack('added_mid', dateAdded: DateTime(2024, 3, 15).millisecondsSinceEpoch),
         addTrack('added_before', dateAdded: d1.millisecondsSinceEpoch - 1000),
-        addTrack('added_after', dateAdded: d2.millisecondsSinceEpoch + 1000),
+        addTrack('added_after', dateAdded: DateTime(2024, 6, 2).millisecondsSinceEpoch),
         addTrack('added_unknown'),
       ];
       listenedTracks = [
@@ -331,7 +331,7 @@ void main() {
       ];
     });
 
-    test('between and before/after include the exact bounds, outside excludes them', () {
+    test('between and before/after include the whole bound days, outside excludes them', () {
       expect(resolveAmong(dateRule(.isInBetween, .dateAdded, data: d1, data2: d2), addedTracks), {'added_d1', 'added_d2', 'added_mid'});
       expect(resolveAmong(dateRule(.isOutside, .dateAdded, data: d1, data2: d2), addedTracks), {'added_before', 'added_after'});
       expect(resolveAmong(dateRule(.isBefore, .dateAdded, data: d1), addedTracks), {'added_before', 'added_d1'});
@@ -400,17 +400,19 @@ void main() {
       expect(resolveAmong(within.copyWith(filter: .isNotWithinLast), tracks), {'month_before'});
     });
 
-    test('dates with sub millisecond parts compare exactly', () {
+    test('dates with sub millisecond parts compare exactly, a clock covers its whole second', () {
       final listenMS = DateTime.utc(2024, 1, 15, 12).millisecondsSinceEpoch;
       final tracks = [
         addTrack('subms_at', listens: [listenMS]),
         addTrack('subms_next', listens: [listenMS + 1]),
       ];
       final halfAfter = DateTime.fromMicrosecondsSinceEpoch(listenMS * 1000 + 500);
+      final secondBeforeHalfAfter = halfAfter.subtract(const Duration(seconds: 1));
+      final earlier = DateTime.fromMillisecondsSinceEpoch(listenMS - 5000);
       expect(resolveAmong(dateRule(.isAfter, .lastListen, data: halfAfter), tracks), {'subms_next'});
-      expect(resolveAmong(dateRule(.isBefore, .lastListen, data: halfAfter), tracks), {'subms_at'});
-      expect(resolveAmong(dateRule(.isSame, .lastListen, data: halfAfter), tracks), isEmpty);
-      expect(resolveAmong(dateRule(.isInBetween, .lastListen, data: DateTime.fromMillisecondsSinceEpoch(listenMS), data2: halfAfter), tracks), {'subms_at'});
+      expect(resolveAmong(dateRule(.isSame, .lastListen, data: halfAfter), tracks), {'subms_next'});
+      expect(resolveAmong(dateRule(.isBefore, .lastListen, data: secondBeforeHalfAfter), tracks), {'subms_at'});
+      expect(resolveAmong(dateRule(.isInBetween, .lastListen, data: earlier, data2: secondBeforeHalfAfter), tracks), {'subms_at'});
     });
 
     test('any and all listens are decided by the oldest or newest listen', () {

@@ -11,6 +11,8 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   final windows = p.Context(style: p.Style.windows, current: r'C:\cwd');
   final posix = p.Context(style: p.Style.posix, current: '/cwd');
   const otherAppHeader = [
