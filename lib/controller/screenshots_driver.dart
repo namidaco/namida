@@ -19,6 +19,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -196,6 +197,8 @@ class ScreenshotsDriver {
             errors.add('$themeName/$id: $e');
             await _log('error $themeName/$id: $e\n$st');
           } finally {
+            await _releaseHeldSwipe();
+            _restoreScrolledRows();
             await _party.leave();
             _restoreSceneSettings();
           }
@@ -312,6 +315,8 @@ class ScreenshotsDriver {
     final search = ScrollSearchController.inst;
     if (search.isGlobalSearchMenuShown.value) search.toggleSearch(instant: true);
     if (search.searchTextEditingController.text.isNotEmpty) search.resetSearch();
+    // -- the search page opens on the last search type, a youtube search would take the next local one
+    search.currentSearchType.value = SearchType.localTracks;
     SettingsSearchController.inst.closeSearch();
     SelectedTracksController.inst.clearEverything();
     MiniPlayerController.inst.snapToMini(haptic: false);
@@ -522,6 +527,10 @@ class ScreenshotsDriver {
         search.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
         search.searchLocal(query);
         await _hideKeyboard();
+      case 'ytSearch':
+        final query = step['text'] as String? ?? '';
+        ScrollSearchController.inst.openYoutubeSearch(query);
+        await _hideKeyboard();
       case 'select':
         final from = step['from'] as int? ?? 0;
         final to = step['to'] as int? ?? 5;
@@ -577,13 +586,15 @@ class ScreenshotsDriver {
         await _tapText(step, holdMS);
       case 'longPress':
         await _tapText(step, _kLongPressHoldMS);
+      case 'swipe':
+        await _swipe(step);
       case 'scrollTo':
         final element = await _scrollUntilTextBuilt(step);
         final alignment = (step['alignment'] as num?)?.toDouble() ?? 0.15;
         await Scrollable.ensureVisible(element, alignment: alignment);
       case 'scrollBy':
         final pixels = (step['pixels'] as num).toDouble();
-        final position = _findScrollPosition();
+        final position = _findScrollPositionFor(step);
         final target = (position.pixels + pixels).withMaximum(position.maxScrollExtent);
         position.jumpTo(target);
       case 'bookmark':
@@ -832,10 +843,67 @@ class ScreenshotsDriver {
 
   static const _kTapHoldMS = 60;
   static const _kLongPressHoldMS = 800;
+  static const _kSwipeMoveSteps = 12;
+  static const _kSwipeReleaseStillMS = 120;
   int _nextPointer = 1;
+
+  /// a `swipe` stays held through the capture, the scene releases it after.
+  _HeldSwipe? _heldSwipe;
 
   /// taps through the gesture arena directly, no os input is involved.
   Future<void> _tapText(Map<String, dynamic> step, int holdMS) async {
+    final target = _findPointerTarget(step);
+    final position = target.position;
+    final label = step['text'] ?? step['icon'];
+    await _log('tap $label at ${position.dx.round()},${position.dy.round()}');
+    final pointer = _nextPointer++;
+    final downEvent = PointerDownEvent(viewId: target.viewId, pointer: pointer, position: position);
+    GestureBinding.instance.handlePointerEvent(downEvent);
+    await Future.delayed(Duration(milliseconds: holdMS));
+    final upEvent = PointerUpEvent(viewId: target.viewId, pointer: pointer, position: position);
+    GestureBinding.instance.handlePointerEvent(upEvent);
+  }
+
+  /// drags the text or icon horizontally by `dx` and keeps holding it, so the capture shows the swipe midway.
+  Future<void> _swipe(Map<String, dynamic> step) async {
+    final target = _findPointerTarget(step);
+    final dx = (step['dx'] as num).toDouble();
+    final label = step['text'] ?? step['icon'];
+    await _log('swipe $label by ${dx.round()}');
+    final pointer = _nextPointer++;
+    final downEvent = PointerDownEvent(viewId: target.viewId, pointer: pointer, position: target.position);
+    GestureBinding.instance.handlePointerEvent(downEvent);
+    final position = await _movePointer(target.viewId, pointer, target.position, Offset(dx, 0.0));
+    _heldSwipe = (pointer: pointer, viewId: target.viewId, start: target.position, position: position);
+  }
+
+  /// one move per frame, so the drag recognizer wins the arena and the dragged widget follows like a finger.
+  Future<Offset> _movePointer(int viewId, int pointer, Offset from, Offset offset) async {
+    final delta = offset / _kSwipeMoveSteps.toDouble();
+    var position = from;
+    for (var i = 0; i < _kSwipeMoveSteps; i++) {
+      position += delta;
+      final moveEvent = PointerMoveEvent(viewId: viewId, pointer: pointer, position: position, delta: delta);
+      GestureBinding.instance.handlePointerEvent(moveEvent);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    return position;
+  }
+
+  /// back to where it started and still for a moment before lifting, so the swipe settles without running its action.
+  Future<void> _releaseHeldSwipe() async {
+    final heldSwipe = _heldSwipe;
+    if (heldSwipe == null) return;
+    _heldSwipe = null;
+    final backOffset = heldSwipe.start - heldSwipe.position;
+    await _movePointer(heldSwipe.viewId, heldSwipe.pointer, heldSwipe.position, backOffset);
+    await Future.delayed(const Duration(milliseconds: _kSwipeReleaseStillMS));
+    final upEvent = PointerUpEvent(viewId: heldSwipe.viewId, pointer: heldSwipe.pointer, position: heldSwipe.start);
+    GestureBinding.instance.handlePointerEvent(upEvent);
+  }
+
+  /// the center of a step's `text` or `icon`, where its pointer events land.
+  _PointerTarget _findPointerTarget(Map<String, dynamic> step) {
     final isIcon = step.containsKey('icon');
     final element = isIcon ? _findIconElement(step) : _findTextElement(step, onlyHittable: true);
     final renderObject = element.renderObject;
@@ -843,14 +911,7 @@ class ScreenshotsDriver {
     final center = renderObject.size.center(Offset.zero);
     final position = renderObject.localToGlobal(center);
     final viewId = View.of(element).viewId;
-    final label = step['text'] ?? step['icon'];
-    await _log('tap $label at ${position.dx.round()},${position.dy.round()}');
-    final pointer = _nextPointer++;
-    final downEvent = PointerDownEvent(viewId: viewId, pointer: pointer, position: position);
-    GestureBinding.instance.handlePointerEvent(downEvent);
-    await Future.delayed(Duration(milliseconds: holdMS));
-    final upEvent = PointerUpEvent(viewId: viewId, pointer: pointer, position: position);
-    GestureBinding.instance.handlePointerEvent(upEvent);
+    return (position: position, viewId: viewId);
   }
 
   Element _findTextElement(Map<String, dynamic> step, {required bool onlyHittable}) {
@@ -927,6 +988,29 @@ class ScreenshotsDriver {
   /// the topmost scrollable big enough to be a page or a dialog's list, small ones are chips rows and text fields.
   ScrollPosition _findScrollPosition() => _findPageScrollable().position;
 
+  /// rows a scene scrolled go back after its capture, a kept alive page would show them scrolled in the next scenes.
+  final _scrolledRows = <_ScrolledRow>[];
+
+  /// the page, or with `within` the list holding that text (like a horizontal row on the page).
+  ScrollPosition _findScrollPositionFor(Map<String, dynamic> step) {
+    final rowText = step['within'] as String?;
+    if (rowText == null) return _findScrollPosition();
+    final anchorStep = {'text': rowText};
+    final anchor = _findTextElement(anchorStep, onlyHittable: true);
+    final row = Scrollable.maybeOf(anchor);
+    if (row == null) throw StateError('no list holds $rowText');
+    _scrolledRows.add((row: row, pixels: row.position.pixels));
+    return row.position;
+  }
+
+  void _restoreScrolledRows() {
+    for (final scrolledRow in _scrolledRows.reversed) {
+      final row = scrolledRow.row;
+      if (row.mounted) row.position.jumpTo(scrolledRow.pixels);
+    }
+    _scrolledRows.clear();
+  }
+
   _PageScrollable _findPageScrollable() {
     final matches = _collectVisibleElements((element) => element is StatefulElement && element.state is ScrollableState);
     for (final element in matches.reversed) {
@@ -977,9 +1061,10 @@ class ScreenshotsDriver {
     return smartPlaylists.firstWhereEff((e) => e.value.name == name) ?? smartPlaylists.firstOrNull;
   }
 
+  /// roles name songs, a loop video tagged like its song never stands in for it.
   Track? _findTrack(String? title) {
     if (title == null) return null;
-    return allTracksInLibrary.firstWhereEff((e) => e.title == title);
+    return allTracksInLibrary.firstWhereEff((e) => e is! Video && e.title == title);
   }
 
   Track _resolveTrack(Map<String, dynamic> step) {
@@ -1051,8 +1136,11 @@ class ScreenshotsDriver {
     await _playTracks(step, tracks, source);
   }
 
+  /// a named track missing from the library fails the scene, any other track would be shot in its place.
   Future<void> _playTracks(Map<String, dynamic> step, List<Track> tracks, QueueSource source) async {
-    final track = _findTrack(step['track'] as String?);
+    final trackTitle = step['track'] as String?;
+    final track = _findTrack(trackTitle);
+    if (trackTitle != null && track == null) throw StateError('no track titled $trackTitle');
     final trackIndex = track == null ? -1 : tracks.indexOf(track);
     final stepIndex = step['index'] as int? ?? 0;
     final index = trackIndex >= 0 ? trackIndex : stepIndex;
@@ -1147,3 +1235,6 @@ typedef _SettingsValues = ({String? file, Map<String, dynamic> values});
 typedef _CaptureRegions = ({List<_CaptureRegion> tiles, List<_CaptureRegion> texts});
 typedef _TallPage = ({double windowHeight, RenderObject page});
 typedef _PageScrollable = ({ScrollPosition position, RenderBox box});
+typedef _PointerTarget = ({Offset position, int viewId});
+typedef _HeldSwipe = ({int pointer, int viewId, Offset start, Offset position});
+typedef _ScrolledRow = ({ScrollableState row, double pixels});

@@ -115,6 +115,8 @@ PLAYLIST_TAGS = {
 }
 # -- the lyrics of these never show up
 LYRICS_EXCLUDED_TITLES = {'Paranoid (feat. Izzy Bizu)'}
+# -- local videos come along only as loop clips, the music videos come from the youtube cache
+LOOP_VIDEO_MAX_SECONDS = 30
 LIBRARY_TABS = ['home', 'tracks', 'history', 'genres', 'playlists', 'folders', 'youtube']
 # -- the 2023 readme's recent listens, newest first, when there is no `screenshots recent` playlist
 RECENT_LISTENS_TITLES = ['Nightfall', "Everybody's Scared", 'One & Only', 'Zombie Step']
@@ -407,7 +409,7 @@ def write_vorbis_tags(path: Path, tags: dict):
 
 def write_tags(path: Path, tags: dict):
     extension = path.suffix.lower()
-    if extension == '.m4a':
+    if extension in ('.m4a', '.mp4'):
         write_mp4_tags(path, tags)
     elif extension == '.mp3':
         write_id3_tags(path, tags)
@@ -433,6 +435,38 @@ def collect_video(youtube_id: str, source_videos_dir: Path, videos_dir: Path) ->
     dest = videos_dir / best.name
     copy_whole(best, dest)
     return dest
+
+
+def find_source_videos(source: Path, android_root: str | None, drives: dict) -> dict:
+    # -- every video in the source's scanned folders by its matching key, servers left out
+    source_settings = read_json(source / 'namida_settings.json')
+    videos = {}
+    for directory in source_settings.get('directoriesToScan', []):
+        if 'type' in directory:
+            continue
+        local_dir = resolve_source_path(directory['source'], android_root, drives)
+        if local_dir is None:
+            continue
+        for video in local_dir.rglob('*.mp4'):
+            video_key = matching_key_of(video.stem)
+            videos[video_key] = video
+    return videos
+
+
+# -- namida's local video matching ignores symbols, whitespace and case
+def matching_key_of(name: str) -> str:
+    return NON_ALNUM_REGEX.sub('', name).lower()
+
+
+def find_loop_video(source_file: Path, source_videos: dict) -> Path | None:
+    filename_key = matching_key_of(source_file.stem)
+    for video_key, video in source_videos.items():
+        if filename_key not in video_key:
+            continue
+        media = MutagenFile(video)
+        if media is not None and media.info.length <= LOOP_VIDEO_MAX_SECONDS:
+            return video
+    return None
 
 
 # -- the artists tab shows last.fm photos, runs are offline so only the user's cached ones can show
@@ -640,8 +674,10 @@ def cmd_music(args):
     lyrics_dir.mkdir(parents=True, exist_ok=True)
     source_videos_dir = source / 'Videos'
     source_lyrics_dir = source / 'Lyrics'
+    source_videos = find_source_videos(source, args.android_root, drives)
     kept_files = set()
     library = []
+    loop_videos = []
     for album in albums:
         album_items = album['items']
         album_dir = music_dir / safe_filename(album['albumArtist']) / safe_filename(album['name'])
@@ -689,6 +725,15 @@ def cmd_music(args):
                 'comment': f'https://www.youtube.com/watch?v={youtube_id}' if youtube_id else '',
             }
             write_tags(dest, tags)
+            loop_video = find_loop_video(source_file, source_videos)
+            if loop_video is not None:
+                # -- next to its track and named after it so namida matches it, tagged like it so the library files it
+                # -- under the same song instead of an unknown one
+                loop_dest = album_dir / f'{dest.name}{loop_video.suffix.lower()}'
+                copy_whole(loop_video, loop_dest)
+                write_tags(loop_dest, tags)
+                kept_files.add(loop_dest)
+                loop_videos.append(loop_dest)
             audio = MutagenFile(dest)
             duration_ms = int(audio.info.length * 1000)
             relative_path = dest.relative_to(music_dir).as_posix()
@@ -702,9 +747,14 @@ def cmd_music(args):
     pinned_paths = [item['relativePath'] for item in placement_items['tracks']]
     ranked_paths = [item['relativePath'] for item in sorted(items, key=lambda item: item['rank'])]
     newest_modified = time.time()
-    for index, relative_path in enumerate(dict.fromkeys([*pinned_paths, *ranked_paths])):
+    modified_order = list(dict.fromkeys([*pinned_paths, *ranked_paths]))
+    for index, relative_path in enumerate(modified_order):
         modified = newest_modified - index * TRACK_MODIFIED_GAP_SECONDS
         os.utime(music_dir / relative_path, (modified, modified))
+    # -- loop videos sort after every track
+    loop_videos_modified = newest_modified - len(modified_order) * TRACK_MODIFIED_GAP_SECONDS
+    for loop_video in loop_videos:
+        os.utime(loop_video, (loop_videos_modified, loop_videos_modified))
 
     prune_dir(music_dir, kept_files)
     prune_dir(lyrics_dir, kept_files)
@@ -725,7 +775,7 @@ def cmd_music(args):
     write_json(work / 'library.json', {'musicDir': str(music_dir), 'tracks': library, 'playlists': playlists, 'placement': placement})
     videos_count = sum(1 for _ in videos_dir.iterdir())
     lyrics_count = sum(1 for _ in lyrics_dir.iterdir())
-    print(f'{len(library)} tracks in {len(albums)} albums, {videos_count} cached videos, {lyrics_count} lyrics, {artist_artworks_count} artist photos -> {music_dir}')
+    print(f'{len(library)} tracks in {len(albums)} albums, {videos_count} cached videos, {len(loop_videos)} loop videos, {lyrics_count} lyrics, {artist_artworks_count} artist photos -> {music_dir}')
 
 
 def days_since_1970(date: datetime.date) -> int:
