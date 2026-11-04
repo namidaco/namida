@@ -1,0 +1,55 @@
+name: readme_badges
+
+# -- redraws the README badge chips with fresh numbers and publishes them on this repo's GitHub Pages,
+# -- so the README links to fixed urls and nothing gets committed
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/gen_readme_badges.py
+      - scripts/gen_readme_cards.py
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: readme_badges
+  cancel-in-progress: true
+
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            scripts
+            assets/fonts
+            lib/core/icon_fonts
+            some stuff/summaries/brands
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Draw badges
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install fonttools uharfbuzz
+          python scripts/gen_readme_badges.py site/badges
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

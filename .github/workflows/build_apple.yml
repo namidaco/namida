@@ -96,7 +96,7 @@ jobs:
           }
 
           package_app() {
-            local app="$1" name="Namida-macos-$2-$VERSION_NAME" stage="dmg_stage_$2"
+            local app="$1" name="Namida-v$VERSION_NAME-macos-$2" stage="dmg_stage_$2"
             mkdir -p "$stage"
             ditto "$app" "$stage/Namida.app"
             ln -s /Applications "$stage/Applications"
@@ -202,7 +202,7 @@ jobs:
       # -- sideloading tools keep the entitlements they find in the signature, an unsigned app would lose its app group
       - name: Package ipa
         env:
-          IPA_NAME: Namida-ios-${{ steps.setup.outputs.version-name }}.ipa
+          IPA_NAME: Namida-v${{ steps.setup.outputs.version-name }}-ios.ipa
         run: |
           APP="build/ios/iphoneos/Runner.app"
           WIDGETS="$APP/PlugIns/NamidaWidgets.appex"

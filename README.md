@@ -2,7 +2,7 @@
 
 # <div style="margin-right: 18px; margin-top: 18px; display:flex; vertical-align: middle; align-items: center; max-width: 100%;"><img src="assets/namida_icon.png" width="82" style="margin-right: 18px;">Namida</div>
 
-A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
+A Beautiful and Feature-rich Music & Video Player with YouTube Support, Built in Flutter
 
 <a href="https://namida.app">![](https://img.shields.io/badge/-Website-%23463e35)
 </a>
@@ -12,63 +12,75 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 </a>
 <a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk&logo=telegram&logoColor=white)
 </a>
-<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT&logo=discord&logoColor=white)
+<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/discord/1156253663803740271?label=Discord&logo=discord&logoColor=white&color=7B55C1)
 </a>
-<a href="https://github.com/namidaco/namida/releases">
-![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
+<a href="#installation">![](https://img.shields.io/badge/Platforms-Android_%7C_Windows_%7C_Linux_%7C_macOS_%7C_iOS-slateblue)
+</a><br>
+<a href="https://github.com/namidaco/namida/releases/latest">![](https://img.shields.io/github/v/release/namidaco/namida?label=Stable)
+</a>
+<a href="https://github.com/namidaco/namida-snapshots/releases/latest">![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fnamidaco.github.io%2Fnamida-snapshots%2Faltstore-source.json&query=%24.apps%5B0%5D.versions%5B0%5D.version&label=Beta&prefix=v&color=f5a623)
+</a>
+<a href="https://github.com/namidaco/namida/commits/main">![](https://img.shields.io/github/commits-since/namidaco/namida/latest?label=Commits%20since%20stable)
+</a>
+<a href="https://github.com/namidaco/namida/commits/main">![](https://img.shields.io/github/last-commit/namidaco/namida?label=Last%20commit)
+</a>
+<a href="https://aur.archlinux.org/packages/namida-bin">![](https://img.shields.io/aur/version/namida-bin?logo=archlinux&label=AUR)
+</a>
+<a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida">![](https://img.shields.io/winget/v/namidaco.Namida?label=winget)
+</a><br>
+<a href="https://github.com/namidaco/namida/stargazers">![](https://img.shields.io/github/stars/namidaco/namida?style=flat&logo=github&label=Stars)
+</a>
+<a href="https://github.com/namidaco/namida/releases">![](https://img.shields.io/github/downloads/namidaco/namida/total?label=Downloads)
+</a>
+<a href="https://github.com/namidaco/namida-snapshots/releases">![](https://img.shields.io/github/downloads/namidaco/namida-snapshots/total?label=Beta%20downloads)
+</a>
+<a href="https://github.com/namidaco/namida/issues?q=is%3Aissue+is%3Aclosed">![](https://img.shields.io/github/issues-closed/namidaco/namida?label=Issues)
+</a>
+<a href="https://hitsofcode.com/github/namidaco/namida/view?branch=main">![](https://hitsofcode.com/github/namidaco/namida?branch=main)
 </a>
 <a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
 </a>
-<a href="https://github.com/namidaco/namida/releases">
-[![Hits-of-Code](https://hitsofcode.com/github/namidaco/namida?branch=main)](https://hitsofcode.com/github/namidaco/namida/view?branch=main)
-</a>
-<a href="https://github.com/namidaco/namida/releases">
-[![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/namidaco/namida/badge?style=flat&logo=dart&logoColor=aqua&label=Total%20Lines&color=darkturquoise)](https://ghloc.vercel.app/namidaco/namida?branch=main)
-</a>
 
-<div>
-  <a href="https://github.com/namidaco/namida/releases/latest">
-    <img src="./some stuff/badge_github.png" height="50">
-  </a>
-  &nbsp;
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
-    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50">
-  </a>
-</div>
+Don't forget to 🌟 star the repo if you like the project ^^
 
-# Documentation
+# Intro
 
-New to Namida or want to discover more? **[Checkout the docs here](https://docs.namida.app)**
+New to Namida? Take the [tour](https://docs.namida.app/tour/) for a quick look at the main features. Everything else is in the [docs](https://docs.namida.app)
 
-# Sections:
+<a href="#installation"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/installation_dark.svg"><img src="./some%20stuff/summaries/installation_light.svg" width="159" align="absmiddle" alt="Download"></picture></a>
+<a href="https://docs.namida.app/tour/"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/docs_tour_dark.svg"><img src="./some%20stuff/summaries/docs_tour_light.svg" width="121" align="absmiddle" alt="Take the tour"></picture></a>
+<a href="https://docs.namida.app/#quickstart"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/docs_quickstart_dark.svg"><img src="./some%20stuff/summaries/docs_quickstart_light.svg" width="163" align="absmiddle" alt="Quickstart"></picture></a>
+<a href="https://docs.namida.app/screens/"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/docs_screens_dark.svg"><img src="./some%20stuff/summaries/docs_screens_light.svg" width="178" align="absmiddle" alt="Screens map"></picture></a>
 
-- [Documentation](#documentation)
+# Sections
+
 - [Features](#-features)
   - [Library \& Indexing](#library--indexing)
   - [Look \& Feel](#look--feel)
   - [Sound](#sound)
-  - [Streaming & Youtube](#streaming--youtube)
+  - [Streaming & YouTube](#streaming--youtube)
+  - [Video Integration](#video-integration)
   - [System Integration](#system-integration)
   - [Others](#others)
   - [Some additional cool features](#some-additional-cool-features)
-- [Video Integration](#video-integration)
 - [Screenshots](#screenshots)
-- [Usage Preview](#usage-preview)
+  - [Usage Preview](#usage-preview)
 - [Installation](#installation)
-- [Companion Apps](#companion-apps)
-- [Permission Note](#permission-note)
-- [Special Thanks](#special-thanks)
-- [Translate](#translate)
-- [Contribute](#contribute)
+  - [Android Permissions](#permission-note)
+- [Translate & Contribute](#translate--contribute)
+- [Community](#community)
+  - [Companion Apps](#companion-apps)
 - [Donate](#donate)
-- [Social](#social)
+- [Special Thanks](#special-thanks)
 - [LICENSE](#license)
 
 # 🎉 Features
 
-- Everything you might expect from a music player, in addition to the following:
+Everything you might expect from a music player, in addition to the following:
 
-## Library & Indexing
+<a name="library--indexing"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/library_indexing_dark.svg"><img src="./some%20stuff/summaries/library_indexing_light.svg" width="435" align="absmiddle" alt="Library &amp; Indexing"></picture></summary>
 
 - Powerful Indexer & Tag Editor, powered by `taglib`.
 - Artists & Genres Separators.
@@ -76,7 +88,11 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Folders-based Library, with excluded folders.
 - Sort by almost any track or album property.
 
-## Look & Feel
+</details>
+
+<a name="look--feel"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/look_feel_dark.svg"><img src="./some%20stuff/summaries/look_feel_light.svg" width="435" align="absmiddle" alt="Look &amp; Feel"></picture></summary>
 
 - Material3-like Theme with Dynamic Colors from the current artwork.
 - Home, Tracks, Albums, Artists, Genres, Playlists, Folders & Queues Pages, plus cool ones like Most Played, Moods, Tags, Ratings, Languages, Stats & more.
@@ -84,7 +100,11 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Visualizers, Animated Backgrounds & Custom Wallpapers. <sub><code>new</code></sub>
 - Lots of customizations (check out [customization section](#customization-settings)).
 
-## Sound
+</details>
+
+<a name="sound"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/sound_dark.svg"><img src="./some%20stuff/summaries/sound_light.svg" width="435" align="absmiddle" alt="Sound"></picture></summary>
 
 - Parametric Equalizer with AutoEQ import. <sub><code>new</code></sub>
 - Bit-perfect Playback, USB DAC Direct Access, Exclusive Mode (desktop) & 32-bit float audio. <sub><code>new</code></sub>
@@ -96,64 +116,43 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Per-track Speed, Pitch, Volume & Equalizer, and Sound Presets to switch them all at once. <sub><code>new</code></sub>
 - Replay Gain support (Normalize loudness between tracks)
 
-## Streaming & Youtube
+</details>
+
+<a name="streaming--youtube"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/streaming_youtube_dark.svg"><img src="./some%20stuff/summaries/streaming_youtube_light.svg" width="435" align="absmiddle" alt="Streaming &amp; YouTube"></picture></summary>
 
 - Best Video & Audio Quality, Audio Only & Data Saver Mode.
 - Sign in with Multiple Profiles, get your Feed, Subscriptions, Playlists & Notifications.
 - Multi Library (Local/YT/Subsonic/Jellyfin/WebDAV/SMB) & Offline Caching for Servers. <sub><code>new</code></sub>
 - Video View with [gestures](https://docs.namida.app/features/youtube/#video-view) for volume, brightness, seeking, fullscreen, speed up & more.
-- SponsorBlock, Return Youtube Dislike, Segments & Heatmap.
+- SponsorBlock, Return YouTube Dislike, Segments & Heatmap.
 - Subtitles & Captions.
 - Downloads, Caching & Offline Playback, with a Cache Priority System.
 - Split Downloads by Chapters & Remove Sponsor Segments. <sub><code>new</code></sub>
 - Downloads Tags config & Filename builder (similar to yt-dlp).
 - Auto title/artist/album extraction from video titles, for downloads & scrobbling.
 
-<details>
-
-<summary>Available formats & example</summary>
-
-- Formats:
-  - `video_id`, `id`: video identifier
-  - `video_url`, `url`: video full url (https://www.youtube.com/watch?v=`id`)
-  - `video_title`, `fulltitle`: video full title
-  - `title`: extracted music title from video title (_Navjaxx - **<ins>Fading Light</ins>** (Slowed)_)
-  - `artist`: extracted music artist from video title (**\*<ins>Navjaxx</ins>** - Fading Light (Slowed)\*) or else `channel`
-  - `genre`: music genre. automatically set to **_Nightcore_** when the video title contains "nightcore".
-  - `ext`: format container extension (mp4, m4a, webm). this is not necessary as it would be added automatically
-  - `channel_fulltitle`: channel full name
-  - `channel`, `uploader`: channel name (excluding ` - Topic`)
-  - `channel_id`, `uploader_id`: channel id
-  - `channel_url`, `uploader_url`: channel url
-  - `timestamp`: UNIX timestamp of the video (milliseconds since epoch)
-  - `upload_date`: upload date of the video, converted to local time (yyyyMMdd)
-  - `view_count`: view count of the video
-  - `like_count`: like count of the video
-  - `description`: video description. links are wrapped in a markdown style
-  - `duration`: video duration in seconds (204)
-  - `duration_string`: video duration formatted (3:24)
-  - `playlist_title`: title of the playlist containing the video
-  - `playlist_id`: id of the playlist containing the video
-  - `playlist`: `playlist_title` if available or else `playlist_id`
-  - `playlist_count`: total videos count in the playlist
-  - `playlist_index`: index of the video in the playlists (starts at 0)
-  - `playlist_autonumber`: position of the video in the playlists (starts at 1)
-  - `none`: empty field. useful for tags to override any other settings
-
-- Example:
-
-```bash
-# [04] music title [(channel name)]
-[%(playlist_autonumber)s] %(title)s [(%(channel)s)]
-
-# saving to separate folders
-# music playlist/02. music title.m4a
-%(playlist)s/%(playlist_autonumber)s. %(title)s.%(ext)s
-```
+<a href="https://docs.namida.app/features/youtube/#filename-formats"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_formats_dark.svg"><img src="./some%20stuff/summaries/yt_formats_light.svg" width="239" align="absmiddle" alt="Available formats &amp; example"></picture></a>
 
 </details>
 
-## System Integration
+<a name="video-integration"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_integration_dark.svg"><img src="./some%20stuff/summaries/video_integration_light.svg" width="435" align="absmiddle" alt="Video Integration"></picture></summary>
+
+- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube
+
+<a href="https://docs.namida.app/guides/medium/#link-local-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_local_dark.svg"><img src="./some%20stuff/summaries/video_local_light.svg" width="149" align="absmiddle" alt="How locally?"></picture></a>
+<a href="https://docs.namida.app/guides/medium/#link-yt-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_youtube_dark.svg"><img src="./some%20stuff/summaries/video_youtube_light.svg" width="158" align="absmiddle" alt="How youtube?"></picture></a>
+
+- Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
+
+</details>
+
+<a name="system-integration"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/system_integration_dark.svg"><img src="./some%20stuff/summaries/system_integration_light.svg" width="435" align="absmiddle" alt="System Integration"></picture></summary>
 
 - Home Screen Widget & Quick Settings Tiles.
 - Android Auto & Wear OS. <sub><code>new</code></sub>
@@ -161,7 +160,11 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Desktop: System Tray, Keyboard Shortcuts, System Wide Hotkeys & Floating Lyrics Window.
 - Now Playing Broadcasts & Webhook for Tasker, scripts & scrobblers. <sub><code>new</code></sub>
 
-## Others:
+</details>
+
+<a name="others"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/others_dark.svg"><img src="./some%20stuff/summaries/others_light.svg" width="435" align="absmiddle" alt="Others"></picture></summary>
 
 - Lyrics fetching & displaying (Synced, Plain & Word Synced lrc/ttml), and an Editor to sync them yourself. <sub><code>new</code></sub>
 - Smart Playlists with flexible rules, usable in search too.
@@ -179,7 +182,11 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Folder images (`cover.jpg` etc) & `.info.txt` for small info.
 - Sleep Timer (Tracks or Minutes) & Pausing Scenarios (calls, notifications, volume 0, etc).
 
-## Some additional cool features:
+</details>
+
+<a name="some-additional-cool-features"></a>
+<details open>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/cool_features_dark.svg"><img src="./some%20stuff/summaries/cool_features_light.svg" width="435" align="absmiddle" alt="Some additional cool features"></picture></summary>
 
 - Smort Tracks Generation: uuh.. with dis advanced algorithm brought for you, generate tracks u often listened to alongside the current one. also by release date, time range, ratings, moods, or randomly.
 - Lost Memories: meet tracks you listened to around this time, but n years ago.
@@ -193,47 +200,7 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - <p>LASTFM, SPOTIFY & LISTENBRAINZ TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - decent amount of options/customizations in settings & dialogs, make sure to check them out ^^
 
-# Video Integration
-
-- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube
-
-<details>
-<summary>
-
-###### How locally?
-
-</summary>
-typically looks (inside the folders you specificed) for any matching title, matching goes as following:
-<br>
--- Alan walker - Faded.m4a
-<br>
--- video alAn WaLkER - faDed (480p).mp4
-<br>
-the video filename should contain at least one of the following:
- <br>
-   1. the music filename as shown above.
- <br>
-   2. title & first artist of the track.
- <br>
-   3. track youtube id (in track comment tag/filename, see "#How youtube?" section below).
-<br>
-note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
 </details>
-
-<details>
-<summary>
-
-###### How youtube?
-
-</summary>
-
-- looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
-  - for comment tag, any url format should get matched normally (example: `https://youtu.be/video_id`).
-  - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
-
-</details>
-
-- Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
 
 # Screenshots
 
@@ -244,21 +211,14 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_dark_1.webp" class="imgbr"/>
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_dark_2.webp" class="imgbr"/>
 
+<a name="customization-settings"></a>
 <details>
-  <summary>
-
-### Customization Settings
-
-  </summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/customization_dark.svg"><img src="./some%20stuff/summaries/customization_light.svg" width="435" align="absmiddle" alt="Customization Settings"></picture></summary>
     <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_customization.webp" class="imgbr" width="50%">
 </details>
 
 <details>
-  <summary>
-
-### All Settings
-
-  </summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/all_settings_dark.svg"><img src="./some%20stuff/summaries/all_settings_light.svg" width="435" align="absmiddle" alt="All Settings"></picture></summary>
 
 <table>
   <tr><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_theme.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_indexer.webp" class="imgbr"/></td></tr>
@@ -269,20 +229,12 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 </details>
 
 <details>
-  <summary>
-
-### YouTube Miniplayer
-
-  </summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_miniplayer_dark.svg"><img src="./some%20stuff/summaries/yt_miniplayer_light.svg" width="435" align="absmiddle" alt="YouTube Miniplayer"></picture></summary>
     <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/manual/yt_miniplayer.jpg" class="imgbr" width="50%">
 </details>
 
 <details>
-  <summary>
-
-### 2023 Screenshots
-
-  </summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/screenshots_2023_dark.svg"><img src="./some%20stuff/summaries/screenshots_2023_light.svg" width="435" align="absmiddle" alt="2023 Screenshots"></picture></summary>
 
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_1.jpg" class="imgbr"/>
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_2.jpg" class="imgbr"/>
@@ -292,13 +244,15 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/yt_miniplayer.png" class="imgbr" width="50%">
 
 </details>
-<br>
 
-### Usage Preview
+<details open>
+<summary><a name="usage-preview"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/usage_preview_dark.svg"><img src="./some%20stuff/summaries/usage_preview_light.svg" width="435" align="absmiddle" alt="Usage Preview"></picture></summary>
 
 | Animating Thumbnail | Recommends & Listens |
 | --- | --- |
 | <video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> | <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4"> |
+
+</details>
 
 # Installation
 
@@ -310,48 +264,40 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
   <th><div align="center">Platform</div></th>
   <th><div align="center">Stable</div></th>
   <th><div align="center">Beta</div></th>
+  <th><div align="center">Guide</div></th>
 </tr>
 
 <tr>
 <td align="center"><b>Android</b></td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida/releases/latest">
-      <img src="./some stuff/badge_github.png" height="50">
-    </a>
-    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
-      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
-    </a>
+    <a href="https://github.com/namidaco/namida/releases/latest"><img src="./some stuff/badge_github.png" height="50"></a>
+    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/"><img src="./some stuff/badge_obtainium.png" height="50" style="margin-top:8px;"></a>
   </div>
 </td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
-      <img src="./some stuff/badge_github.png" height="50">
-    </a>
-    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/">
-      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
-    </a>
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
+    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/"><img src="./some stuff/badge_obtainium_beta.png" height="50" style="margin-top:8px;"></a>
   </div>
 </td>
+<td align="center"><a href="https://docs.namida.app/installation/#android-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>
 </tr>
 
 <tr>
 <td align="center"><b>Windows</b></td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida/releases/latest">
-      <img src="./some stuff/badge_github.png" height="50">
-    </a>
+    <a href="https://github.com/namidaco/namida/releases/latest"><img src="./some stuff/badge_github.png" height="50"></a>
+    <a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida"><img src="./some%20stuff/summaries/pm_winget.svg" height="50" alt="winget"></a>
   </div>
 </td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
-      <img src="./some stuff/badge_github.png" height="50">
-    </a>
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
   </div>
 </td>
+<td align="center"><a href="https://docs.namida.app/installation/#windows-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>
 </tr>
 
 <tr>
@@ -359,72 +305,49 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 <td align="center"><i>Soon</i></td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
-      <img src="./some stuff/badge_github.png" height="50">
-    </a>
-    <a href="#linux-installation"><sub>Installation steps ↓</sub></a>
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
+    <a href="https://aur.archlinux.org/packages/namida-bin"><img src="./some%20stuff/summaries/pm_aur.svg" height="50" alt="AUR"></a>
   </div>
 </td>
+<td align="center"><a href="https://docs.namida.app/installation/#linux-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>
+</tr>
+
+<tr>
+<td align="center"><b>macOS</b> <sub><code>new</code></sub></td>
+<td align="center"><i>Soon</i></td>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
+  </div>
+</td>
+<td align="center"><a href="https://docs.namida.app/installation/#apple-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>
+</tr>
+
+<tr>
+<td align="center"><b>iOS</b> <sub><code>new</code></sub></td>
+<td align="center"><i>Soon</i></td>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
+    <a href="https://namidaco.github.io/namida-snapshots/altstore-source.json"><img src="./some%20stuff/summaries/pm_altstore.svg" height="50" alt="AltStore"></a>
+  </div>
+</td>
+<td align="center"><a href="https://docs.namida.app/installation/#apple-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>
 </tr>
 
 </table>
 
 </div>
 
-### Linux Installation
+Full installation steps for every platform (which file to pick, dependencies and updates) are in the [docs](https://docs.namida.app/installation/).
 
-1. **Install Dependencies**
+> [!WARNING]
+> Namida is only available through [namida.app](https://namida.app), GitHub & Telegram.
+> We are not responsible for downloads from other sources.
 
-> [!IMPORTANT]
-> Install dependencies: **mpv** for playback
-> (you may skip this if you used a package manager)
->
-> ```bash
-> sudo pacman -S mpv            # Arch/Manjaro
-> sudo apt install mpv libmpv2  # Debian/Ubuntu/Mint
-> sudo dnf install mpv mpv-libs # Fedora/RHEL
-> ```
-
-> [!NOTE]
-> (Optional) Install **webkit2gtk** for youtube login & poToken
->
-> ```bash
-> sudo pacman -S webkit2gtk-4.1          # Arch/Manjaro
-> sudo apt install libwebkit2gtk-4.1-0   # Debian/Ubuntu/Mint
-> sudo dnf install webkit2gtk4.1         # Fedora/RHEL
-> ```
-
-2. **Install Namida**
-
-```bash
-# Quick Install
-curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/install_linux_tar.sh | sudo bash
-
-# Package managers
-yay -Sy namida-bin                  # AUR (Arch Linux)
-paru -Sy namida-bin                 # AUR (Arch Linux)
-sudo apt install ./namida.deb   # Debian/Ubuntu (download .deb from beta releases)
-sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
-
-# Nix (Home Manager) Installation
-# Available at: https://codeberg.org/iWisp360/namida-nix
-```
-
-### Companion Apps:
-
-> [!TIP]
-> **Community-built tools for an enhanced namida experience**
->
-> - 🔄 [Namida Sync](https://github.com/010101-sans/namida_sync), a tool for syncing namida backups & files across android, windows and linux
->   - by [@010101-sans](https://github.com/010101-sans)
-> - 📊 [Namida Charts](https://github.com/DiWu17/namida_history_app), a companion app that shows yearly, monthly & more listening stats with charts based on namida history
->   - by [@DiWu17](https://github.com/DiWu17)
-> - 🎁 [Namida Wrapped](https://namida-wrapped.vercel.app), a local web ui for generating spotify wrapped-style stats
->   - by [@bebrriko](https://github.com/bebrriko)
-
-### Permission Note:
-
-#### The permissions namida uses and why:
+<a name="permission-note"></a>
+<details>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/permissions_dark.svg"><img src="./some%20stuff/summaries/permissions_light.svg" width="435" align="absmiddle" alt="Android Permissions"></picture></summary>
 
 > - `WAKE_LOCK` & `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_MEDIA_PLAYBACK`: keep app alive for media playback.
 > - `INTERNET`: for many stuff like artist/album images, streaming & downloading, etc.
@@ -449,7 +372,50 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 > - `WRITE_SETTINGS` (requested when needed): to set audio as ringtone/etc.
 > - `QUERY_ALL_PACKAGES`: to allow opening custom equalizer apps.
 
-### Special Thanks:
+</details>
+
+# Translate & Contribute
+
+You can help translating Namida to your language on the Translation Repo.
+
+<a href="https://github.com/namidaco/namida-translations"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/translations_dark.svg"><img src="./some%20stuff/summaries/translations_light.svg" width="174" align="absmiddle" alt="Translations"></picture></a>
+
+Building is not currently directly possible, see why on [#37](https://github.com/namidaco/namida/issues/37#issuecomment-1780341883).
+
+<!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->
+
+# Community
+
+Join us on our platforms for updates, tips, discussion & ideas.
+
+<a href="https://t.me/namida_official"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_tg_channel_dark.svg"><img src="./some%20stuff/summaries/social_tg_channel_light.svg" width="176" align="absmiddle" alt="Telegram"></picture></a>
+<a href="https://t.me/+FmdfsgKoGmM1ZGFk"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_tg_chat_dark.svg"><img src="./some%20stuff/summaries/social_tg_chat_light.svg" width="176" align="absmiddle" alt="Telegram"></picture></a>
+<a href="https://discord.gg/WeY7DTVChT"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_discord_dark.svg"><img src="./some%20stuff/summaries/social_discord_light.svg" width="176" align="absmiddle" alt="Discord"></picture></a>
+
+<details>
+<summary><a name="companion-apps"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/companion_apps_dark.svg"><img src="./some%20stuff/summaries/companion_apps_light.svg" width="435" align="absmiddle" alt="Companion Apps"></picture></summary>
+
+> **Community-built tools for an enhanced namida experience**
+>
+> - 🔄 [Namida Sync](https://github.com/010101-sans/namida_sync), a tool for syncing namida backups & files across android, windows and linux
+>   - by [@010101-sans](https://github.com/010101-sans)
+> - 📊 [Namida Charts](https://github.com/DiWu17/namida_history_app), a companion app that shows yearly, monthly & more listening stats with charts based on namida history
+>   - by [@DiWu17](https://github.com/DiWu17)
+> - 🎁 [Namida Wrapped](https://namida-wrapped.vercel.app), a local web ui for generating spotify wrapped-style stats
+>   - by [@bebrriko](https://github.com/bebrriko)
+
+</details>
+
+# Donate
+
+Donation will help improve namida and will show appreciation.
+
+<a href="https://www.buymeacoffee.com/namidaco"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/donate_bmc_dark.svg"><img src="./some%20stuff/summaries/donate_bmc_light.svg" width="201" align="absmiddle" alt="Buy me a coffee"></picture></a>
+<a href="https://ko-fi.com/namidaco"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/donate_kofi_dark.svg"><img src="./some%20stuff/summaries/donate_kofi_light.svg" width="201" align="absmiddle" alt="Ko-fi"></picture></a>
+
+> Bitcoin/ETH/USDT (BEP20): `0x95b2834c84def92860df773d8b3d80d4c296d748`
+
+# Special Thanks
 
 > - [@MSOB7YY](https://github.com/MSOB7YY) for their youtube client, which powers youtube section.
 > - [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
@@ -458,41 +424,9 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 > - All packages' maintainers which made namida possible.
 >   <br>
 
-# Translate
-
-- You can help translating Namida to your language on [Translation Repo](https://github.com/namidaco/namida-translations)
-
-# Contribute
-
-- Building is not currently directly possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
-
-<!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->
-
-# Donate
-
-- Donation will help improve namida and will show appreciation.
-
-<a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
-<a href="https://ko-fi.com/namidaco" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" style="height: 42px;" ></a>
-
-> Bitcoin/ETH/USDT (BEP20): `0x95b2834c84def92860df773d8b3d80d4c296d748`
-
-- Don't forget to 🌟 star the repo if you like the project ^^
-
-# Social
-
-- join us on our platforms for updates, tips, discussion & ideas
-  - [Telegram (Updates)](https://t.me/namida_official)
-  - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
-  - [Discord](https://discord.gg/WeY7DTVChT)
-
-> [!WARNING]
-> Namida is only available through [namida.app](https://namida.app), GitHub & Telegram.
-> We are not responsible for downloads from other sources.
-
 # LICENSE
 
-Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LICENSE) License.
+Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LICENSE).
 
 ```
 © Copyright (C) 2023-present Namidaco <namida.coo@gmail.com>
@@ -504,6 +438,8 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 
 <a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
+Don't forget to 🌟 star the repo if you like the project ^^
+
 <a href="https://www.star-history.com/?repos=namidaco%2Fnamida&amp;type=date">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=namidaco/namida&amp;type=date&amp;theme=dark&amp;legend=top-left" />
@@ -511,6 +447,8 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
     <img alt="Namida GitHub star history" src="https://api.star-history.com/chart?repos=namidaco/namida&amp;type=date" />
   </picture>
 </a>
+
+<br>
 
 > Made by human, **not** vibe coded. AI usage is minimal and very selective.
 > Every design choice comes after thoughtful decisions and series of refining, down to every pixel.

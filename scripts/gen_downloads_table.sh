@@ -14,11 +14,13 @@ PREFIX="v${PREFIXRAW}"
 
 ENCODED_TAG="${TAG//+/%2B}"
 BASE_URL="https://github.com/${REPO}/releases/download/${ENCODED_TAG}"
+ALTSTORE_SOURCE_URL="https://${REPO%%/*}.github.io/${REPO#*/}/altstore-source.json"
 
 link() {
   local label="$1"
-  local filename="$2"
-  printf '<a href="%s/%s"><b><code>%s</code></b></a>' "$BASE_URL" "$filename" "$label"
+  local url="$2"
+  [[ "$url" == https://* ]] || url="$BASE_URL/$url"
+  printf '<a href="%s"><b><code>%s</code></b></a>' "$url" "$label"
 }
 
 bullets() {
@@ -71,6 +73,15 @@ if [ "$IS_BETA" = "true" ]; then
     "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm" \
     "${PREFIX}.AppImage|Namida-x86_64-${PREFIXRAW}.AppImage" \
     "${PREFIX}.flatpak|Namida-x86_64-${PREFIXRAW}.flatpak"
+
+  row "macOS" \
+    "${PREFIX}-universal.dmg|Namida-${PREFIX}-macos-universal.dmg" \
+    "${PREFIX}-arm64.dmg|Namida-${PREFIX}-macos-arm64.dmg" \
+    "${PREFIX}-x86_64.dmg|Namida-${PREFIX}-macos-x86_64.dmg"
+
+  row "iOS" \
+    "${PREFIX}.ipa|Namida-${PREFIX}-ios.ipa" \
+    "AltStore / SideStore source|${ALTSTORE_SOURCE_URL}"
 fi
 
 cat << EOF

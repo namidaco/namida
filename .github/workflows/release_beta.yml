@@ -9,8 +9,8 @@ name: release_beta
 #   linux    -> build_linux (deb/rpm/tar.gz + AUR)
 #   appimage -> build_linux (build only) + build_appimage
 #   flatpak  -> build_linux_portable + build_flatpak
-#   macos    -> build_apple.yml (dmg + zip, beta only, not in the downloads table yet)
-#   ios      -> build_apple.yml (ipa for sideloading, beta only, not in the downloads table yet)
+#   macos    -> build_apple.yml (dmg + zip, beta only)
+#   ios      -> build_apple.yml (ipa for sideloading, beta only)
 # source_run_id skips the builds and takes their artifacts from that run instead, to re-package only.
 on:
   workflow_dispatch:

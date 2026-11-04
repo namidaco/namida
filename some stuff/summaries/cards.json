@@ -1,0 +1,223 @@
+{
+  "customization": {
+    "title": "Customization Settings",
+    "icon": "brush_1"
+  },
+  "all_settings": {
+    "title": "All Settings",
+    "icon": "setting"
+  },
+  "yt_miniplayer": {
+    "title": "YouTube Miniplayer",
+    "icon": "video"
+  },
+  "screenshots_2023": {
+    "title": "2023 Screenshots",
+    "icon": "clock"
+  },
+  "library_indexing": {
+    "title": "Library & Indexing",
+    "icon": "component"
+  },
+  "look_feel": {
+    "title": "Look & Feel",
+    "icon": "brush_2"
+  },
+  "sound": {
+    "title": "Sound",
+    "icon": "sound"
+  },
+  "streaming_youtube": {
+    "title": "Streaming & YouTube",
+    "icon": "video",
+    "level": 1
+  },
+  "video_integration": {
+    "title": "Video Integration",
+    "icon": "video_square"
+  },
+  "system_integration": {
+    "title": "System Integration",
+    "icon": "monitor_mobbile"
+  },
+  "others": {
+    "title": "Others",
+    "icon": "category"
+  },
+  "cool_features": {
+    "title": "Some additional cool features",
+    "icon": "magic_star"
+  },
+  "yt_formats": {
+    "title": "Available formats & example",
+    "icon": "document_code",
+    "level": 2,
+    "kind": "link",
+    "url": "https://docs.namida.app/features/youtube/#filename-formats",
+    "subtitle": null,
+    "width": null
+  },
+  "video_local": {
+    "title": "How locally?",
+    "icon": "folder",
+    "level": 2,
+    "kind": "link",
+    "url": "https://docs.namida.app/guides/medium/#link-local-video",
+    "subtitle": null,
+    "width": null
+  },
+  "video_youtube": {
+    "title": "How youtube?",
+    "icon": "link",
+    "level": 2,
+    "kind": "link",
+    "url": "https://docs.namida.app/guides/medium/#link-yt-video",
+    "subtitle": null,
+    "width": null
+  },
+  "permissions": {
+    "title": "Android Permissions",
+    "icon": "security_safe",
+    "level": 1
+  },
+  "companion_apps": {
+    "title": "Companion Apps",
+    "icon": "people"
+  },
+  "install_guide": {
+    "title": "Install guide",
+    "icon": "book",
+    "level": 2,
+    "kind": "link",
+    "url": "https://docs.namida.app/installation/",
+    "subtitle": null,
+    "width": null
+  },
+  "donate_bmc": {
+    "title": "Buy me a coffee",
+    "icon": "si:buymeacoffee",
+    "level": 1,
+    "kind": "link",
+    "url": "https://www.buymeacoffee.com/namidaco",
+    "subtitle": null,
+    "width": 296,
+    "color": "#ffdd00"
+  },
+  "donate_kofi": {
+    "title": "Ko-fi",
+    "icon": "si:kofi",
+    "level": 1,
+    "kind": "link",
+    "url": "https://ko-fi.com/namidaco",
+    "subtitle": null,
+    "width": 296,
+    "color": "#ff5e5b"
+  },
+  "social_tg_channel": {
+    "title": "Telegram",
+    "icon": "si:telegram",
+    "level": 1,
+    "kind": "link",
+    "url": "https://t.me/namida_official",
+    "subtitle": "Updates channel",
+    "width": 259,
+    "color": "#26a5e4"
+  },
+  "social_tg_chat": {
+    "title": "Telegram",
+    "icon": "si:telegram",
+    "level": 1,
+    "kind": "link",
+    "url": "https://t.me/+FmdfsgKoGmM1ZGFk",
+    "subtitle": "Chat group",
+    "width": 259,
+    "color": "#26a5e4"
+  },
+  "social_discord": {
+    "title": "Discord",
+    "icon": "si:discord",
+    "level": 1,
+    "kind": "link",
+    "url": "https://discord.gg/WeY7DTVChT",
+    "subtitle": "Community server",
+    "width": 259,
+    "color": "#5865f2"
+  },
+  "docs_tour": {
+    "title": "Tour",
+    "icon": "global",
+    "level": 1,
+    "kind": "link",
+    "url": "https://docs.namida.app/tour/",
+    "subtitle": null,
+    "width": null
+  },
+  "docs_quickstart": {
+    "title": "Quickstart",
+    "icon": "book",
+    "level": 1,
+    "kind": "link",
+    "url": "https://docs.namida.app/#quickstart",
+    "subtitle": null,
+    "width": null
+  },
+  "docs_screens": {
+    "title": "Screens map",
+    "icon": "category",
+    "level": 1,
+    "kind": "link",
+    "url": "https://docs.namida.app/screens/",
+    "subtitle": null,
+    "width": null
+  },
+  "installation": {
+    "title": "Download",
+    "icon": "import",
+    "level": 1,
+    "kind": "link",
+    "url": "#installation",
+    "subtitle": null,
+    "width": null
+  },
+  "usage_preview": {
+    "title": "Usage Preview",
+    "icon": "video_play",
+    "level": 1
+  },
+  "pm_winget": {
+    "kind": "store",
+    "title": "winget",
+    "icon": "box",
+    "url": "https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida",
+    "color": "#0078d4",
+    "caption": "GET IT ON",
+    "beta": false
+  },
+  "pm_aur": {
+    "kind": "store",
+    "title": "AUR",
+    "icon": "si:archlinux",
+    "url": "https://aur.archlinux.org/packages/namida-bin",
+    "color": "#1793d1",
+    "caption": "GET IT ON",
+    "beta": true
+  },
+  "pm_altstore": {
+    "kind": "store",
+    "title": "AltStore",
+    "icon": "mobile",
+    "url": "https://namidaco.github.io/namida-snapshots/altstore-source.json",
+    "color": "#13a89e",
+    "caption": "GET IT ON",
+    "beta": true
+  },
+  "translations": {
+    "title": "Translations",
+    "icon": "translate",
+    "level": 1,
+    "kind": "link",
+    "url": "https://github.com/namidaco/namida-translations",
+    "subtitle": null,
+    "width": null
+  }
+}
