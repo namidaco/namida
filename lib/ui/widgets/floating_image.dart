@@ -1,16 +1,20 @@
 // by claude, me no math
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
-/// A single app-wide ticker driving every floating animation.
+import 'package:namida/core/extensions.dart';
+
+/// A single app-wide clock driving every floating animation.
 ///
 /// Each subscriber would otherwise own a [Ticker], sharing one keeps the cost flat
 /// no matter how many things float at once. Runs only while something listens.
+///
+/// Ticks ride on frames that happen anyway (ex: every video frame is a full frame), and a frame
+/// is requested only when none came in time for [_kMaxFps], so floats don't add frames next to a playing video.
 ///
 /// Every painter driven by this clock calls [markPainted] from its paint. Ticking pauses once
 /// nothing painted for [_kIdleSeconds] (ex: all of them scrolled off screen), the next paint resumes it.
@@ -20,87 +24,93 @@ class NamidaFloatClock extends ChangeNotifier {
   static final instance = NamidaFloatClock._();
 
   static const _kMaxFps = 60;
+  static const _kMaxTickSeconds = 0.1;
   static const _kIdleSeconds = 0.25;
 
   /// Seconds of ticking so far, never goes backwards.
   ///
-  /// A [Ticker] restarts its elapsed time from zero, and this one is thrown away
-  /// whenever nothing is animating. Carrying the total across restarts keeps every
-  /// float, fade and drift going from where it was instead of snapping to a new phase.
+  /// Only the time between ticks counts, so a pause keeps every float,
+  /// fade and drift going from where it was instead of snapping to a new phase.
   double get seconds => _seconds;
   double _seconds = 0.0;
-  double _elapsedBeforeRestart = 0.0;
   double _lastPaintedSeconds = 0.0;
 
-  Ticker? _ticker;
-  bool _isIdle = false;
-  Timer? _unmuteTimer;
+  bool _isTicking = false;
+  Duration? _lastTickTimeStamp;
+  int? _frameCallbackId;
+  Timer? _frameRequestTimer;
 
   @override
   void addListener(VoidCallback listener) {
     super.addListener(listener);
     _lastPaintedSeconds = _seconds;
-    if (_ticker == null) {
-      _ticker = Ticker(_onTick)..start();
-    } else if (_isIdle) {
-      _resume();
-    }
+    _start();
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners) {
-      _elapsedBeforeRestart = _seconds;
-      _isIdle = false;
-      _unmuteTimer?.cancel();
-      _ticker?.dispose();
-      _ticker = null;
-    }
+    if (!hasListeners) _stop();
   }
 
   void markPainted() {
     _lastPaintedSeconds = _seconds;
-    if (_isIdle) _resume();
+    _start();
   }
 
-  void _resume() {
-    _isIdle = false;
-    _ticker?.start();
+  void _start() {
+    if (_isTicking) return;
+    _isTicking = true;
+    _lastTickTimeStamp = null;
+    _frameCallbackId = SchedulerBinding.instance.scheduleFrameCallback(_onFrame);
   }
 
-  void _pause() {
-    _isIdle = true;
-    _elapsedBeforeRestart = _seconds;
-    _ticker?.stop();
+  void _stop() {
+    _isTicking = false;
+    final frameCallbackId = _frameCallbackId;
+    if (frameCallbackId != null) SchedulerBinding.instance.cancelFrameCallbackWithId(frameCallbackId);
+    _frameCallbackId = null;
+    _frameRequestTimer?.cancel();
+    _frameRequestTimer = null;
   }
 
-  void _onTick(Duration elapsed) {
-    _seconds = _elapsedBeforeRestart + elapsed.inMicroseconds / Duration.microsecondsPerSecond;
+  void _onFrame(Duration timeStamp) {
+    _frameCallbackId = null;
+    final scheduler = SchedulerBinding.instance;
+    final refreshRate = scheduler.platformDispatcher.implicitView?.display.refreshRate ?? 0.0;
+    final vsyncsPerTick = (refreshRate / _kMaxFps).floor();
+    final isEveryVsyncWanted = vsyncsPerTick <= 1;
+    // -- mid-way through the vsync before the wanted one, a frame requested then lands right on it
+    final minTickMicros = isEveryVsyncWanted ? 0.0 : (vsyncsPerTick - 0.5) * Duration.microsecondsPerSecond / refreshRate;
+
+    final lastTickTimeStamp = _lastTickTimeStamp;
+    if (lastTickTimeStamp != null) {
+      final sinceLastTickMicros = (timeStamp - lastTickTimeStamp).inMicroseconds;
+      if (sinceLastTickMicros < minTickMicros) {
+        // -- something else drew right after the last tick (ex: a video frame), counting from it lands later ticks on its frames
+        _scheduleNextTick(scheduler, isEveryVsyncWanted, minTickMicros);
+        return;
+      }
+      // -- frames stop while the app is hidden, that pause doesn't count
+      final sinceLastTickSeconds = (sinceLastTickMicros / Duration.microsecondsPerSecond).withMaximum(_kMaxTickSeconds);
+      _seconds += sinceLastTickSeconds;
+    }
+    _lastTickTimeStamp = timeStamp;
     if (_seconds - _lastPaintedSeconds > _kIdleSeconds) {
-      _pause();
+      _stop();
       return;
     }
     notifyListeners();
-    _skipVsyncsAboveMaxFps();
+    _scheduleNextTick(scheduler, isEveryVsyncWanted, minTickMicros);
   }
 
-  /// Mutes the ticker through the vsyncs above [_kMaxFps], no frame is produced for them at all.
-  void _skipVsyncsAboveMaxFps() {
-    final ticker = _ticker;
-    if (ticker == null) return;
-    final refreshRate = PlatformDispatcher.instance.implicitView?.display.refreshRate ?? 0.0;
-    final vsyncsPerTick = (refreshRate / _kMaxFps).floor();
-    if (vsyncsPerTick <= 1) return;
-    // -- unmuting mid-way through the last skipped vsync lands the next tick right on the wanted one
-    final vsyncMicros = Duration.microsecondsPerSecond / refreshRate;
-    final unmuteAfterMicros = ((vsyncsPerTick - 0.5) * vsyncMicros).round();
-    final unmuteAfter = Duration(microseconds: unmuteAfterMicros);
-    ticker.muted = true;
-    _unmuteTimer = Timer(unmuteAfter, _unmute);
+  void _scheduleNextTick(SchedulerBinding scheduler, bool isEveryVsyncWanted, double minTickMicros) {
+    _frameCallbackId = scheduler.scheduleFrameCallback(_onFrame, rescheduling: true, scheduleNewFrame: isEveryVsyncWanted);
+    _frameRequestTimer?.cancel();
+    if (isEveryVsyncWanted) return;
+    final frameRequestDelay = Duration(microseconds: minTickMicros.round());
+    _frameRequestTimer = Timer(frameRequestDelay, scheduler.scheduleFrame);
   }
-
-  void _unmute() => _ticker?.muted = false;
 }
 
 /// Whether a drifting decoration should hold still.
