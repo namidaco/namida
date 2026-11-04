@@ -41,6 +41,18 @@ void main() {
     expect(sortedBy(reversedChain, length: items.length), expected);
   });
 
+  test('inserting one by one lands each item where sorting puts it', () {
+    for (final reverse in [false, true]) {
+      final chain = SortChain(const [SortEntry(SortType.rating, reverse: true), SortEntry(SortType.mostPlayed), SortEntry(SortType.trackNo)], reverse: reverse);
+      final comparables = comparablesOf(chain);
+      final inserted = <(int, int, int)>[];
+      for (final e in items) {
+        inserted.insertByChain(e, comparables);
+      }
+      expect(inserted, sortedBy(chain, length: items.length), reason: 'reverse: $reverse');
+    }
+  });
+
   test('lazy sorting follows the same directions', () {
     const chain = SortChain([SortEntry(SortType.rating), SortEntry(SortType.mostPlayed, reverse: true), SortEntry(SortType.trackNo)]);
     final lazy = items.lazySortedByChain(comparablesOf(chain)).toList();

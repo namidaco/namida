@@ -529,7 +529,7 @@ class YoutubeController {
 
   Timer? _downloadNotificationTimer;
   DateTime? _downloadNotificationStartTime;
-  final activeRawDownloadsCount = 0.obs;
+  int _activeRawDownloadsCount = 0;
 
   /// ios 26 keeps downloads running after leaving the app with a system progress ui, a task that stops reporting is ended.
   static final _reportsBackgroundWorkProgress = Platform.isIOS;
@@ -551,7 +551,7 @@ class YoutubeController {
     NamidaChannel.inst.updateBackgroundWorkProgress(
       progress: progress,
       totalProgress: totalProgress,
-      itemsCount: activeRawDownloadsCount.value,
+      itemsCount: _activeRawDownloadsCount,
     );
   }
 
@@ -573,7 +573,7 @@ class YoutubeController {
       await _postDownloadingNotifications(isAudio: true);
       if (_reportsBackgroundWorkProgress) _reportBackgroundWorkProgress();
     } finally {
-      if (activeRawDownloadsCount.value > 0) {
+      if (_activeRawDownloadsCount > 0) {
         _scheduleNotificationTick();
       } else {
         _downloadNotificationTimer = null;
@@ -591,12 +591,12 @@ class YoutubeController {
     } else {
       map[filename] = true;
     }
-    activeRawDownloadsCount.value++;
+    _activeRawDownloadsCount++;
     _startNotificationTimer();
   }
 
   void _onRawDownloadEnded(DownloadTaskVideoId id, DownloadTaskFilename filename) {
-    activeRawDownloadsCount.value--;
+    _activeRawDownloadsCount--;
     final map = isDownloading.value[id];
     if (map == null) return;
     map.remove(filename);

@@ -253,19 +253,51 @@ void main() {
       for (final name in ['b', 'd', 'a']) trackOf(pathOf('m1$sep$name.mp3'), artist: 'X', album: 'Alb', albumArtist: 'AA'),
     ];
     final group = filled(tracks);
+    Comparable<dynamic> byPath(Track tr) => tr.path;
+    SortChainComparables<Track> sortersOf(MediaType media) => SortChainComparables<Track>([byPath], const [false], reverse: media == MediaType.albumArtist);
+    group.sortAllSync({for (final e in MediaType.values) e: sortersOf(e)}, tracks.map((e) => e.asTrack()).toList());
+
     final added = trackOf(pathOf('m1${sep}c.mp3'), artist: 'X', album: 'Alb', albumArtist: 'AA');
     final changes = group.updateTracksSync({added: null}, albumIdentifiers);
-
-    Comparable<dynamic> byPath(Track tr) => tr.path;
-    final sorters = {
-      for (final e in changes.changedMedias) e: SortChainComparables<Track>([byPath], const [false], reverse: e == MediaType.albumArtist),
-    };
-    group.sortChangedSync(changes, sorters);
+    group.sortChangedSync(changes, {for (final e in changes.changedMedias) e: sortersOf(e)});
 
     List<String> namesOf(List<Track> list) => list.map((e) => e.path.split(sep).last).toList();
     expect(namesOf(group.mainMapAlbums.value.values.single), ['a.mp3', 'b.mp3', 'c.mp3', 'd.mp3']);
     expect(namesOf(group.mainMapArtists.value.values.single), ['a.mp3', 'b.mp3', 'c.mp3', 'd.mp3']);
     expect(namesOf(group.mainMapAlbumArtists.value.values.single), ['d.mp3', 'c.mp3', 'b.mp3', 'a.mp3']);
+  });
+
+  test('a few added tracks are inserted in place and more sort the list again, both end up sorted', () {
+    final random = math.Random(5);
+    int idOf(Track tr) => int.parse(tr.path.split(sep).last.split('.').first);
+    Comparable<dynamic> bucketOf(Track tr) => idOf(tr) % 4;
+    Comparable<dynamic> idKeyOf(Track tr) => idOf(tr);
+    SortChainComparables<Track> sortersOf(MediaType media) => SortChainComparables<Track>([bucketOf, idKeyOf], const [true, false], reverse: media == MediaType.artist);
+    const medias = [MediaType.album, MediaType.artist, MediaType.composer, MediaType.folder, MediaType.folderMusic];
+    const initialCount = 500;
+
+    for (final addedCount in [1, 3, 32, 33, 200]) {
+      final ids = List.generate(initialCount + addedCount, (i) => i)..shuffle(random);
+      final tracks = ids.take(initialCount).map((id) => trackOf(pathOf('m1$sep$id.mp3'))).toList();
+      final group = filled(tracks);
+      group.sortAllSync({for (final e in medias) e: sortersOf(e)}, tracks.map((e) => e.asTrack()).toList());
+
+      final added = {for (final id in ids.skip(initialCount)) trackOf(pathOf('m1$sep$id.mp3')): null};
+      final changes = group.updateTracksSync(added, albumIdentifiers);
+      group.sortChangedSync(changes, {for (final e in changes.changedMedias) e: sortersOf(e)});
+
+      void expectSorted(MediaType media, List<Track> list) {
+        final expected = list.toList()..sortByChain(sortersOf(media));
+        expect(list.length, initialCount + addedCount, reason: '$media with $addedCount added');
+        expect(list, expected, reason: '$media with $addedCount added');
+      }
+
+      expectSorted(MediaType.album, group.mainMapAlbums.value.values.single);
+      expectSorted(MediaType.artist, group.mainMapArtists.value.values.single);
+      expectSorted(MediaType.composer, group.mainMapComposer.value.values.single);
+      expectSorted(MediaType.folder, group.mainMapFoldersTracksAndVideos.value.values.single);
+      expectSorted(MediaType.folderMusic, group.mainMapFoldersTracks.value.values.single);
+    }
   });
 
   group('long lists', () {
@@ -287,6 +319,28 @@ void main() {
       final composerTracks = group.mainMapComposer.value[UnknownTags.COMPOSER]!;
       expect(composerTracks.length, listed.length + 1);
       expect(composerTracks.last, added.asTrack());
+    });
+
+    test('a new track is inserted in place, reading a few sort keys instead of the whole list', () {
+      final group = LibraryGroup<Track>()..fillAll(listed, (_) => template, albumIdentifiers);
+      int keyReads = 0;
+      Comparable<dynamic> countedPathOf(Track tr) {
+        keyReads++;
+        return tr.path;
+      }
+
+      final sorters = {MediaType.composer: SortChainComparables<Track>([countedPathOf], const [false], reverse: false)};
+      group.sortAllSync(sorters, listed);
+      final added = trackOf(pathOf('m1${sep}15000x.mp3'));
+      final changes = group.updateTracksSync({added: null}, albumIdentifiers);
+      keyReads = 0;
+      group.sortChangedSync(changes, sorters);
+
+      expect(keyReads, lessThan(64));
+      final composerTracks = group.mainMapComposer.value[UnknownTags.COMPOSER]!;
+      final expected = composerTracks.toList()..sort((a, b) => a.path.compareTo(b.path));
+      expect(composerTracks, expected);
+      expect(composerTracks.length, listed.length + 1);
     });
 
     test('a batch edit moving tracks into one checks it once, not per track', () {

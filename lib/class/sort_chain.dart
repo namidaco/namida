@@ -57,6 +57,35 @@ extension SortChainListUtils<E> on List<E> {
   Iterable<E> lazySortedByChain(SortChainComparables<E> comparables) {
     return lazySortedByAltsPrecomputed(comparables.keys, reverse: comparables.reverse, alternativesReverse: comparables.keysReverse);
   }
+
+  /// inserts [item] where [comparables] place it in this already sorted list, after the items equal to it.
+  void insertByChain(E item, SortChainComparables<E> comparables) {
+    final keys = comparables.keys;
+    final keysReverse = comparables.keysReverse;
+    final reverse = comparables.reverse;
+    final keysLength = keys.length;
+    final itemKeys = List<Comparable>.generate(keysLength, (i) => keys[i](item), growable: false);
+
+    int compareWithItem(E other) {
+      for (int i = 0; i < keysLength; i++) {
+        final compare = keys[i](other).compareTo(itemKeys[i]);
+        if (compare != 0) return keysReverse[i] != reverse ? -compare : compare;
+      }
+      return 0;
+    }
+
+    int low = 0;
+    int high = length;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (compareWithItem(this[mid]) > 0) {
+        high = mid;
+      } else {
+        low = mid + 1;
+      }
+    }
+    insert(low, item);
+  }
 }
 
 /// sorters applied in order, each can be reversed on its own, [reverse] flips the whole order on top.

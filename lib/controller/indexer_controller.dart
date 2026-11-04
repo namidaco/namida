@@ -534,9 +534,12 @@ class Indexer<T extends Track> {
     final changedMedias = changes.changedMedias;
     final mediaSorters = {for (final e in changedMedias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     mainMapsGroup.sortChangedSync(changes, mediaSorters);
-    for (final e in changedMedias) {
-      SearchSortController.inst.sortMedia(e); // main list sorting
-    }
+    SearchSortController.inst.sortChangedGroups(changes); // main list sorting
+    mainMapsGroup.refreshMedias(changedMedias);
+
+    if (changedMedias.contains(MediaType.folder)) FoldersController.tracksAndVideos.refreshAfterSorting();
+    if (changedMedias.contains(MediaType.folderMusic)) FoldersController.tracks.refreshAfterSorting();
+    if (changedMedias.contains(MediaType.folderVideo)) FoldersController.videos.refreshAfterSorting();
 
     if (changes.hasNewKeys(MediaType.folder)) FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
     if (changes.hasNewKeys(MediaType.folderMusic)) FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);

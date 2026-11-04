@@ -211,6 +211,10 @@ class LibraryGroup<T extends Track> {
     return changes;
   }
 
+  /// above this, sorting the list again is cheaper than inserting each track.
+  static const _kMaxAppendedToInsert = 32;
+
+  /// expects the lists already sorted by [mediasWithSorts], a list that got only a few tracks has them inserted in place.
   void sortChangedSync(
     LibraryGroupChanges changes,
     Map<MediaType, SortChainComparables<Track>> mediasWithSorts,
@@ -227,6 +231,12 @@ class LibraryGroup<T extends Track> {
       for (final key in entry.value) {
         final list = map[key];
         if (list == null) continue;
+        final appendedCount = changes._appendedCounts[list] ?? 0;
+        if (appendedCount == 0) continue;
+        if (appendedCount <= _kMaxAppendedToInsert) {
+          _insertAppendedSorted(list, appendedCount, sorters);
+          continue;
+        }
         lists.add(list);
         for (final track in list) {
           if (trackIndex.containsKey(track)) continue;
@@ -235,10 +245,20 @@ class LibraryGroup<T extends Track> {
         }
       }
 
+      if (lists.isEmpty) continue;
       final precomputedKeys = _precomputeSortKeys(sorters.keys, affectedTracks);
       for (final list in lists) {
         _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, sorters);
       }
+    }
+  }
+
+  static void _insertAppendedSorted(List<Track> list, int appendedCount, SortChainComparables<Track> sorters) {
+    final sortedLength = list.length - appendedCount;
+    final appended = list.sublist(sortedLength);
+    list.removeRange(sortedLength, list.length);
+    for (final track in appended) {
+      list.insertByChain(track, sorters);
     }
   }
 
@@ -290,30 +310,18 @@ class LibraryGroup<T extends Track> {
 
     for (final entry in mediasWithSorts.entries) {
       final type = entry.key;
-      final sorters = entry.value.keys;
-      final sortersReverse = entry.value.keysReverse;
-      final sortersLength = sorters.length;
-      final reverse = entry.value.reverse;
+      final sorters = entry.value;
 
       // -- all are taken out before any goes back, the binary search needs the rest of the list sorted
       final insertions = <void Function()>[];
 
       for (final tr in tracks) {
         late final trExt = trackToExtended(tr);
-        final trackKeys = [for (final sorter in sorters) sorter(tr)];
 
-        int compareWithTrack(Track other) {
-          for (int i = 0; i < sortersLength; i++) {
-            final compare = sorters[i](other).compareTo(trackKeys[i]);
-            if (compare != 0) return sortersReverse[i] != reverse ? -compare : compare;
-          }
-          return 0;
-        }
-
-        void takeOut<E extends Track>(List<E>? list, E track) {
+        void takeOut(List<Track>? list, Track track) {
           if (list == null) return;
           final didRemove = list.remove(track);
-          if (didRemove) insertions.add(() => _insertSorted(list, track, compareWithTrack));
+          if (didRemove) insertions.add(() => list.insertByChain(track, sorters));
         }
 
         switch (type) {
@@ -366,21 +374,6 @@ class LibraryGroup<T extends Track> {
     }
 
     return changedMedias;
-  }
-
-  /// [compareWithTrack] is positive when the item belongs after [track].
-  static void _insertSorted<E extends Track>(List<E> list, E track, int Function(Track other) compareWithTrack) {
-    int low = 0;
-    int high = list.length;
-    while (low < high) {
-      final mid = (low + high) >> 1;
-      if (compareWithTrack(list[mid]) > 0) {
-        high = mid;
-      } else {
-        low = mid + 1;
-      }
-    }
-    list.insert(low, track);
   }
 
   void refreshMedias(Iterable<MediaType> medias) {
@@ -450,9 +443,13 @@ class LibraryGroupChanges {
   static const _kLongListMinLength = 32;
   final _longListsSets = Map<List<Object?>, Set<Object?>>.identity();
 
+  final _appendedCounts = Map<List<Object?>, int>.identity();
+
   LibraryGroupChanges._();
 
   Iterable<MediaType> get changedMedias => _modifiedKeys.keys;
+
+  Set<Object?>? modifiedKeysOf(MediaType media) => _modifiedKeys[media];
 
   bool hasNewKeys(MediaType media) => _mediasWithNewKeys.contains(media);
 
@@ -509,6 +506,7 @@ class LibraryGroupChanges {
         return;
       }
       list.add(track);
+      _onAppended(list);
     }
     (_modifiedKeys[type] ??= <Object?>{}).add(key);
   }
@@ -530,7 +528,10 @@ class LibraryGroupChanges {
     } else {
       if (identical(list.lastOrNull, track)) return;
       list.add(track);
+      _onAppended(list);
     }
     (_modifiedKeys[type] ??= <Object?>{}).add(key);
   }
+
+  void _onAppended(List<Object?> list) => _appendedCounts.update(list, (count) => count + 1, ifAbsent: () => 1);
 }

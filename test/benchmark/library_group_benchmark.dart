@@ -140,9 +140,11 @@ int _addTheseTracksToAlbumGenreArtistEtc(Map<TrackExtended, TrackExtended?> trac
   final changedMedias = changes.changedMedias;
   final mediaSorters = {for (final e in changedMedias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
   group.sortChangedSync(changes, mediaSorters);
-  for (final e in changedMedias) {
-    SearchSortController.inst.sortMedia(e);
-  }
+  SearchSortController.inst.sortChangedGroups(changes);
+  group.refreshMedias(changedMedias);
+  if (changedMedias.contains(MediaType.folder)) FoldersController.tracksAndVideos.refreshAfterSorting();
+  if (changedMedias.contains(MediaType.folderMusic)) FoldersController.tracks.refreshAfterSorting();
+  if (changedMedias.contains(MediaType.folderVideo)) FoldersController.videos.refreshAfterSorting();
   if (changes.hasNewKeys(MediaType.folder)) FoldersController.tracksAndVideos.onMapChanged(group.mainMapFoldersTracksAndVideos.value);
   if (changes.hasNewKeys(MediaType.folderMusic)) FoldersController.tracks.onMapChanged(group.mainMapFoldersTracks.value);
   if (changes.hasNewKeys(MediaType.folderVideo)) FoldersController.videos.onMapChanged(group.mainMapFoldersVideos.value);

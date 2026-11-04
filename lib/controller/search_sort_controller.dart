@@ -9,6 +9,8 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/library_group.dart';
+import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -1523,69 +1525,56 @@ class SearchSortController extends SearchPortsProvider {
     if (sorting.firstType == GroupSortType.shuffle) {
       albumsList.shuffle();
     } else {
-      String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) encapsulateSortCanIgnorePrefix(
-        TrackSearchFilter filter,
-        String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) comparable,
-      ) {
-        final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
-        if (ignoreCommonPrefix.contains(filter)) {
-          return (e) => comparable(e).ignoreCommonPrefixes();
-        } else {
-          return comparable;
-        }
-      }
-
-      Comparable<dynamic> Function(MapEntry<AlbumIdentifierWrapper, List<Track>>)? comparableOf(GroupSortType s) {
-        if (s == GroupSortType.album) {
-          final normalize = sortKeyNormalizer;
-          final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.key.displayAlbumName));
-          return (e) => mainFn(e);
-        } else if (s == GroupSortType.lastPlayed) {
-          final latestPlayedForSource = QueueController.latestPlayedForSourceManager;
-          return (e) => -(latestPlayedForSource.latestPlayedTime(QueueSource.album(e.key, null)) ?? 0);
-        } else {
-          final fn = _getMediaSortingComparable(s);
-          if (fn == null) return null;
-          return (e) => fn(MapEntry(e.key.displayAlbumName, e.value));
-        }
-      }
-
-      final comparables = SortChainComparables.of(
-        sorting,
-        comparableOf,
-        fallbacks: const [GroupSortType.album, GroupSortType.year, GroupSortType.dateModified],
-      );
-      albumsList.sortByChain(comparables);
+      albumsList.sortByChain(_getAlbumsComparables(sorting));
     }
+  }
+
+  SortChainComparables<MapEntry<AlbumIdentifierWrapper, List<Track>>> _getAlbumsComparables(SortChain<GroupSortType> sorting) {
+    String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) encapsulateSortCanIgnorePrefix(
+      TrackSearchFilter filter,
+      String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) comparable,
+    ) {
+      final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+      if (ignoreCommonPrefix.contains(filter)) {
+        return (e) => comparable(e).ignoreCommonPrefixes();
+      } else {
+        return comparable;
+      }
+    }
+
+    Comparable<dynamic> Function(MapEntry<AlbumIdentifierWrapper, List<Track>>)? comparableOf(GroupSortType s) {
+      if (s == GroupSortType.album) {
+        final normalize = sortKeyNormalizer;
+        final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.key.displayAlbumName));
+        return (e) => mainFn(e);
+      } else if (s == GroupSortType.lastPlayed) {
+        final latestPlayedForSource = QueueController.latestPlayedForSourceManager;
+        return (e) => -(latestPlayedForSource.latestPlayedTime(QueueSource.album(e.key, null)) ?? 0);
+      } else {
+        final fn = _getMediaSortingComparable(s);
+        if (fn == null) return null;
+        return (e) => fn(MapEntry(e.key.displayAlbumName, e.value));
+      }
+    }
+
+    return SortChainComparables.of(
+      sorting,
+      comparableOf,
+      fallbacks: const [GroupSortType.album, GroupSortType.year, GroupSortType.dateModified],
+    );
   }
 
   /// Sorts Artists and Saves automatically to settings
   void _sortArtistsCurrent({required MediaType artistType, SortChain<GroupSortType>? sorting, bool? reverse}) {
     final effectiveSorting = _effectiveGroupSorting(artistType, sorting, reverse);
 
-    final finalMap = switch (artistType) {
-      MediaType.artist => Indexer.inst.mainMapArtists,
-      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists,
-      MediaType.composer => Indexer.inst.mainMapComposer,
-      _ => Indexer.inst.mainMapArtists,
-    };
+    final finalMap = Indexer.inst.getArtistMapFor(artistType);
     final artistsList = finalMap.value.entries.toFixedList();
 
     if (effectiveSorting.firstType == GroupSortType.shuffle) {
       artistsList.shuffle();
     } else {
-      final fallbackGroupSortTitle = switch (artistType) {
-        MediaType.artist => GroupSortType.artistsList,
-        MediaType.albumArtist => GroupSortType.albumArtist,
-        MediaType.composer => GroupSortType.composer,
-        _ => null,
-      };
-      final comparables = SortChainComparables.of(
-        effectiveSorting,
-        (sort) => sort == GroupSortType.albumsCount ? _getArtistsAlbumsCountComparable(artistType) : _getArtistsSortingComparable(artistType, sort),
-        fallbacks: [?fallbackGroupSortTitle, GroupSortType.year, GroupSortType.dateModified],
-      );
-      artistsList.sortByChain(comparables);
+      artistsList.sortByChain(_getArtistsComparables(artistType, effectiveSorting));
     }
 
     finalMap.value.assignAllEntries(artistsList);
@@ -1594,6 +1583,20 @@ class SearchSortController extends SearchPortsProvider {
     settings.updateGroupSorting(artistType, effectiveSorting);
 
     _searchMediaType(type: artistType, text: LibraryTab.artists.textSearchController?.text ?? '');
+  }
+
+  SortChainComparables<MapEntry<String, List<Track>>> _getArtistsComparables(MediaType artistType, SortChain<GroupSortType> sorting) {
+    final fallbackGroupSortTitle = switch (artistType) {
+      MediaType.artist => GroupSortType.artistsList,
+      MediaType.albumArtist => GroupSortType.albumArtist,
+      MediaType.composer => GroupSortType.composer,
+      _ => null,
+    };
+    return SortChainComparables.of(
+      sorting,
+      (sort) => sort == GroupSortType.albumsCount ? _getArtistsAlbumsCountComparable(artistType) : _getArtistsSortingComparable(artistType, sort),
+      fallbacks: [?fallbackGroupSortTitle, GroupSortType.year, GroupSortType.dateModified],
+    );
   }
 
   /// Sorts Genres and Saves automatically to settings
@@ -1606,12 +1609,7 @@ class SearchSortController extends SearchPortsProvider {
     if (effectiveSorting.firstType == GroupSortType.shuffle) {
       genresList.shuffle();
     } else {
-      final comparables = SortChainComparables.of(
-        effectiveSorting,
-        (sort) => _getGenresSortingComparable(genreType, sort),
-        fallbacks: const [GroupSortType.genresList, GroupSortType.year, GroupSortType.dateModified],
-      );
-      genresList.sortByChain(comparables);
+      genresList.sortByChain(_getGenresComparables(genreType, effectiveSorting));
     }
 
     finalMap.value.assignAllEntries(genresList);
@@ -1619,6 +1617,14 @@ class SearchSortController extends SearchPortsProvider {
 
     settings.updateGroupSorting(genreType, effectiveSorting);
     _searchMediaType(type: genreType, text: LibraryTab.genres.textSearchController?.text ?? '');
+  }
+
+  SortChainComparables<MapEntry<String, List<Track>>> _getGenresComparables(MediaType genreType, SortChain<GroupSortType> sorting) {
+    return SortChainComparables.of(
+      sorting,
+      (sort) => _getGenresSortingComparable(genreType, sort),
+      fallbacks: const [GroupSortType.genresList, GroupSortType.year, GroupSortType.dateModified],
+    );
   }
 
   /// Sorts Languages and Saves automatically to settings
@@ -1631,12 +1637,7 @@ class SearchSortController extends SearchPortsProvider {
     if (effectiveSorting.firstType == GroupSortType.shuffle) {
       languagesList.shuffle();
     } else {
-      final comparables = SortChainComparables.of(
-        effectiveSorting,
-        _getLanguagesSortingComparable,
-        fallbacks: const [GroupSortType.title, GroupSortType.year, GroupSortType.dateModified],
-      );
-      languagesList.sortByChain(comparables);
+      languagesList.sortByChain(_getLanguagesComparables(effectiveSorting));
     }
 
     finalMap.value.assignAllEntries(languagesList);
@@ -1644,6 +1645,102 @@ class SearchSortController extends SearchPortsProvider {
 
     settings.updateGroupSorting(MediaType.language, effectiveSorting);
     _searchMediaType(type: MediaType.language, text: LibraryTab.languages.textSearchController?.text ?? '');
+  }
+
+  SortChainComparables<MapEntry<String, List<Track>>> _getLanguagesComparables(SortChain<GroupSortType> sorting) {
+    return SortChainComparables.of(
+      sorting,
+      _getLanguagesSortingComparable,
+      fallbacks: const [GroupSortType.title, GroupSortType.year, GroupSortType.dateModified],
+    );
+  }
+
+  /// above this, sorting the whole list again is cheaper than inserting each group.
+  static const _kMaxGroupsToInsert = 32;
+
+  /// inserts the few groups [changes] touched in place instead of sorting each list again, the caller refreshes the maps.
+  void sortChangedGroups(LibraryGroupChanges changes) {
+    _sortChangedGroups(
+      media: MediaType.album,
+      changes: changes,
+      finalMap: Indexer.inst.mainMapAlbums,
+      comparablesOf: _getAlbumsComparables,
+      sortAll: _sortAlbums,
+    );
+    final artistType = settings.activeArtistType.value;
+    _sortChangedGroups(
+      media: artistType,
+      changes: changes,
+      finalMap: Indexer.inst.getArtistMapFor(artistType),
+      comparablesOf: (sorting) => _getArtistsComparables(artistType, sorting),
+      sortAll: () => _sortArtistsCurrent(artistType: artistType),
+    );
+    final genreType = settings.activeGenreType.value;
+    _sortChangedGroups(
+      media: genreType,
+      changes: changes,
+      finalMap: Indexer.inst.getGenreMapFor(genreType),
+      comparablesOf: (sorting) => _getGenresComparables(genreType, sorting),
+      sortAll: () => _sortGenresCurrent(genreType: genreType),
+    );
+    _sortChangedGroups(
+      media: MediaType.language,
+      changes: changes,
+      finalMap: Indexer.inst.mainMapLanguages,
+      comparablesOf: _getLanguagesComparables,
+      sortAll: _sortLanguages,
+    );
+  }
+
+  /// a shuffled list keeps new groups at its end.
+  void _sortChangedGroups<K>({
+    required MediaType media,
+    required LibraryGroupChanges changes,
+    required LibraryItemMapRaw<K> finalMap,
+    required SortChainComparables<MapEntry<K, List<Track>>> Function(SortChain<GroupSortType> sorting) comparablesOf,
+    required void Function() sortAll,
+  }) {
+    final keys = changes.modifiedKeysOf(media);
+    if (keys == null) return;
+    if (keys.length > _kMaxGroupsToInsert) {
+      sortAll();
+      return;
+    }
+
+    final sorting = settings.groupSortingOf(media);
+    if (sorting.firstType != GroupSortType.shuffle) {
+      final map = finalMap.value;
+      // -- by list, the case insensitive maps can store a key in another case
+      final changedLists = Set<List<Track>>.identity();
+      for (final key in keys) {
+        final list = map[key];
+        if (list != null) changedLists.add(list);
+      }
+      final allEntries = map.entries.toFixedList();
+      final sortedEntries = <MapEntry<K, List<Track>>>[];
+      final changedEntries = <MapEntry<K, List<Track>>>[];
+      for (final e in allEntries) {
+        final entries = changedLists.contains(e.value) ? changedEntries : sortedEntries;
+        entries.add(e);
+      }
+      final comparables = comparablesOf(sorting);
+      for (final e in changedEntries) {
+        sortedEntries.insertByChain(e, comparables);
+      }
+
+      // -- the map rebuild is the slow part
+      bool didMove = false;
+      for (int i = 0; i < allEntries.length; i++) {
+        if (!identical(allEntries[i], sortedEntries[i])) {
+          didMove = true;
+          break;
+        }
+      }
+      if (didMove) map.assignAllEntries(sortedEntries);
+    }
+
+    final searchText = media.toLibraryTab().textSearchController?.text ?? '';
+    searchMedia(searchText, media);
   }
 
   void _saveMoodsTagsSorting(MediaType type, {SortChain<GroupSortType>? sorting, bool? reverse}) {

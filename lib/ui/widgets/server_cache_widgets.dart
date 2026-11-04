@@ -13,7 +13,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 class ServerCacheTrackIndicator extends StatelessWidget {
@@ -137,7 +137,7 @@ class DownloadsAppBarIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: YoutubeController.inst.activeRawDownloadsCount,
+      rx: YoutubeParallelDownloadsHandler.inst.tasksCount,
       builder: (context, youtubeCount) => ObxO(
         rx: ServerCacheController.inst.tasks,
         builder: (context, serverTasks) {
@@ -244,7 +244,7 @@ class _ServerCacheQueueSheet extends StatelessWidget {
           height: 8.0,
         ),
         ObxO(
-          rx: YoutubeController.inst.activeRawDownloadsCount,
+          rx: YoutubeParallelDownloadsHandler.inst.tasksCount,
           builder: (context, youtubeCount) => youtubeCount > 0
               ? Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
