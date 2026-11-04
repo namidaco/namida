@@ -41,14 +41,40 @@ void main() {
     SmartPlaylistRuleFilterDateTimeSource source = SmartPlaylistRuleFilterDateTimeSource.dateAdded,
     bool clockOnly = false,
   }) => SmartPlaylistRuleDateTime(
-    data: data,
-    data2: data2,
+    data: data == null ? null : SmartPlaylistDate.legacy(data, clockOnly: clockOnly),
+    data2: data2 == null ? null : SmartPlaylistDate.legacy(data2, clockOnly: clockOnly),
     filter: filter,
     source: source,
     enableCleanup: false,
     clockOnly: clockOnly,
     relativeDuration: null,
   );
+
+  SmartPlaylistRuleDateTime typedRuleOf(
+    SmartPlaylistRuleFilterDateTime filter,
+    String text, {
+    String? text2,
+    SmartPlaylistRuleFilterDateTimeSource source = SmartPlaylistRuleFilterDateTimeSource.dateAdded,
+    bool clockOnly = false,
+  }) {
+    final rule = ruleOf(filter, null, source: source, clockOnly: clockOnly);
+    final data = rule.textToData(text);
+    final data2 = rule.textToData2(text2);
+    expect(data, isNotNull, reason: text);
+    return rule.copyWith(datas: (data, data2));
+  }
+
+  Track trackWithYear(String name, int year) {
+    final path = '/music/$name.m4a';
+    final track = Track.explicit(path);
+    Indexer.inst.allTracksMappedByPath[path] = kDummyExtendedTrack.copyWith(
+      path: path,
+      title: name,
+      year: year,
+      generatePathHash: false,
+    );
+    return track;
+  }
 
   Set<String> matchedNames(SmartPlaylistRuleDateTime rule, List<Track> tracks) {
     final playlist = SmartPlaylist(
@@ -114,7 +140,7 @@ void main() {
     test('rule text shows the date only', () {
       final rule = ruleOf(SmartPlaylistRuleFilterDateTime.isSame, day);
       expect(rule.datasDisplayText(), '= ${day.dateFormattedOriginal}');
-      expect(rule.dataToText(day), '2026-10-22');
+      expect(rule.dataToText(rule.data), '2026-10-22');
     });
   });
 
@@ -143,7 +169,7 @@ void main() {
     test('rule text keeps the clock', () {
       final rule = ruleOf(SmartPlaylistRuleFilterDateTime.isSame, noon);
       expect(rule.datasDisplayText(), '= ${noon.dateAndClockFormattedOriginal}');
-      expect(rule.dataToText(noon), '2026-10-22 12:00:00');
+      expect(rule.dataToText(rule.data), '2026-10-22 12:00:00');
     });
   });
 
@@ -197,5 +223,157 @@ void main() {
     HistoryController.inst.topTracksMapListens.value.assignAll(listens);
     final rule = ruleOf(SmartPlaylistRuleFilterDateTime.isSame, DateTime(2026, 10, 22), source: SmartPlaylistRuleFilterDateTimeSource.anyListen);
     expect(matchedNames(rule, [listenedThatDay, listenedNextMidnight]), {'listenedThatDay'});
+  });
+
+  group('typed text', () {
+    late final rule = ruleOf(SmartPlaylistRuleFilterDateTime.isSame, null);
+    late final clockRule = ruleOf(SmartPlaylistRuleFilterDateTime.isSame, null, clockOnly: true);
+
+    test('keeps the precision that was typed', () {
+      const expected = {
+        '2019': SmartPlaylistDatePrecision.year,
+        '2019-05': SmartPlaylistDatePrecision.month,
+        '2019-05-14': SmartPlaylistDatePrecision.day,
+        '2019-05-14 12:30': SmartPlaylistDatePrecision.minute,
+        '2019-05-14 12:30:15': SmartPlaylistDatePrecision.second,
+        '2019-01-01 00:00:00': SmartPlaylistDatePrecision.second,
+      };
+      for (final e in expected.entries) {
+        final date = rule.textToData(e.key);
+        expect(date?.precision, e.value, reason: e.key);
+        expect(rule.dataToText(date), e.key);
+      }
+      expect(rule.dataToText(rule.textToData('2019-5-4')), '2019-05-04');
+    });
+
+    test('clock only keeps minutes or seconds', () {
+      expect(clockRule.textToData('14:30')?.precision, SmartPlaylistDatePrecision.minute);
+      expect(clockRule.textToData('14:30:15')?.precision, SmartPlaylistDatePrecision.second);
+      expect(clockRule.dataToText(clockRule.textToData('14:30')), '14:30');
+      expect(clockRule.dataToText(clockRule.textToData('14:30:15')), '14:30:15');
+    });
+
+    test('other iso formats read like before', () {
+      expect(rule.textToData('20190514'), SmartPlaylistDate(DateTime(2019, 5, 14), SmartPlaylistDatePrecision.day));
+    });
+
+    test('invalid text is rejected', () {
+      for (final text in ['19', '2019-13', '2019-02-30', '2019-05-14 24:00', 'abc']) {
+        expect(rule.textToData(text), isNull, reason: text);
+        expect(rule.dataValidator(text), isNotNull, reason: text);
+      }
+      for (final text in ['24:00', '12', '12:60']) {
+        expect(clockRule.textToData(text), isNull, reason: text);
+      }
+    });
+
+    test('rule text shows the year or the month', () {
+      expect(typedRuleOf(SmartPlaylistRuleFilterDateTime.isSame, '2019').datasDisplayText(), '= 2019');
+      expect(typedRuleOf(SmartPlaylistRuleFilterDateTime.isSame, '2019-05').datasDisplayText(), '= May 2019');
+    });
+
+    test('saved rules without a precision keep their old meaning', () {
+      final midnight = DateTime(2019);
+      final dateRule = SmartPlaylistRuleBase.fromMap({'type': 'dateTime', 'filter': 'isSame', 'source': 'year', 'data': midnight.millisecondsSinceEpoch});
+      expect(dateRule?.data, SmartPlaylistDate(midnight, SmartPlaylistDatePrecision.day));
+      expect(dateRule?.toMap()['dataPrecision'], 'day');
+
+      final clock = DateTime(0, 1, 1, 14, 30);
+      final clockMap = {'type': 'dateTime', 'filter': 'isSame', 'source': 'dateAdded', 'data': clock.millisecondsSinceEpoch, 'clockOnly': true};
+      expect(SmartPlaylistRuleBase.fromMap(clockMap)?.data, SmartPlaylistDate(clock, SmartPlaylistDatePrecision.minute));
+    });
+
+    test('typed rules survive a round trip', () {
+      final typedRule = typedRuleOf(SmartPlaylistRuleFilterDateTime.isInBetween, '2019', text2: '2020-05-14 12:30');
+      expect(SmartPlaylistRuleBase.fromMap(typedRule.toMap()), typedRule);
+    });
+  });
+
+  group('typed precisions on timestamps', () {
+    late final tracks = [
+      trackAt('lastOf2018', DateTime(2018, 12, 31, 23, 59, 59)),
+      trackAt('newYear2019', DateTime(2019)),
+      trackAt('newYear2019Noon', DateTime(2019, 1, 1, 12)),
+      trackAt('may14At1230', DateTime(2019, 5, 14, 12, 30)),
+      trackAt('may14At123059', DateTime(2019, 5, 14, 12, 30, 59)),
+      trackAt('may14At1231', DateTime(2019, 5, 14, 12, 31)),
+      trackAt('lastOf2019', DateTime(2019, 12, 31, 23, 59, 59)),
+      trackAt('newYear2020', DateTime(2020)),
+    ];
+    const in2019 = {'newYear2019', 'newYear2019Noon', 'may14At1230', 'may14At123059', 'may14At1231', 'lastOf2019'};
+    const inMay2019 = {'may14At1230', 'may14At123059', 'may14At1231'};
+
+    Set<String> matched(SmartPlaylistRuleFilterDateTime filter, String text, [String? text2]) => matchedNames(typedRuleOf(filter, text, text2: text2), tracks);
+
+    test('isSame covers what was typed', () {
+      expect(matched(.isSame, '2019'), in2019);
+      expect(matched(.isSame, '2019-05'), inMay2019);
+      expect(matched(.isSame, '2019-01-01'), {'newYear2019', 'newYear2019Noon'});
+      expect(matched(.isSame, '2019-05-14 12:30'), {'may14At1230', 'may14At123059'});
+      expect(matched(.isSame, '2019-05-14 12:30:00'), {'may14At1230'});
+      expect(matched(.isSame, '2019-01-01 00:00:00'), {'newYear2019'});
+    });
+
+    test('isNotSame is the opposite of isSame', () {
+      expect(matched(.isNotSame, '2019'), {'lastOf2018', 'newYear2020'});
+    });
+
+    test('isBefore and isAfter include the whole value', () {
+      expect(matched(.isBefore, '2019'), {'lastOf2018', ...in2019});
+      expect(matched(.isBefore, '2019-04'), {'lastOf2018', 'newYear2019', 'newYear2019Noon'});
+      expect(matched(.isAfter, '2019-05'), {...inMay2019, 'lastOf2019', 'newYear2020'});
+    });
+
+    test('isInBetween includes both values whole, in any order', () {
+      expect(matched(.isInBetween, '2019', '2019-05'), in2019);
+      expect(matched(.isInBetween, '2019-12', '2019-05'), {...inMay2019, 'lastOf2019'});
+    });
+
+    test('isOutside is the opposite of isInBetween', () {
+      expect(matched(.isOutside, '2019-02', '2019-11'), {'lastOf2018', 'newYear2019', 'newYear2019Noon', 'lastOf2019', 'newYear2020'});
+    });
+
+    test('clock only minutes and seconds', () {
+      final clockTracks = [
+        trackAt('t_143000', DateTime(2026, 3, 2, 14, 30)),
+        trackAt('t_143030', DateTime(2026, 3, 3, 14, 30, 30)),
+        trackAt('t_143100', DateTime(2026, 3, 5, 14, 31)),
+      ];
+      expect(matchedNames(typedRuleOf(.isSame, '14:30', clockOnly: true), clockTracks), {'t_143000', 't_143030'});
+      expect(matchedNames(typedRuleOf(.isSame, '14:30:00', clockOnly: true), clockTracks), {'t_143000'});
+    });
+  });
+
+  group('year tags', () {
+    late final tracks = [
+      trackWithYear('yearOnly2019', 2019),
+      trackWithYear('may14of2019', 20190514),
+      trackWithYear('yearOnly2020', 2020),
+      trackWithYear('unknownYear', 0),
+    ];
+    const source = SmartPlaylistRuleFilterDateTimeSource.year;
+
+    Set<String> matched(SmartPlaylistRuleFilterDateTime filter, String text) => matchedNames(typedRuleOf(filter, text, source: source), tracks);
+
+    test('a year matches year-only tags and full dates', () {
+      expect(matched(.isSame, '2019'), {'yearOnly2019', 'may14of2019'});
+      expect(matched(.isSame, '2019-05'), {'may14of2019'});
+    });
+
+    test('a year-only tag matches only when its whole year fits', () {
+      expect(matched(.isSame, '2019-01-01'), <String>{});
+      expect(matched(.isNotSame, '2019-05'), {'yearOnly2020'});
+      expect(matched(.isBefore, '2019'), {'yearOnly2019', 'may14of2019'});
+      expect(matched(.isBefore, '2019-03'), <String>{});
+      expect(matched(.isAfter, '2019'), {'yearOnly2019', 'may14of2019', 'yearOnly2020'});
+      expect(matched(.isAfter, '2019-03'), {'may14of2019', 'yearOnly2020'});
+      expect(matchedNames(typedRuleOf(.isInBetween, '2018', text2: '2019', source: source), tracks), {'yearOnly2019', 'may14of2019'});
+      expect(matchedNames(typedRuleOf(.isOutside, '2019-03', text2: '2019-06', source: source), tracks), {'yearOnly2020'});
+    });
+
+    test('unknown years are missing', () {
+      expect(matchedNames(ruleOf(.missing, null, source: source), tracks), {'unknownYear'});
+      expect(matchedNames(ruleOf(.exists, null, source: source), tracks), {'yearOnly2019', 'may14of2019', 'yearOnly2020'});
+    });
   });
 }

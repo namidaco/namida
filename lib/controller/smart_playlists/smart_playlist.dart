@@ -258,7 +258,7 @@ class _SmartPlaylistResolveContext {
   final caseSensitiveRegexes = <String, RegExp?>{};
   final caseInsensitiveRegexes = <String, RegExp?>{};
   final _relativeBoundariesMicros = Map<SmartPlaylistRelativeDuration, int>.identity();
-  final _yearDates = <int, DateTime?>{};
+  final _yearRanges = <int, _MicrosRange?>{};
   final siblingDateFilters = Map<SmartPlaylistRuleNumber, bool Function(int? msse)>.identity();
 
   int relativeBoundaryMicrosOf(SmartPlaylistRelativeDuration duration) {
@@ -270,13 +270,22 @@ class _SmartPlaylistResolveContext {
     return boundaryMicros;
   }
 
-  DateTime? yearDateOf(Track track) {
+  _MicrosRange? yearRangeOf(Track track) {
     final year = track.year;
-    final cached = _yearDates[year];
-    if (cached != null || _yearDates.containsKey(year)) return cached;
-    final yearDate = track.yearAsDateTime();
-    _yearDates[year] = yearDate;
-    return yearDate;
+    final cached = _yearRanges[year];
+    if (cached != null || _yearRanges.containsKey(year)) return cached;
+    final yearRange = _computeYearRange(track);
+    _yearRanges[year] = yearRange;
+    return yearRange;
+  }
+
+  /// year-only tags cover the whole year, full dates their day.
+  static _MicrosRange? _computeYearRange(Track track) {
+    final yearString = track.year.toString();
+    final date = track.yearAsDateTime(yearString: yearString);
+    if (date == null || date.year == 0) return null;
+    final end = yearString.length == 4 ? DateTime(date.year + 1) : DateTime(date.year, date.month, date.day + 1);
+    return (startMicros: date.microsecondsSinceEpoch, endMicros: end.microsecondsSinceEpoch);
   }
 
   List<String>? playlistsOf(Track track) {
@@ -334,16 +343,18 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
   final bool clockOnly;
   final SmartPlaylistRelativeDuration? relativeDuration;
 
-  const SmartPlaylistRuleBase({
+  SmartPlaylistRuleBase({
     required this.type,
     required this.filter,
     required this.source,
-    required this.data,
-    required this.data2,
+    required T? data,
+    required T2? data2,
     required this.enableCleanup,
     required this.clockOnly,
-    required this.relativeDuration,
-  });
+    required SmartPlaylistRelativeDuration? relativeDuration,
+  }) : data = filter.requiresDataField ? data : null,
+       data2 = filter.requiresData2Field ? data2 : null,
+       relativeDuration = filter.isRelativeDate ? relativeDuration : null;
 
   static SmartPlaylistRuleBase buildFrom({
     required SmartPlaylistFilterType type,
@@ -675,3 +686,6 @@ enum SmartPlaylistLimitUnit {
 extension SmartPlaylistRuleGroupUtils on List<SmartPlaylistRuleGroup> {
   bool isValid() => isNotEmpty && any((g) => g.rules.isNotEmpty);
 }
+
+/// [endMicros] is exclusive.
+typedef _MicrosRange = ({int startMicros, int endMicros});

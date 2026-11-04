@@ -169,8 +169,8 @@ void main() {
     bool clockOnly = false,
     SmartPlaylistRelativeDuration? relativeDuration,
   }) => SmartPlaylistRuleDateTime(
-    data: data,
-    data2: data2,
+    data: data == null ? null : SmartPlaylistDate.legacy(data, clockOnly: clockOnly),
+    data2: data2 == null ? null : SmartPlaylistDate.legacy(data2, clockOnly: clockOnly),
     filter: filter,
     source: source,
     enableCleanup: false,
@@ -656,6 +656,46 @@ void main() {
       expect(pl.toMap()['sorts_v2'], {
         'sorts': ['title'],
       });
+    });
+  });
+
+  group('unused fields', () {
+    test('a rule keeps only what its filter uses', () {
+      final text = SmartPlaylistRuleText(
+        data: const [SmartPlaylistTextDataTokenLiteral('foo')],
+        data2: const [SmartPlaylistTextDataTokenLiteral('bar')],
+        filter: .exists,
+        source: .title,
+        enableCleanup: true,
+      );
+      expect(text.data, isNull);
+      expect(text.data2, isNull);
+      expect(text.validate(), isNull);
+      expect(text.toMap()['data'], isNull);
+
+      final number = SmartPlaylistRuleNumber(data: 20, data2: 80, filter: .isGreaterThan, source: .rating, enableCleanup: false);
+      expect(number.data2, isNull);
+      expect(number.validate(), isNull);
+
+      const twoWeeks = SmartPlaylistRelativeDuration(amount: 2, unit: .weeks);
+      final date = dateRule(.isAfter, .dateAdded, data: DateTime(2020), relativeDuration: twoWeeks);
+      expect(date.relativeDuration, isNull);
+      final relative = date.copyWith(filter: .isWithinLast, relativeDuration: twoWeeks);
+      expect(relative.data, isNull);
+      expect(relative.validate(), isNull);
+    });
+
+    test('switching the filter drops the old values', () {
+      final rule = SmartPlaylistRuleText(
+        data: const [SmartPlaylistTextDataTokenLiteral('foo')],
+        data2: null,
+        filter: .contains,
+        source: .title,
+        enableCleanup: true,
+      );
+      final exists = rule.copyWith(filter: .exists);
+      expect(exists.validate(), isNull);
+      expect(exists, SmartPlaylistRuleText(data: null, data2: null, filter: .exists, source: .title, enableCleanup: true));
     });
   });
 }

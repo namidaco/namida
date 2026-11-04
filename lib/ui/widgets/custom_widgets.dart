@@ -2416,6 +2416,9 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
   /// the last value sent through [NamidaWheelSlider.onValueChanged], in [NamidaWheelSlider.initValue] form.
   int? _reportedInitValue;
 
+  /// the owner already has the value it passed, reporting it back would snap/clamp it while being built.
+  bool _isJumpingToInitValue = false;
+
   int _itemOf(int initValue) => (initValue / widget.stepper / widget.multiplier).round();
 
   static bool _isMultipleOfFive(int n) => n % 5 == 0;
@@ -2426,7 +2429,9 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
     final initValue = widget.initValue;
     // -- outside changes only, our own report can map back to another item (extra value)
     if (initValue == oldWidget.initValue || initValue == _reportedInitValue) return;
+    _isJumpingToInitValue = true;
     _controller.jumpToItem(_itemOf(initValue));
+    _isJumpingToInitValue = false;
   }
 
   @override
@@ -2485,6 +2490,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                       },
                     ),
                     onSelectedItemChanged: (val) {
+                      if (_isJumpingToInitValue) return;
                       int finalValue = (val * widget.stepper * widget.multiplier + widget.min);
                       if ((widget.extraValue && finalValue > widget.max)) finalValue = -1;
                       _reportedInitValue = finalValue < widget.min ? widget.max + 1 : finalValue - widget.min;

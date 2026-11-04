@@ -275,11 +275,10 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
             }
           } else {
             final indexOfAlreadyExistingSimilar = group.rules.indexOf(rule);
-            if (indexOfAlreadyExistingSimilar < 0) {
-              group.rules[initialRule.$1] = rule;
-            } else {
-              group.rules[initialRule.$1] = rule;
-              if (indexOfAlreadyExistingSimilar != initialRule.$1) group.rules.removeAt(indexOfAlreadyExistingSimilar); // also remove old one
+            final isSimilarToAnotherRule = indexOfAlreadyExistingSimilar >= 0 && indexOfAlreadyExistingSimilar != initialRule.$1;
+            group.rules[initialRule.$1] = rule;
+            if (isSimilarToAnotherRule) {
+              group.rules.removeAt(indexOfAlreadyExistingSimilar); // also remove old one
               snackyy(
                 title: lang.note,
                 isError: true,
@@ -345,28 +344,33 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                 ),
               ),
               if (!isForTempSearch)
-                Row(
-                  children: [
-                    const SizedBox(width: 8.0),
-                    NamidaButton(
-                      dense: true,
-                      minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
-                      colors: NamidaButtonColors.dimmed,
-                      icon: Broken.sort,
-                      text: _sorting.firstType?.toText() ?? lang.auto,
-                      fontSizeMultiplier: 0.95,
-                      onTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
-                        currentSorting: _sorting,
-                        onChanged: _setSorting,
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: .end,
+                    children: [
+                      const SizedBox(width: 8.0),
+                      Flexible(
+                        child: NamidaButton(
+                          dense: true,
+                          minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
+                          colors: NamidaButtonColors.dimmed,
+                          icon: Broken.sort,
+                          text: _sorting.firstType?.toText() ?? lang.auto,
+                          fontSizeMultiplier: 0.95,
+                          onTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
+                            currentSorting: _sorting,
+                            onChanged: _setSorting,
+                          ),
+                        ),
                       ),
-                    ),
-                    NamidaIconButton(
-                      horizontalPadding: 8.0,
-                      icon: _sorting.reverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                      iconSize: 20.0,
-                      onPressed: () => _setSortReverse(!_sorting.reverse),
-                    ),
-                  ],
+                      NamidaIconButton(
+                        horizontalPadding: 8.0,
+                        icon: _sorting.reverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                        iconSize: 20.0,
+                        onPressed: () => _setSortReverse(!_sorting.reverse),
+                      ),
+                    ],
+                  ),
                 ),
 
               if (isForTempSearch && ruleGroupsAreValid) ...[
@@ -745,6 +749,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
   final _dataController = TextEditingController();
   final _data2Controller = TextEditingController();
+  List<SmartPlaylistTextDataToken>? _textTokens;
+  List<SmartPlaylistTextDataToken>? _textTokens2;
+  SmartPlaylistRelativeDuration? _relativeDuration;
 
   // -- used to keep previous filters while changing sources
   final _tempFilterForTypeMap = <SmartPlaylistFilterType?, SmartPlaylistRuleFilter?>{};
@@ -756,7 +763,12 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
     final selectedRule = _selectedRule;
     if (selectedRule != null) {
-      if (selectedRule is! SmartPlaylistRuleText) {
+      _tempFilterForTypeMap[selectedRule.type] = selectedRule.filter;
+      _relativeDuration = selectedRule.relativeDuration;
+      if (selectedRule is SmartPlaylistRuleText) {
+        _textTokens = selectedRule.data;
+        _textTokens2 = selectedRule.data2;
+      } else {
         _dataController.text = selectedRule.dataToText(selectedRule.data) ?? '';
         _data2Controller.text = selectedRule.data2ToText(selectedRule.data2) ?? '';
       }
@@ -776,51 +788,41 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
   void _addOrEditRule() {
     if (_formKey.currentState?.validate() == true) {
-      var selectedRule = _selectedRule;
+      final selectedRule = _selectedRule;
       if (selectedRule == null) return;
+      final SmartPlaylistRuleBase rule;
       if (selectedRule is SmartPlaylistRuleText) {
         // -- auto add literal text if field had data
-        final data = _withPendingLiteral(selectedRule.data, _dataController);
-        final data2 = selectedRule.filter.requiresData2Field ? _withPendingLiteral(selectedRule.data2, _data2Controller) : null;
-        selectedRule = _selectedRule = selectedRule.copyWith(datas: (data, data2));
+        final data = _withPendingLiteral(_textTokens, _dataController.text);
+        final data2 = _withPendingLiteral(_textTokens2, _data2Controller.text);
+        rule = selectedRule.copyWith(datas: (data, data2));
       } else {
-        selectedRule = _selectedRule = selectedRule.copyWith(
-          datas: (
-            selectedRule.filter.requiresDataField
-                ? selectedRule.textToData(
-                    _dataController.text,
-                  )
-                : null,
-            selectedRule.filter.requiresData2Field
-                ? selectedRule.textToData2(
-                    _data2Controller.text,
-                  )
-                : null,
-          ),
-        );
+        final data = selectedRule.textToData(_dataController.text);
+        final data2 = selectedRule.textToData2(_data2Controller.text);
+        rule = selectedRule.copyWith(datas: (data, data2));
       }
-      final error = selectedRule.validate();
+      final error = rule.validate();
       if (error != null) {
         snackyy(message: error, isError: true);
         return;
       }
-      widget.onAdd(selectedRule);
+      widget.onAdd(rule);
       NamidaNavigator.inst.closeDialog();
     }
   }
 
-  static List<SmartPlaylistTextDataToken>? _withPendingLiteral(List<SmartPlaylistTextDataToken>? tokens, TextEditingController controller) {
-    final pending = controller.text;
-    if (pending.isEmpty) return tokens;
-    controller.clear();
-    return [...?tokens, SmartPlaylistTextDataTokenLiteral(pending)];
+  static List<SmartPlaylistTextDataToken>? _withPendingLiteral(List<SmartPlaylistTextDataToken>? tokens, String pendingText) {
+    if (pendingText.isEmpty) return tokens;
+    return [...?tokens, SmartPlaylistTextDataTokenLiteral(pendingText)];
   }
 
-  void _setTextTokens(List<SmartPlaylistTextDataToken>? tokens, {required bool isData2}) {
-    final rule = _selectedRule;
-    if (rule is! SmartPlaylistRuleText) return;
-    final datas = isData2 ? (rule.data, tokens) : (tokens, rule.data2);
-    setState(() => _selectedRule = rule.copyWith(datas: datas));
+  void _setRelativeDuration(SmartPlaylistRelativeDuration relativeDuration) {
+    final selectedRule = _selectedRule;
+    if (selectedRule == null) return;
+    setState(() {
+      _relativeDuration = relativeDuration;
+      _selectedRule = selectedRule.copyWith(relativeDuration: relativeDuration);
+    });
   }
 
   void _setNumberRule(SmartPlaylistRuleNumber rule) {
@@ -949,16 +951,26 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         onSelect: (s) {
           if (selectedSourceRx.value != s) {
             selectedSourceRx.value = s;
-            final previousFilter = _tempFilterForTypeMap[s.type];
+            final previousRule = _selectedRule;
+            final keptDateRule = previousRule is SmartPlaylistRuleDateTime && s.type == SmartPlaylistFilterType.dateTime ? previousRule : null;
+            if (keptDateRule == null) {
+              _dataController.clear();
+              _data2Controller.clear();
+              _textTokens = null;
+              _textTokens2 = null;
+              _relativeDuration = null;
+            }
+            final filter = _tempFilterForTypeMap[s.type] ?? s.recommendedFilter;
+            final clockOnly = keptDateRule?.clockOnly ?? false;
             setState(() {
               _selectedRule = null; // avoid subtype errors
               _selectedRule = SmartPlaylistRuleBase.buildFrom(
                 type: s.type,
-                filter: previousFilter ?? s.recommendedFilter,
+                filter: filter,
                 source: s,
                 enableCleanup: s.supportsCleanup,
-                clockOnly: false,
-                relativeDuration: null,
+                clockOnly: clockOnly,
+                relativeDuration: _relativeDuration,
               );
             });
           }
@@ -1021,12 +1033,11 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         iconText: filter.toIconText(),
         text: filter.toText(),
         onTap: () {
-          final isRelative = filter.isRelativeDate;
+          final relativeDuration = _relativeDuration ?? const SmartPlaylistRelativeDuration.initial();
           setState(() {
             _selectedRule = selectedRule.copyWith(
               filter: filter,
-              datas: isRelative ? (null, null) : null,
-              relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? const SmartPlaylistRelativeDuration.initial() : null,
+              relativeDuration: relativeDuration,
             );
           });
           _tempFilterForTypeMap[_selectedRule?.type] = filter;
@@ -1149,9 +1160,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               if (selectedRule is SmartPlaylistRuleText)
                 _TextDataTokensEditor(
                   rule: selectedRule,
-                  tokens: selectedRule.data,
+                  tokens: _textTokens,
                   controller: _dataController,
-                  onChanged: (tokens) => _setTextTokens(tokens, isData2: false),
+                  onChanged: (tokens) => setState(() => _textTokens = tokens),
                 )
               else
                 Row(
@@ -1194,9 +1205,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               if (selectedRule is SmartPlaylistRuleText)
                 _TextDataTokensEditor(
                   rule: selectedRule,
-                  tokens: selectedRule.data2,
+                  tokens: _textTokens2,
                   controller: _data2Controller,
-                  onChanged: (tokens) => _setTextTokens(tokens, isData2: true),
+                  onChanged: (tokens) => setState(() => _textTokens2 = tokens),
                 )
               else
                 Row(
@@ -1239,16 +1250,8 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               _RelativeDurationPicker(
                 key: ValueKey(selectedRule.source),
                 relativeDuration: selectedRule.relativeDuration ?? const SmartPlaylistRelativeDuration.initial(),
-                onChanged: (relDur) {
-                  setState(() {
-                    _selectedRule = selectedRule.copyWith(relativeDuration: relDur);
-                  });
-                },
-                onUnitChanged: (relDur) {
-                  setState(() {
-                    _selectedRule = selectedRule.copyWith(relativeDuration: relDur);
-                  });
-                },
+                onChanged: _setRelativeDuration,
+                onUnitChanged: _setRelativeDuration,
                 validator: selectedRule.dataValidator,
               ),
             ],
@@ -1430,7 +1433,7 @@ class _ChoiceChipsWrap<T> extends StatelessWidget {
 
 class _CalendarPickerIconWidget extends StatelessWidget {
   final bool clockOnly;
-  final void Function(DateTime date) onSelect;
+  final void Function(SmartPlaylistDate date) onSelect;
   const _CalendarPickerIconWidget({required this.clockOnly, required this.onSelect});
 
   @override
@@ -1446,7 +1449,8 @@ class _CalendarPickerIconWidget extends StatelessWidget {
             initialEntryMode: .dial,
           );
           if (res != null) {
-            onSelect(DateTime(0, 1, 1, res.hour, res.minute));
+            final clock = DateTime(0, 1, 1, res.hour, res.minute);
+            onSelect(SmartPlaylistDate(clock, .minute));
           }
         } else {
           showCalendarDialog(
@@ -1456,7 +1460,7 @@ class _CalendarPickerIconWidget extends StatelessWidget {
             calendarType: NamidaCalendarDatePickerType.single,
             onGenerate: (dates) {
               if (dates.isNotEmpty) {
-                onSelect(dates.first);
+                onSelect(SmartPlaylistDate(dates.first, .day));
               }
               NamidaNavigator.inst.closeDialog();
             },
@@ -1725,26 +1729,26 @@ class _TextDataTokensEditor extends StatefulWidget {
 }
 
 class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
-  late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.tokens ?? <SmartPlaylistTextDataToken>[]);
   final _suggestionsProvider = TextSuggestionsProvider();
 
   Set<String>? _buildAlreadyAddedLiterals() {
+    final tokens = widget.tokens;
+    if (tokens == null) return null;
     Set<String>? literals;
-    for (final token in _tokensCopy) {
+    for (final token in tokens) {
       if (token is SmartPlaylistTextDataTokenLiteral) (literals ??= <String>{}).add(token.text.toLowerCase());
     }
     return literals;
   }
 
-  void _refreshTokens() {
-    widget.onChanged(_tokensCopy.isEmpty ? null : _tokensCopy);
+  void _setTokens(List<SmartPlaylistTextDataToken> tokens) {
+    widget.onChanged(tokens.isEmpty ? null : tokens);
   }
 
   void _addLiteralFromField() {
     final text = widget.controller.text;
     if (text.isEmpty) return;
-    _tokensCopy.add(SmartPlaylistTextDataTokenLiteral(text));
-    _refreshTokens();
+    _setTokens([...?widget.tokens, SmartPlaylistTextDataTokenLiteral(text)]);
     widget.controller.clear();
   }
 
@@ -1754,8 +1758,9 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
   }
 
   void _removeAt(int index) {
-    _tokensCopy.removeAt(index);
-    _refreshTokens();
+    final tokens = [...?widget.tokens];
+    tokens.removeAt(index);
+    _setTokens(tokens);
   }
 
   void _editLiteral(int index, SmartPlaylistTextDataTokenLiteral token) {
@@ -1790,12 +1795,13 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                       onSelect: (source) {
                         source as SmartPlaylistRuleFilterTextSource;
                         final tokenSource = SmartPlaylistTextDataTokenSource(source);
+                        final tokens = [...?widget.tokens];
                         if (replaceIndex != null) {
-                          _tokensCopy[replaceIndex] = tokenSource;
+                          tokens[replaceIndex] = tokenSource;
                         } else {
-                          _tokensCopy.add(tokenSource);
+                          tokens.add(tokenSource);
                         }
-                        _refreshTokens();
+                        _setTokens(tokens);
 
                         NamidaNavigator.inst.closeDialog();
                       },
@@ -1812,7 +1818,7 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = _tokensCopy;
+    final tokens = widget.tokens ?? const <SmartPlaylistTextDataToken>[];
     final filter = widget.rule.filter;
     final isRegex = filter.isRegex();
 

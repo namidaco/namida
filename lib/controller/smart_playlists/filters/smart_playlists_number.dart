@@ -107,9 +107,7 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     final data = this.data;
     final data2 = this.data2;
     if (filter.requiresDataField && (data == null || data < 0)) return '0+';
-    if (!filter.requiresDataField && (data != null && data >= 0)) return lang.nameContainsBadCharacter;
     if (filter.requiresData2Field && (data2 == null || data2 < 0)) return '0+';
-    if (!filter.requiresData2Field && (data2 != null && data2 >= 0)) return lang.nameContainsBadCharacter;
     return null;
   }
 

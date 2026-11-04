@@ -82,9 +82,7 @@ final class SmartPlaylistRuleText
     final hasTokens = data?.isNotEmpty == true;
     final hasTokens2 = data2?.isNotEmpty == true;
     if (filter.requiresDataField && !hasTokens) return lang.emptyValue;
-    if (!filter.requiresDataField && hasTokens) return lang.nameContainsBadCharacter;
     if (filter.requiresData2Field && !hasTokens2) return lang.emptyValue;
-    if (!filter.requiresData2Field && hasTokens2) return lang.nameContainsBadCharacter;
     return null;
   }
 

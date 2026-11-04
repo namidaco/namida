@@ -1,6 +1,6 @@
 part of '../smart_playlists_controller.dart';
 
-final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, DateTime, SmartPlaylistRuleFilterDateTime, SmartPlaylistRuleFilterDateTimeSource> {
+final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<SmartPlaylistDate, SmartPlaylistDate, SmartPlaylistRuleFilterDateTime, SmartPlaylistRuleFilterDateTimeSource> {
   SmartPlaylistRuleDateTime({
     required super.data,
     required super.data2,
@@ -13,7 +13,7 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
 
   @override
   SmartPlaylistRuleDateTime copyWith({
-    (DateTime? data, DateTime? data2)? datas,
+    (SmartPlaylistDate? data, SmartPlaylistDate? data2)? datas,
     SmartPlaylistRuleFilterDateTime? filter,
     bool? enableCleanup,
     bool? clockOnly,
@@ -37,16 +37,8 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
         return lang.emptyValue;
       }
     } else {
-      if (clockOnly) {
-        final parts = value.split(':');
-        if (parts.length != 3 || parts.any((p) => int.tryParse(p) == null)) return lang.nameContainsBadCharacter;
-        return null;
-      }
-      try {
-        DateTime.parse(value);
-      } catch (e) {
-        return e.toString();
-      }
+      final date = textToData(value);
+      if (date == null) return lang.nameContainsBadCharacter;
     }
 
     return null;
@@ -59,9 +51,7 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
     if (filter.isRelativeDate && (relativeDuration == null || relativeDuration!.amount <= 0)) return lang.emptyValue;
 
     if (filter.requiresDataField && data == null) return lang.emptyValue;
-    if (!filter.requiresDataField && data != null) return lang.nameContainsBadCharacter;
     if (filter.requiresData2Field && data2 == null) return lang.emptyValue;
-    if (!filter.requiresData2Field && data2 != null) return lang.nameContainsBadCharacter;
     return null;
   }
 
@@ -84,60 +74,111 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
         '';
   }
 
-  String? _displayTextOf(DateTime? date) {
-    if (date == null) return null;
+  String? _displayTextOf(SmartPlaylistDate? value) {
+    if (value == null) return null;
+    final date = value.date;
     if (clockOnly) return date.clockFormatted;
-    if (_isWholeDay(date)) return date.dateFormattedOriginal;
-    return date.dateAndClockFormattedOriginal;
+    return switch (value.precision) {
+      SmartPlaylistDatePrecision.year => '${date.year}',
+      SmartPlaylistDatePrecision.month => DateFormat('MMMM yyyy').format(date),
+      SmartPlaylistDatePrecision.day => date.dateFormattedOriginal,
+      SmartPlaylistDatePrecision.minute || SmartPlaylistDatePrecision.second => date.dateAndClockFormattedOriginal,
+    };
   }
 
+  static final _dateTextRegex = RegExp(r'^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?)?)?$');
+  static final _clockTextRegex = RegExp(r'^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$');
+
   @override
-  DateTime? textToData(String? value) {
+  SmartPlaylistDate? textToData(String? value) {
     if (value == null || value.isEmpty) return null;
-    if (clockOnly) {
-      final parts = value.split(':');
-      if (parts.length != 3) return null;
-      final h = int.tryParse(parts[0]);
-      final m = int.tryParse(parts[1]);
-      final s = int.tryParse(parts[2]);
-      if (h == null || m == null || s == null) return null;
-      return DateTime(0, 1, 1, h, m, s);
-    }
-    return DateTime.tryParse(value);
+    final text = value.trim();
+    return clockOnly ? _parseClockText(text) : _parseDateText(text);
+  }
+
+  static SmartPlaylistDate? _parseClockText(String text) {
+    final match = _clockTextRegex.firstMatch(text);
+    if (match == null) return null;
+    final secondText = match[3];
+    final hour = int.parse(match[1]!);
+    final minute = int.parse(match[2]!);
+    final second = secondText == null ? 0 : int.parse(secondText);
+    if (hour > 23 || minute > 59 || second > 59) return null;
+    final precision = secondText == null ? SmartPlaylistDatePrecision.minute : SmartPlaylistDatePrecision.second;
+    return SmartPlaylistDate(DateTime(0, 1, 1, hour, minute, second), precision);
+  }
+
+  /// the parts given decide how much the value covers, `2019` is the whole year and `2019-05-14 12:30` that minute.
+  static SmartPlaylistDate? _parseDateText(String text) {
+    final match = _dateTextRegex.firstMatch(text);
+    if (match == null) return _parseIsoText(text);
+    final monthText = match[2];
+    final dayText = match[3];
+    final hourText = match[4];
+    final secondText = match[6];
+    final year = int.parse(match[1]!);
+    final month = monthText == null ? 1 : int.parse(monthText);
+    final day = dayText == null ? 1 : int.parse(dayText);
+    final hour = hourText == null ? 0 : int.parse(hourText);
+    final minute = hourText == null ? 0 : int.parse(match[5]!);
+    final second = secondText == null ? 0 : int.parse(secondText);
+    if (month < 1 || month > 12) return null;
+    if (day < 1 || day > DateUtils.getDaysInMonth(year, month)) return null;
+    if (hour > 23 || minute > 59 || second > 59) return null;
+    final precision = secondText != null
+        ? SmartPlaylistDatePrecision.second
+        : hourText != null
+        ? SmartPlaylistDatePrecision.minute
+        : dayText != null
+        ? SmartPlaylistDatePrecision.day
+        : monthText != null
+        ? SmartPlaylistDatePrecision.month
+        : SmartPlaylistDatePrecision.year;
+    return SmartPlaylistDate(DateTime(year, month, day, hour, minute, second), precision);
+  }
+
+  /// other iso formats (ex: `20190514`) keep meaning what they did before precisions existed.
+  static SmartPlaylistDate? _parseIsoText(String text) {
+    final date = DateTime.tryParse(text);
+    if (date == null) return null;
+    return SmartPlaylistDate.legacy(date, clockOnly: false);
   }
 
   @override
-  DateTime? textToData2(String? value) => textToData(value);
+  SmartPlaylistDate? textToData2(String? value) => textToData(value);
 
   @override
-  String? dataToText(DateTime? data) {
+  String? dataToText(SmartPlaylistDate? data) {
     if (data == null) return null;
-    final dateFormat = clockOnly
-        ? DateFormat('HH:mm:ss')
-        : _isWholeDay(data)
-        ? DateFormat('yyyy-MM-dd')
-        : DateFormat('yyyy-MM-dd HH:mm:ss');
-    return dateFormat.format(data);
+    final pattern = switch (data.precision) {
+      SmartPlaylistDatePrecision.year => 'yyyy',
+      SmartPlaylistDatePrecision.month => 'yyyy-MM',
+      SmartPlaylistDatePrecision.day => 'yyyy-MM-dd',
+      SmartPlaylistDatePrecision.minute => clockOnly ? 'HH:mm' : 'yyyy-MM-dd HH:mm',
+      SmartPlaylistDatePrecision.second => clockOnly ? 'HH:mm:ss' : 'yyyy-MM-dd HH:mm:ss',
+    };
+    return DateFormat(pattern).format(data.date);
   }
 
   @override
-  String? data2ToText(DateTime? data2) => data2 == null ? null : dataToText(data2);
+  String? data2ToText(SmartPlaylistDate? data2) => data2 == null ? null : dataToText(data2);
 
   @override
-  String? toHintText() => clockOnly ? 'HH:mm:ss' : 'YYYY-MM-DD [HH:mm:ss]';
-
-  /// midnight means no clock was given.
-  static bool _isWholeDay(DateTime date) => date.hour == 0 && date.minute == 0 && date.second == 0 && date.millisecond == 0 && date.microsecond == 0;
+  String? toHintText() => clockOnly ? 'HH:mm[:ss]' : 'YYYY[-MM[-DD]] [HH:mm[:ss]]';
 
   bool _matchesTimestamp(int? msse, _SmartPlaylistResolveContext context) => _dateFn(msse, context);
 
   late final _comparesClockOnly = clockOnly && !filter.isRelativeDate;
 
   /// seconds of the local day for clock only comparisons, microseconds since epoch otherwise, ints since each local date costs a timezone lookup.
-  int? _valueOf(DateTime? date) {
-    if (date == null) return null;
+  int _valueOfDate(DateTime date) {
     if (_comparesClockOnly) return _secondsOfDay(date);
     return date.microsecondsSinceEpoch;
+  }
+
+  int? _valueOf(SmartPlaylistDate? value) {
+    if (value == null) return null;
+    return _valueOfDate(value.date);
   }
 
   int _valueOfTimestamp(int msse) {
@@ -153,70 +194,89 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   late final _dataValue = _valueOf(data);
   late final _data2Value = _valueOf(data2);
 
-  int? _exclusiveEndOf(DateTime? date) {
-    if (date == null) return null;
+  int? _exclusiveEndOf(SmartPlaylistDate? value) {
+    if (value == null) return null;
+    final date = value.date;
     if (_comparesClockOnly) {
-      final coveredSeconds = date.second == 0 ? Duration.secondsPerMinute : 1;
+      final coveredSeconds = value.precision == SmartPlaylistDatePrecision.second ? 1 : Duration.secondsPerMinute;
       return _secondsOfDay(date) + coveredSeconds;
     }
-    if (_isWholeDay(date)) {
-      final nextDay = DateTime(date.year, date.month, date.day + 1);
-      return nextDay.microsecondsSinceEpoch;
-    }
-    return date.microsecondsSinceEpoch + Duration.microsecondsPerSecond;
+    return switch (value.precision) {
+      SmartPlaylistDatePrecision.year => DateTime(date.year + 1).microsecondsSinceEpoch,
+      SmartPlaylistDatePrecision.month => DateTime(date.year, date.month + 1).microsecondsSinceEpoch,
+      SmartPlaylistDatePrecision.day => DateTime(date.year, date.month, date.day + 1).microsecondsSinceEpoch,
+      SmartPlaylistDatePrecision.minute => date.microsecondsSinceEpoch + Duration.microsecondsPerMinute,
+      SmartPlaylistDatePrecision.second => date.microsecondsSinceEpoch + Duration.microsecondsPerSecond,
+    };
   }
 
   late final _dataEndValue = _exclusiveEndOf(data);
   late final _data2EndValue = _exclusiveEndOf(data2);
 
-  late final (int?, int?) _rangeValues = _dataValue == null || _data2Value == null
+  /// both values are included whole, so `2019` to `2019-06` still covers all of 2019.
+  late final (int?, int?) _rangeValues = _dataValue == null || _data2Value == null || _dataEndValue == null || _data2EndValue == null
       ? (_dataValue, _data2EndValue)
-      : _dataValue < _data2Value
-      ? (_dataValue, _data2EndValue)
-      : (_data2Value, _dataEndValue);
+      : (_dataValue.withMaximum(_data2Value), _dataEndValue.withMinimum(_data2EndValue));
 
   late final _startValue = _rangeValues.$1;
   late final _endValue = _rangeValues.$2;
 
   late final _crossesMidnight = _comparesClockOnly && _dataValue != null && _data2Value != null && _data2Value < _dataValue;
 
-  bool _isWithinData(int value) {
+  bool _isWithinData(int start, int end) {
     final dataValue = _dataValue;
     final dataEndValue = _dataEndValue;
-    return dataValue != null && dataEndValue != null && value >= dataValue && value < dataEndValue;
+    return dataValue != null && dataEndValue != null && start >= dataValue && end <= dataEndValue;
+  }
+
+  bool _isOutsideData(int start, int end) {
+    final dataValue = _dataValue;
+    final dataEndValue = _dataEndValue;
+    return dataValue != null && dataEndValue != null && (end <= dataValue || start >= dataEndValue);
   }
 
   /// in dates world, one usually means an inclusive date.
   /// ex: in between 2015-2016, so both exact dates should be included as well.
   /// usually useful for types like: `isBefore`, `isAfter`, `isInBetween`.
   /// but not for types like: `isOutside`.
-  late final bool Function(int? value, _SmartPlaylistResolveContext context) _valueFnRaw = switch (filter) {
-    SmartPlaylistRuleFilterDateTime.isSame => (value, _) => value != null && _isWithinData(value),
-    SmartPlaylistRuleFilterDateTime.isNotSame => (value, _) => value != null && _dataValue != null && !_isWithinData(value),
-    SmartPlaylistRuleFilterDateTime.isBefore => (value, _) => value != null && _dataEndValue != null && value < _dataEndValue,
-    SmartPlaylistRuleFilterDateTime.isAfter => (value, _) => value != null && _dataValue != null && value >= _dataValue,
-    SmartPlaylistRuleFilterDateTime.isInBetween => (value, context) {
-      if (value == null) return false;
-      if (_crossesMidnight) return value >= _dataValue! || value < _data2EndValue!;
-      return _startValue != null && value >= _startValue && value < _endValueOf(context);
+  ///
+  /// a track date covers `[start, end)`, a timestamp only its own microsecond and a year-only tag its whole year,
+  /// it matches only when all of it is on the filter's side, a `2019` tag isn't the same as `2019-01-01`.
+  late final bool Function(int start, int end, _SmartPlaylistResolveContext context) _rangeFn = switch (filter) {
+    SmartPlaylistRuleFilterDateTime.isSame => (start, end, _) => _isWithinData(start, end),
+    SmartPlaylistRuleFilterDateTime.isNotSame => (start, end, _) => _isOutsideData(start, end),
+    SmartPlaylistRuleFilterDateTime.isBefore => (start, end, _) => _dataEndValue != null && end <= _dataEndValue,
+    SmartPlaylistRuleFilterDateTime.isAfter => (start, end, _) => _dataValue != null && start >= _dataValue,
+    SmartPlaylistRuleFilterDateTime.isInBetween => (start, end, context) {
+      if (_crossesMidnight) return start >= _dataValue! || end <= _data2EndValue!;
+      return _startValue != null && start >= _startValue && end <= _endValueOf(context);
     },
-    SmartPlaylistRuleFilterDateTime.isOutside => (value, context) {
-      if (value == null) return false;
-      if (_crossesMidnight) return value < _dataValue! && value >= _data2EndValue!;
-      return (_startValue != null && value < _startValue) || value >= _endValueOf(context);
+    SmartPlaylistRuleFilterDateTime.isOutside => (start, end, context) {
+      if (_crossesMidnight) return start < _dataValue! && start >= _data2EndValue!;
+      return (_startValue != null && end <= _startValue) || start >= _endValueOf(context);
     },
-    SmartPlaylistRuleFilterDateTime.isWithinLast => (value, context) {
-      if (value == null) return false; // -- never listened, definetly not here
+    SmartPlaylistRuleFilterDateTime.isWithinLast => (start, end, context) {
       final boundary = _relativeBoundaryOf(context);
-      return boundary != null && value > boundary;
+      return boundary != null && start > boundary;
     },
-    SmartPlaylistRuleFilterDateTime.isNotWithinLast => (value, context) {
-      if (value == null) return true; // -- never listened, ofc not within any range
+    SmartPlaylistRuleFilterDateTime.isNotWithinLast => (start, end, context) {
       final boundary = _relativeBoundaryOf(context);
-      return boundary != null && value < boundary;
+      return boundary != null && end <= boundary;
     },
-    SmartPlaylistRuleFilterDateTime.exists => (value, _) => value != null,
-    SmartPlaylistRuleFilterDateTime.missing => (value, _) => value == null,
+    SmartPlaylistRuleFilterDateTime.exists => (start, end, _) => true,
+    SmartPlaylistRuleFilterDateTime.missing => (start, end, _) => false,
+  };
+
+  late final bool _matchesUnknownDate = switch (filter) {
+    SmartPlaylistRuleFilterDateTime.isNotWithinLast || SmartPlaylistRuleFilterDateTime.missing => true,
+    SmartPlaylistRuleFilterDateTime.isSame ||
+    SmartPlaylistRuleFilterDateTime.isNotSame ||
+    SmartPlaylistRuleFilterDateTime.isBefore ||
+    SmartPlaylistRuleFilterDateTime.isAfter ||
+    SmartPlaylistRuleFilterDateTime.isInBetween ||
+    SmartPlaylistRuleFilterDateTime.isOutside ||
+    SmartPlaylistRuleFilterDateTime.isWithinLast ||
+    SmartPlaylistRuleFilterDateTime.exists => false,
   };
 
   int _endValueOf(_SmartPlaylistResolveContext context) {
@@ -231,20 +291,18 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
     return context.relativeBoundaryMicrosOf(relativeDuration);
   }
 
-  static final _unknownDate = DateTime(0);
-  late final _unknownDateValue = _valueOf(_unknownDate);
-
   bool _yearFn(Track track, _SmartPlaylistResolveContext context) {
-    final yearDate = context.yearDateOf(track);
-    final value = _valueOf(yearDate);
-    final knownValue = value == _unknownDateValue ? null : value;
-    return _valueFnRaw(knownValue, context);
+    // -- year tags have no clock
+    if (_comparesClockOnly) return _matchesUnknownDate;
+    final yearRange = context.yearRangeOf(track);
+    if (yearRange == null) return _matchesUnknownDate;
+    return _rangeFn(yearRange.startMicros, yearRange.endMicros, context);
   }
 
   bool _dateFn(int? trackDateMSSE, _SmartPlaylistResolveContext context) {
-    if (trackDateMSSE == null || trackDateMSSE == 0) return _valueFnRaw(null, context);
+    if (trackDateMSSE == null || trackDateMSSE == 0) return _matchesUnknownDate;
     final value = _valueOfTimestamp(trackDateMSSE);
-    return _valueFnRaw(value, context);
+    return _rangeFn(value, value + 1, context);
   }
 
   /// later dates only ever match more (rising) or less (falling), so sorted listens can be decided by their oldest or newest one.
@@ -304,17 +362,24 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   }
 
   factory SmartPlaylistRuleDateTime.fromMap(Map map) {
-    final dataJson = map['data'] as int?;
-    final data2Json = map['data2'] as int?;
+    final clockOnly = map['clockOnly'] == true;
     return SmartPlaylistRuleDateTime(
-      data: dataJson == null ? null : DateTime.fromMillisecondsSinceEpoch(dataJson),
-      data2: data2Json == null ? null : DateTime.fromMillisecondsSinceEpoch(data2Json),
+      data: _dateFromMap(map['data'] as int?, map['dataPrecision'], clockOnly: clockOnly),
+      data2: _dateFromMap(map['data2'] as int?, map['data2Precision'], clockOnly: clockOnly),
       filter: SmartPlaylistRuleFilterDateTime.values.getEnum(map['filter'])!,
       source: SmartPlaylistRuleFilterDateTimeSource.values.getEnum(map['source'])!,
       enableCleanup: map['enableCleanup'] == true,
-      clockOnly: map['clockOnly'] == true,
+      clockOnly: clockOnly,
       relativeDuration: map['relativeDuration'] != null ? SmartPlaylistRelativeDuration.fromMap(map['relativeDuration']) : null,
     );
+  }
+
+  static SmartPlaylistDate? _dateFromMap(int? msse, dynamic precisionName, {required bool clockOnly}) {
+    if (msse == null) return null;
+    final date = DateTime.fromMillisecondsSinceEpoch(msse);
+    final precision = SmartPlaylistDatePrecision.values.getEnum(precisionName);
+    if (precision == null) return SmartPlaylistDate.legacy(date, clockOnly: clockOnly);
+    return SmartPlaylistDate(date, precision);
   }
 
   @override
@@ -323,8 +388,10 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
       'type': type.name,
       'filter': filter.name,
       'source': source.name,
-      'data': ?data?.millisecondsSinceEpoch,
-      'data2': ?data2?.millisecondsSinceEpoch,
+      'data': ?data?.date.millisecondsSinceEpoch,
+      'dataPrecision': ?data?.precision.name,
+      'data2': ?data2?.date.millisecondsSinceEpoch,
+      'data2Precision': ?data2?.precision.name,
       if (enableCleanup) 'enableCleanup': enableCleanup,
       if (clockOnly) 'clockOnly': clockOnly,
       'relativeDuration': ?relativeDuration?.toMap(),
@@ -538,6 +605,48 @@ class SmartPlaylistRelativeDuration {
 
   @override
   int get hashCode => amount.hashCode ^ unit.hashCode;
+}
+
+enum SmartPlaylistDatePrecision {
+  year,
+  month,
+  day,
+  minute,
+  second,
+}
+
+/// a rule date and how much of time it covers, starting at [date].
+///
+/// by claude
+class SmartPlaylistDate {
+  final DateTime date;
+  final SmartPlaylistDatePrecision precision;
+
+  const SmartPlaylistDate(this.date, this.precision);
+
+  /// rules saved before precisions existed, midnight meant the whole day and a clock with zero seconds the whole minute.
+  factory SmartPlaylistDate.legacy(DateTime date, {required bool clockOnly}) {
+    final SmartPlaylistDatePrecision precision;
+    if (clockOnly) {
+      precision = date.second == 0 ? .minute : .second;
+    } else {
+      precision = _isMidnight(date) ? .day : .second;
+    }
+    return SmartPlaylistDate(date, precision);
+  }
+
+  static bool _isMidnight(DateTime date) => date.hour == 0 && date.minute == 0 && date.second == 0 && date.millisecond == 0 && date.microsecond == 0;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! SmartPlaylistDate) return false;
+
+    return other.date == date && other.precision == precision;
+  }
+
+  @override
+  int get hashCode => date.hashCode ^ precision.hashCode;
 }
 
 enum _DateTrend {
