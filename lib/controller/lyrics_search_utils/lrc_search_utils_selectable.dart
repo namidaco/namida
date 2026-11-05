@@ -227,6 +227,131 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
     } catch (_) {}
   }
 
+  /// lyrics and subtitles of moved or renamed tracks follow them: next to the track, in the cache and in lyrics folders.
+  /// ones that a track in [libraryPaths] still matches are copied instead, existing files are never replaced.
+  /// returns how many files were moved or copied.
+  static Future<int> moveLyricsOfMovedTracks(
+    Map<String, String> newPathsByOldPath,
+    List<String> libraryPaths, {
+    String? cacheDirectory,
+    LyricsLocations? locations,
+  }) {
+    final params = _LyricsMoveParams(
+      newPathsByOldPath: newPathsByOldPath,
+      libraryPaths: libraryPaths,
+      cacheDirectory: cacheDirectory ?? AppDirs.LYRICS,
+      locations: locations ?? LyricsLocations.fromSettings(),
+    );
+    return Isolate.run(() => _moveLyricsOfMovedTracksSync(params));
+  }
+
+  static int _moveLyricsOfMovedTracksSync(_LyricsMoveParams params) {
+    final cacheDirectory = params.cacheDirectory;
+    final locations = params.locations;
+    final movedPaths = {...params.newPathsByOldPath.keys, ...params.newPathsByOldPath.values};
+
+    final namesInLibrary = <String>{};
+    final pathsInLibrary = <String>{};
+    for (final path in params.libraryPaths) {
+      if (movedPaths.contains(path)) continue;
+      final names = _LyricsTrackNames.fromPath(path);
+      namesInLibrary.add(names.filename);
+      namesInLibrary.add(names.filenameWOExt);
+      pathsInLibrary.add(names.directoryWithSeparator + names.filename);
+      pathsInLibrary.add(names.directoryWithSeparator + names.filenameWOExt);
+    }
+
+    int movedCount = 0;
+    for (final e in params.newPathsByOldPath.entries) {
+      final oldPath = e.key;
+      final newPath = e.value;
+      if (oldPath == newPath || oldPath.startsWith('http')) continue;
+
+      final oldNames = _LyricsTrackNames.fromPath(oldPath);
+      final newFilename = newPath.getFilename;
+      final newFilenameWOExt = newPath.getFilenameWOExt;
+      final newNameByOldKey = {oldNames.filenameWOExt: newFilenameWOExt, oldNames.filename: newFilename};
+      final isRenamed = oldNames.filename != newFilename.toLowerCase();
+
+      int moveSidecars(String fromDirPath, String toDirPath, {required bool Function(String nameKey) isUsedByOthers}) {
+        final sidecars = _LrcSidecarFinder._listSidecars(fromDirPath);
+        if (sidecars == null || sidecars.isEmpty) return 0;
+        int count = 0;
+        for (final nameEntry in newNameByOldKey.entries) {
+          final nameKey = nameEntry.key;
+          final newName = nameEntry.value;
+          final keySidecars = sidecars[nameKey];
+          if (keySidecars == null) continue;
+          final keepSource = isUsedByOthers(nameKey);
+          for (final sidecar in keySidecars) {
+            final extensionPart = sidecar.filename.substring(nameKey.length);
+            final source = FileParts.join(fromDirPath, sidecar.filename);
+            final destinationPath = FileParts.joinPath(toDirPath, '$newName$extensionPart');
+            final didMove = _moveOrCopySync(source, destinationPath, keepSource: keepSource);
+            if (didMove) count++;
+          }
+        }
+        return count;
+      }
+
+      final oldDirPath = oldPath.getDirectoryPath;
+      final newDirPath = newPath.getDirectoryPath;
+      bool isUsedInDirectory(String nameKey) => pathsInLibrary.contains(oldNames.directoryWithSeparator + nameKey);
+      bool isUsedInLibrary(String nameKey) => namesInLibrary.contains(nameKey);
+
+      movedCount += moveSidecars(oldDirPath, newDirPath, isUsedByOthers: isUsedInDirectory);
+
+      final oldSubdirectories = locations.subdirectoriesFor(oldDirPath);
+      final newSubdirectories = locations.subdirectoriesFor(newDirPath);
+      if (oldSubdirectories.length == newSubdirectories.length) {
+        for (int i = 0; i < oldSubdirectories.length; i++) {
+          movedCount += moveSidecars(oldSubdirectories[i], newSubdirectories[i], isUsedByOthers: isUsedInDirectory);
+        }
+      }
+
+      if (!isRenamed) continue;
+
+      for (final dirPath in locations.folders) {
+        movedCount += moveSidecars(dirPath, dirPath, isUsedByOthers: isUsedInLibrary);
+      }
+
+      final oldCacheKey = oldPath.getFilename;
+      final isCacheKeyUsed = namesInLibrary.contains(oldNames.filename);
+      for (final extension in _LrcSidecarFinder.cacheExtensions) {
+        final source = FileParts.join(cacheDirectory, '$oldCacheKey.$extension');
+        final destinationPath = FileParts.joinPath(cacheDirectory, '$newFilename.$extension');
+        final didMove = _moveOrCopySync(source, destinationPath, keepSource: isCacheKeyUsed);
+        if (didMove) movedCount++;
+      }
+    }
+    return movedCount;
+  }
+
+  /// false when [source] doesn't exist or [destinationPath] already does.
+  static bool _moveOrCopySync(File source, String destinationPath, {required bool keepSource}) {
+    try {
+      if (!source.existsSync()) return false;
+      final destination = File(destinationPath);
+      // -- a letter case rename points to the same file on case insensitive storage
+      final isSameFile = destination.existsSync() && FileSystemEntity.identicalSync(source.path, destinationPath);
+      if (destination.existsSync() && !isSameFile) return false;
+      destination.parent.createSync(recursive: true);
+      if (keepSource) {
+        source.copySync(destinationPath);
+        return true;
+      }
+      try {
+        source.renameSync(destinationPath);
+      } catch (_) {
+        source.copySync(destinationPath);
+        source.deleteSync();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // -- replaced by [_LrcSidecarFinder], which lists the directory once instead of probing each name.
   // static List<File Function()> _buildDeviceLRCFilesCallbacks(String localTrackPath) {
   //   final dirPath = localTrackPath.getDirectoryPath;
@@ -461,6 +586,7 @@ class _LrcSidecarFinder {
   static const syncedExtensions = ['lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', 'wlrc'];
   static const plainExtensions = ['txt'];
   static const allExtensions = [...syncedExtensions, ...plainExtensions];
+  static const cacheExtensions = ['lrc', 'txt'];
   static const _allExtensionsSet = {...allExtensions};
 
   static final _listings = <String, _LrcDirectoryListing>{};
@@ -621,6 +747,20 @@ class _LyricsTrackNames {
     final filenameWOExt = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
     return _LyricsTrackNames._(directoryWithSeparator, filename, filenameWOExt);
   }
+}
+
+class _LyricsMoveParams {
+  final Map<String, String> newPathsByOldPath;
+  final List<String> libraryPaths;
+  final String cacheDirectory;
+  final LyricsLocations locations;
+
+  const _LyricsMoveParams({
+    required this.newPathsByOldPath,
+    required this.libraryPaths,
+    required this.cacheDirectory,
+    required this.locations,
+  });
 }
 
 class _LyricsDeleteParams {

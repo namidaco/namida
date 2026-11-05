@@ -309,7 +309,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
           final parentDirPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName);
           final filenameClean = DownloadTaskFilename.cleanupFilename(value, parentDirPath: parentDirPath);
           if (value != filenameClean) {
-            final baddies = value.split('').where(DownloadTaskFilename.cleanupFilenameRegex.hasMatch).toSet().join();
+            final baddies = DownloadTaskFilename.badCharactersIn(value);
             return "${lang.nameContainsBadCharacter} $baddies";
           }
 

@@ -436,4 +436,66 @@ void main() {
       expect(cached.existsSync(), true);
     });
   });
+
+  group('moving and renaming with the track', () {
+    Future<int> move(Map<String, String> newPathsByOldPath, List<String> libraryPaths) {
+      return LrcSearchUtilsSelectable.moveLyricsOfMovedTracks(
+        newPathsByOldPath,
+        libraryPaths,
+        cacheDirectory: cache,
+        locations: LyricsLocations(saveLocation: LyricsSaveLocation.trackFolder, folders: [lyricsFolder], libraryDirectories: [library]),
+      );
+    }
+
+    test('renaming renames lyrics and subtitles everywhere', () async {
+      write(p.join(library, 'Artist', 'Album', 'song.lrc'));
+      write(p.join(library, 'Artist', 'Album', 'Song.flac.SRT'));
+      write(p.join(lyricsFolder, 'Artist', 'Album', 'song.txt'));
+      write(p.join(lyricsFolder, 'song.lrc'));
+      write(p.join(cache, 'song.flac.lrc'));
+      final ofOtherTrack = write(p.join(library, 'Artist', 'Album', 'other.lrc'));
+
+      final movedCount = await move({trackPath(): trackPath('New Name.flac')}, [trackPath('New Name.flac'), trackPath('other.flac')]);
+
+      expect(movedCount, 5);
+      expect(File(p.join(library, 'Artist', 'Album', 'New Name.lrc')).existsSync(), true);
+      expect(File(p.join(library, 'Artist', 'Album', 'New Name.flac.SRT')).existsSync(), true);
+      expect(File(p.join(lyricsFolder, 'Artist', 'Album', 'New Name.txt')).existsSync(), true);
+      expect(File(p.join(lyricsFolder, 'New Name.lrc')).existsSync(), true);
+      expect(File(p.join(cache, 'New Name.flac.lrc')).existsSync(), true);
+      expect(File(p.join(library, 'Artist', 'Album', 'song.lrc')).existsSync(), false);
+      expect(File(p.join(cache, 'song.flac.lrc')).existsSync(), false);
+      expect(ofOtherTrack.existsSync(), true);
+    });
+
+    test('moving to another folder keeps the cache and moves the rest', () async {
+      write(p.join(library, 'Artist', 'Album', 'song.lrc'));
+      write(p.join(lyricsFolder, 'Artist', 'Album', 'song.lrc'));
+      final inLyricsFolder = write(p.join(lyricsFolder, 'song.lrc'));
+      final cached = write(p.join(cache, 'song.flac.lrc'));
+      final newPath = p.join(library, 'Other', 'song.flac');
+
+      final movedCount = await move({trackPath(): newPath}, [newPath]);
+
+      expect(movedCount, 2);
+      expect(File(p.join(library, 'Other', 'song.lrc')).existsSync(), true);
+      expect(File(p.join(lyricsFolder, 'Other', 'song.lrc')).existsSync(), true);
+      expect(File(p.join(library, 'Artist', 'Album', 'song.lrc')).existsSync(), false);
+      expect(inLyricsFolder.existsSync(), true);
+      expect(cached.existsSync(), true);
+    });
+
+    test('lyrics another track still matches are copied, existing files are kept', () async {
+      final shared = write(p.join(library, 'Artist', 'Album', 'song.lrc'));
+      final existing = write(p.join(library, 'Artist', 'Album', 'New Name.flac.lrc'), 'mine');
+      write(p.join(library, 'Artist', 'Album', 'song.flac.lrc'));
+
+      final movedCount = await move({trackPath(): trackPath('New Name.flac')}, [trackPath('New Name.flac'), trackPath('song.mp3')]);
+
+      expect(movedCount, 1);
+      expect(shared.existsSync(), true);
+      expect(File(p.join(library, 'Artist', 'Album', 'New Name.lrc')).existsSync(), true);
+      expect(existing.readAsStringSync(), 'mine');
+    });
+  });
 }
