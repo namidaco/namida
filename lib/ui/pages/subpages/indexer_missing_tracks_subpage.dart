@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
-import 'package:namida/class/file_matcher.dart';
+import 'package:namida/class/missing_track_matcher.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -54,6 +55,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   final _cleanedPathsLookup = <String, String>{};
   final _searchController = TextEditingController();
   final _missingTracksSuggestions = <String, String?>{}.obs;
+  var _missingTracksCandidates = <String, List<String>>{};
   final _selectedTracksToUpdate = <String, bool>{}.obs;
 
   bool _isLoading = false;
@@ -109,6 +111,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     _filteredPaths = null;
     _cleanedPathsLookup.clear();
     _missingTracksSuggestions.value = {};
+    _missingTracksCandidates = {};
     _selectedTracksToUpdate.value = {};
     _loadingProgressOnGoing.value = {_LoadingProgress.initializing: true};
     _loadingProgressActualTracksCount.value = {};
@@ -187,8 +190,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       addTracksCountToStep(_LoadingProgress.findingHistoryTracks);
 
       indicesProgressMap[allTracksSet.length] = _LoadingProgress.findingLibraryTracks;
-      for (final path in Indexer.inst.allTracksMappedByPath.keys) {
+      final fingerprintsByPath = <String, MissingTrackFingerprint>{};
+      for (final e in Indexer.inst.allTracksMappedByPath.entries) {
+        final path = e.key;
+        final trExt = e.value;
         allTracksSet.add(path);
+        final fingerprint = MissingTrackMatcher.fingerprintOf(size: trExt.size, durationMS: trExt.durationMS);
+        if (fingerprint != null) fingerprintsByPath[path] = fingerprint;
       }
       addTracksCountToStep(_LoadingProgress.findingLibraryTracks);
 
@@ -203,6 +211,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       final params = _FetchMissingTracksParams(
         allAudioFiles: audioFiles,
         allTracksSet: allTracksSet,
+        fingerprintsByPath: fingerprintsByPath,
         indicesProgressMap: indicesProgressMap,
         progressPort: _portLoadingProgress!.sendPort,
         resultsPort: _resultPort!.sendPort,
@@ -210,11 +219,12 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       );
       _isolate = await Isolate.spawn(_fetchMissingTracksIsolate, params);
 
-      final res = await _resultPort!.first as (List<String>, Map<String, String?>);
+      final res = await _resultPort!.first as (List<String>, Map<String, String?>, Map<String, List<String>>);
 
       _missingTracksPaths = res.$1;
       _filteredPaths = _computeFilteredPaths(_searchController.text);
       _missingTracksSuggestions.value = res.$2;
+      _missingTracksCandidates = res.$3;
 
       _resultPort?.close();
       _portLoadingProgress?.close();
@@ -233,10 +243,11 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     final resultsPort = params.resultsPort;
     final subProgressPort = params.subProgressPort;
 
-    final fileMatcher = FileMatcher.init(allAudioFiles: allAudioFiles);
+    final matcher = MissingTrackMatcher(allAudioFiles, fingerprintsByPath: params.fingerprintsByPath);
 
     final missingTracksPaths = <String>[];
     final missingTracksSuggestions = <String, String?>{};
+    final missingTracksCandidates = <String, List<String>>{};
 
     void checkAndAdd(String rawPath) {
       final tr = Track.explicit(rawPath);
@@ -244,7 +255,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       final exists = tr.existsSync();
       if (!exists) {
         missingTracksPaths.add(rawPath);
-        missingTracksSuggestions[rawPath] = fileMatcher.getSuggestion(rawPath);
+        final candidates = matcher.getSuggestions(rawPath);
+        missingTracksSuggestions[rawPath] = candidates.firstOrNull;
+        if (candidates.isNotEmpty) missingTracksCandidates[rawPath] = candidates;
       }
     }
 
@@ -259,17 +272,78 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       index++;
     }
 
-    resultsPort.send((missingTracksPaths, missingTracksSuggestions));
+    resultsPort.send((missingTracksPaths, missingTracksSuggestions, missingTracksCandidates));
+  }
 
-    fileMatcher.dispose();
+  void _setNewPathFor(String path, String newPath) {
+    _missingTracksSuggestions[path] = newPath;
+    _selectedTracksToUpdate[path] = true;
   }
 
   void _pickNewPathFor(String path) async {
     final file = await NamidaFileBrowser.pickFile(note: lang.update);
     final newPath = file?.path;
     if (newPath == null) return;
-    _missingTracksSuggestions[path] = newPath;
-    _selectedTracksToUpdate[path] = true;
+    _setNewPathFor(path, newPath);
+  }
+
+  void _onRepickTap(String path) {
+    final candidates = _missingTracksCandidates[path];
+    if (candidates == null) {
+      _pickNewPathFor(path);
+      return;
+    }
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.choose,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.pickFromStorage,
+            onTap: () {
+              NamidaNavigator.inst.closeDialog();
+              _pickNewPathFor(path);
+            },
+          ),
+        ],
+        child: Obx(
+          (context) {
+            final currentPath = _missingTracksSuggestions[path];
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NamidaText(
+                  path.toDisplayPath(),
+                  style: NText.small,
+                ),
+                const SizedBox(height: 8.0),
+                ...candidates.map(
+                  (candidate) {
+                    final displayPath = candidate.toDisplayPath();
+                    final sizeText = File(candidate).fileSizeFormatted();
+                    return SmallListTile(
+                      borderRadius: 12.0,
+                      icon: Broken.medal_star,
+                      title: displayPath,
+                      subtitle: sizeText,
+                      trailing: NamidaCheckMark(
+                        size: 18.0,
+                        active: candidate == currentPath,
+                      ),
+                      onTap: () {
+                        _setNewPathFor(path, candidate);
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _onUpdating() async {
@@ -298,6 +372,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       for (final k in newPaths.keys) {
         _missingTracksPaths.remove(k);
         _missingTracksSuggestions.remove(k);
+        _missingTracksCandidates.remove(k);
         _selectedTracksToUpdate.remove(k);
       }
       _filteredPaths = _computeFilteredPaths(_searchController.text);
@@ -497,7 +572,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                                             verticalPadding: 6.0,
                                                             horizontalPadding: 4.0,
                                                             icon: Broken.repeat_circle,
-                                                            onPressed: () => _pickNewPathFor(path),
+                                                            onPressed: () => _onRepickTap(path),
                                                           ),
                                                         ],
                                                       ),
@@ -675,6 +750,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 class _FetchMissingTracksParams {
   final Set<String> allAudioFiles;
   final Set<String> allTracksSet;
+  final Map<String, MissingTrackFingerprint> fingerprintsByPath;
   final Map<int, _LoadingProgress> indicesProgressMap;
   final SendPort progressPort;
   final SendPort resultsPort;
@@ -683,6 +759,7 @@ class _FetchMissingTracksParams {
   const _FetchMissingTracksParams({
     required this.allAudioFiles,
     required this.allTracksSet,
+    required this.fingerprintsByPath,
     required this.indicesProgressMap,
     required this.progressPort,
     required this.resultsPort,

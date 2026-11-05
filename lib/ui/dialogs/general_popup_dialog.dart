@@ -9,8 +9,8 @@ import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:rhttp/rhttp.dart';
 
-import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/missing_track_matcher.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -461,6 +461,23 @@ Future<void> showGeneralPopupDialog(
     }
   }
 
+  Future<List<String>> getMissingTrackSuggestions(Set<String> existingPaths) {
+    final missingPath = tracks.first.path;
+    final libraryTracks = Indexer.inst.allTracksMappedByPath;
+    final missingTrExt = libraryTracks[missingPath];
+    final fingerprint = missingTrExt == null ? null : MissingTrackMatcher.fingerprintOf(size: missingTrExt.size, durationMS: missingTrExt.durationMS);
+    final sameFingerprintPaths = <String>[];
+    if (fingerprint != null) {
+      for (final e in libraryTracks.entries) {
+        final trExt = e.value;
+        final isSameFile = trExt.size == fingerprint.size && trExt.durationMS == fingerprint.durationMS;
+        if (isSameFile && e.key != missingPath) sameFingerprintPaths.add(e.key);
+      }
+    }
+    final params = (missingPath: missingPath, existingPaths: existingPaths, fingerprint: fingerprint, sameFingerprintPaths: sameFingerprintPaths);
+    return MissingTrackMatcher.scanSuggestions.thready(params);
+  }
+
   void updatePathDialog(String newPath) async {
     final isUpdating = false.obs;
     await openDialog(
@@ -540,8 +557,7 @@ Future<void> showGeneralPopupDialog(
     }
     pathsList.sortBy((p) => p);
 
-    final fileMatcher = FileMatcher.init(allAudioFiles: pathsSet, buildIndex: false);
-    final highMatchesFiles = fileMatcher.getAllSuggestions(tracks.first.path);
+    final highMatchesFiles = await getMissingTrackSuggestions(pathsSet);
 
     /// Searching
     final txtc = TextEditingController();
@@ -1100,8 +1116,8 @@ Future<void> showGeneralPopupDialog(
                                     }
 
                                     /// firstly checks if a file exists in current library
-                                    final fileMatcher = FileMatcher.init(allAudioFiles: Indexer.inst.allAudioFiles.value, buildIndex: false);
-                                    final firstHighMatchesFiles = fileMatcher.getAllSuggestions(tracks.first.path);
+                                    final audioFiles = Indexer.inst.allAudioFiles.value;
+                                    final firstHighMatchesFiles = await getMissingTrackSuggestions(audioFiles);
                                     if (firstHighMatchesFiles.isNotEmpty) {
                                       await openDialog(
                                         (theme) => CustomBlurryDialog(
