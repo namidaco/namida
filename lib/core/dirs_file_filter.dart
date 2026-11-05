@@ -100,22 +100,22 @@ abstract class _DirsWalker {
       final isNewDir = _visitedDirs.add(dir.path);
       if (!isNewDir) continue;
 
-      _dirHasNoMedia = dir.hasNoMedia;
+      _dirHasNoMedia = false;
       _listDir(dir);
-      final hasNoMedia = _dirHasNoMedia;
+      final noMediaDirPath = _dirHasNoMedia ? dir.path : dir.noMediaDirPath;
 
       final folder = fillFolderCovers ? Folder.explicit(dir.path) : null;
-      final listedDir = _ListedDir(folder, hasNoMedia);
+      final listedDir = _ListedDir(folder, noMediaDirPath);
       for (int i = 0; i < dirFilesPaths.length; i++) {
         final didAdd = collector.addFile(dirFilesPaths[i], listedDir);
         if (didAdd && statsBuilder != null) _addFileStats(statsBuilder, i);
       }
       dirFilesPaths.clear();
 
-      final subdirsHaveNoMedia = hasNoMedia && strictNoMedia;
+      final subdirsNoMediaDirPath = strictNoMedia ? noMediaDirPath : null;
       for (int i = dirSubdirs.length - 1; i >= 0; i--) {
         final subdir = dirSubdirs[i];
-        subdir.hasNoMedia = subdirsHaveNoMedia;
+        subdir.noMediaDirPath = subdirsNoMediaDirPath;
         pendingDirs.add(subdir);
       }
       dirSubdirs.clear();
@@ -278,7 +278,7 @@ class DirsFileFilterSimple {
 
     return DirsFileFilterResult(
       allPaths: allPaths,
-      excludedByNoMedia: {},
+      excludedByNoMedia: const {},
       folderCovers: {},
       stats: null,
     );
@@ -287,7 +287,7 @@ class DirsFileFilterSimple {
 
 class _DirsFilesCollector {
   final allPaths = <String>{};
-  final excludedByNoMedia = <String>{};
+  final excludedByNoMedia = <String, List<String>>{};
   final folderCovers = <Folder, String>{};
 
   final List<DirectoryIndex> _directoriesToExclude;
@@ -332,8 +332,9 @@ class _DirsFilesCollector {
     if (path.getFilename.startsWith('.')) return false;
 
     // -- skip if in nomedia folder & specified to exclude
-    if (_respectNoMedia && dir.hasNoMedia) {
-      excludedByNoMedia.add(path);
+    final noMediaDirPath = dir.noMediaDirPath;
+    if (_respectNoMedia && noMediaDirPath != null) {
+      excludedByNoMedia.addForce(noMediaDirPath, path);
       return false;
     }
 
@@ -381,7 +382,9 @@ class _FilesStatsBuilder {
 
 class DirsFileFilterResult {
   final Set<String> allPaths;
-  final Set<String> excludedByNoMedia;
+
+  /// {folder that has the .nomedia: files excluded by it}.
+  final Map<String, List<String>> excludedByNoMedia;
   final Map<Folder, String> folderCovers;
   final FilesStats? stats;
 
@@ -420,17 +423,17 @@ class FilesStats {
 
 class _ListedDir {
   final Folder? folder;
-  final bool hasNoMedia;
+  final String? noMediaDirPath;
   bool hasCover = false;
 
-  _ListedDir(this.folder, this.hasNoMedia);
+  _ListedDir(this.folder, this.noMediaDirPath);
 }
 
 class _PendingDir {
   final String path;
   final bool isLink;
   final _LinksChain? linksChain;
-  bool hasNoMedia = false;
+  String? noMediaDirPath;
 
   _PendingDir({
     required this.path,

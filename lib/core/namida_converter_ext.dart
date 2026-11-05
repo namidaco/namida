@@ -1554,6 +1554,15 @@ extension RouteUtils on NamidaRoute {
       case RouteType.PAGE_party:
         finalWidget = getTextWidget(lang.partyListeningParty);
         break;
+      case RouteType.SUBPAGE_INDEXER_DUPLICATE_TRACKS:
+        finalWidget = getTextWidget(lang.duplicatedTracks);
+        break;
+      case RouteType.SUBPAGE_INDEXER_FILTERED_TRACKS:
+        finalWidget = getTextWidget(lang.filteredBySizeAndDuration);
+        break;
+      case RouteType.SUBPAGE_INDEXER_NOMEDIA_FOLDERS:
+        finalWidget = getTextWidget(lang.tracksExcludedByNomedia);
+        break;
       default:
         null;
     }

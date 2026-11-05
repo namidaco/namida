@@ -29,6 +29,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/pages/subpages/indexer_excluded_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -229,7 +230,8 @@ class IndexerSettings extends SettingSubpageProvider {
         settings.preventDuplicatedTracks,
         icon: Broken.copy,
         title: () => lang.preventDuplicatedTracks,
-        subtitle: () => "${lang.preventDuplicatedTracksSubtitle}. ${lang.indexRefreshRequired}",
+        subtitle: () => lang.preventDuplicatedTracksSubtitle,
+        onChanged: Indexer.inst.onPreventDuplicatedTracksChanged,
       ),
     ],
     [
@@ -1017,11 +1019,25 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-            child: Obx(
-              (context) => NamidaText(
-                '${lang.duplicatedTracks}: ${Indexer.inst.duplicatedTracksLength.valueR}\n${lang.tracksExcludedByNomedia}: ${Indexer.inst.tracksExcludedByNoMedia.valueR}\n${lang.filteredBySizeAndDuration}: ${Indexer.inst.filteredForSizeDurationTracks.valueR}',
-                style: NText.small,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ExcludedTracksCount(
+                  title: lang.duplicatedTracks,
+                  countRx: Indexer.inst.duplicatedTracksLength,
+                  page: const IndexerDuplicateTracksSubpage(),
+                ),
+                _ExcludedTracksCount(
+                  title: lang.tracksExcludedByNomedia,
+                  countRx: Indexer.inst.tracksExcludedByNoMedia,
+                  page: const IndexerNoMediaFoldersSubpage(),
+                ),
+                _ExcludedTracksCount(
+                  title: lang.filteredBySizeAndDuration,
+                  countRx: Indexer.inst.filteredForSizeDurationTracks,
+                  page: const IndexerFilteredTracksSubpage(),
+                ),
+              ],
             ),
           ),
           // const _ExtractingPathsWidget(itemPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0)),
@@ -1030,6 +1046,50 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ExcludedTracksCount extends StatelessWidget {
+  final String title;
+  final RxBaseCore<int> countRx;
+  final NamidaRouteWidget page;
+
+  const _ExcludedTracksCount({
+    required this.title,
+    required this.countRx,
+    required this.page,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: countRx,
+      builder: (context, count) {
+        final canOpen = count > 0;
+        final onTap = canOpen ? page.navigate : null;
+        return NamidaInkWell(
+          onTap: onTap,
+          borderRadius: 4.0,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NamidaText(
+                '$title: $count',
+                style: NText.small,
+              ),
+              if (canOpen) ...[
+                const SizedBox(width: 4.0),
+                const Icon(
+                  Broken.arrow_right_3,
+                  size: 12.0,
+                ),
+                const SizedBox(width: 2.0),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

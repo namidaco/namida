@@ -16,10 +16,12 @@ import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/progress_percentage.dart';
 import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/split_config.dart';
+import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
@@ -50,6 +52,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'indexer_artwork_extract_strategies.dart';
+part 'indexer_duplicate_files.dart';
 part 'indexer_favourites_sorting.dart';
 part 'indexer_filtered_files.dart';
 
@@ -146,9 +149,6 @@ class Indexer<T extends Track> {
   Map<Folder, String>? _allFolderCovers; // {directoryPath, imagePath}
   var allTracksMappedByYTID = <String, List<T>>{};
 
-  /// Used to prevent duplicated track (by filename).
-  final Map<String, bool> _currentFileNamesMap = {};
-
   late final _audioQuery = OnAudioQuery();
 
   List<T> recentlyAddedTracksSorted() {
@@ -239,6 +239,7 @@ class Indexer<T extends Track> {
 
   Future<void> _prepareTracksFile([Completer<void>? completer]) async {
     _fetchMediaStoreTracks(); // to fill ids map
+    if (settings.preventDuplicatedTracks.value) unawaited(_duplicates.load());
 
     final tracksDBPath = AppPaths.TRACKS_DB_INFO.file.path;
     if (await File(tracksDBPath).exists() || await File(AppPaths.TRACKS_OLD).existsAndValid()) {
@@ -525,8 +526,6 @@ class Indexer<T extends Track> {
 
     tr is Video ? removeAndDeleteEmpty(mainMapFoldersVideos.value, tr.folder) : removeAndDeleteEmpty(mainMapFoldersTracks.value, tr.folder);
     removeAndDeleteEmpty(mainMapFoldersTracksAndVideos.value, tr.folder);
-
-    _currentFileNamesMap.remove(tr.filename);
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(Map<TrackExtended, TrackExtended?> tracksMap) {
@@ -724,7 +723,6 @@ class Indexer<T extends Track> {
     final oldTrackExt = allTracksMappedByPath[tr.path];
     allTracksMappedByPath[tr.path] = trackExt;
     unawaited(_tracksDBManager.put(tr.path, trackExt.toJsonWithoutPath()));
-    _currentFileNamesMap[trackExt.path.getFilename] = true;
     _updateYTIDMap(tr, oldTrackExt, trackExt);
 
     if (oldTrackExt == null) {
@@ -819,6 +817,7 @@ class Indexer<T extends Track> {
       if (tr.isPhysical) physicalPathsToScan.add(tr.path);
     }
     NamidaChannel.inst.scanMediaFilesTry(physicalPathsToScan);
+    if (isFromDelete) _onFilesDeleted(physicalPathsToScan);
 
     this.networkTracksCount.value -= networkTracksRemoved;
     this.tracksInfoList.refresh();
@@ -944,8 +943,6 @@ class Indexer<T extends Track> {
         unawaited(_tracksDBManager.put(ot.path, e.value.toJsonWithoutPath()));
         _updateYTIDMap(ot, oldTrackExt, e.value);
       }
-      // _currentFileNamesMap.remove(ot.filename); // same path alr
-      // _currentFileNamesMap[nt.filename] = true; // --^
       TrackTileManager.rebuildTrackInfo(ot);
 
       if (artworkWasEdited) {
@@ -1112,7 +1109,6 @@ class Indexer<T extends Track> {
     networkTracksCount.value = 0;
     allTracksMappedByPath.clear();
     allTracksMappedByYTID.clear();
-    _currentFileNamesMap.clear();
     await _clearTracksDBAndReOpen();
 
     SearchSortController.inst.sortMedia(MediaType.track);
@@ -1121,11 +1117,37 @@ class Indexer<T extends Track> {
 
   void _resetCounters() {
     filteredForSizeDurationTracks.value = 0;
-    duplicatedTracksLength.value = 0;
     tracksExcludedByNoMedia.value = 0;
   }
 
-  late final _filteredFiles = _FilteredFilesMemory(AppPaths.TRACKS_FILTERED);
+  late final _filteredFiles = _SkippedFilesMemory(AppPaths.TRACKS_FILTERED, _FilteredFile.fromJson);
+  late final _duplicates = _IndexerDuplicates<T>(this);
+
+  /// {folder that has the .nomedia: files excluded by it}, from the latest listing.
+  Map<String, List<String>> get excludedByNoMedia => _excludedByNoMedia;
+  Map<String, List<String>> _excludedByNoMedia = const {};
+
+  Future<List<FilteredTrackFile>> getFilteredFiles() async {
+    await _filteredFiles.ensureLoaded();
+    final files = _filteredFiles.entries.map((e) => (path: e.key, size: e.value.size, durationMS: e.value.durationMS)).toFixedList();
+    files.sortBy((e) => e.path);
+    return files;
+  }
+
+  void _onFilesDeleted(List<String> paths) {
+    _duplicates.onDeleted(paths);
+    if (_filteredFiles.isEmpty) return;
+    final removedFilteredCount = _filteredFiles.removeAll(paths);
+    if (removedFilteredCount == 0) return;
+    filteredForSizeDurationTracks.value -= removedFilteredCount;
+    unawaited(_filteredFiles.saveIfChanged());
+  }
+
+  Future<void> onPreventDuplicatedTracksChanged(bool isEnabled) => _duplicates.onToggled(isEnabled);
+
+  List<DuplicateTracksGroup> getDuplicateGroups() => _duplicates.getGroups();
+
+  Future<void> useDuplicateCopy(String copyPath) => _duplicates.useCopy(copyPath);
 
   /// Removes deleted paths of [filesDiff], fetches its new paths and re-fetches the modified ones.
   ///
@@ -1140,11 +1162,15 @@ class Indexer<T extends Track> {
   }) async {
     _resetCounters();
     final serversFetchQueue = _startServersTracksCountFetch();
+    final duplicateFiles = _duplicates.files;
+    final isPreventingDuplicates = settings.preventDuplicatedTracks.value;
     await _filteredFiles.ensureLoaded();
+    if (isPreventingDuplicates) await duplicateFiles.ensureLoaded();
 
     if (forceReIndex) {
       await _clearLists();
       _filteredFiles.clear();
+      duplicateFiles.clear();
       if (!useMediaStore) {
         final currentFiles = await _listAudioFiles(withStats: true);
         filesDiff = await getPathsDifference(currentFiles);
@@ -1154,6 +1180,9 @@ class Indexer<T extends Track> {
     final stillFilteredPaths = filesDiff?.filteredPaths ?? const <String>{};
     _filteredFiles.retainOnly(stillFilteredPaths);
     filteredForSizeDurationTracks.value += stillFilteredPaths.length;
+
+    final stillDuplicatePaths = filesDiff?.duplicatePaths ?? const <String>{};
+    duplicateFiles.retainOnly(stillDuplicatePaths);
 
     final audioFiles = filesDiff?.newPaths ?? const <String>{};
     final modifiedFiles = filesDiff?.modifiedPaths ?? const <String>{};
@@ -1170,7 +1199,6 @@ class Indexer<T extends Track> {
         if (remove) {
           _removeFromYTIDMap(tr.youtubeID, tr);
           allTracksMappedByPath.remove(tr.path);
-          _currentFileNamesMap.remove(tr.path.getFilename);
           unawaited(_tracksDBManager.delete(tr.path));
         }
         return remove;
@@ -1179,7 +1207,15 @@ class Indexer<T extends Track> {
 
     final minDur = settings.indexMinDurationInSec.value; // Seconds
     final minSize = settings.indexMinFileSizeInB.value; // bytes
-    final prevDuplicated = settings.preventDuplicatedTracks.value;
+
+    // -- built on first use, before this refresh adds anything
+    _DuplicatesResolver? duplicatesResolver;
+    bool isDuplicate(TrackExtended trext) {
+      if (!isPreventingDuplicates) return false;
+      final resolver = duplicatesResolver ??= _DuplicatesResolver.ofLibrary(allTracksMappedByPath.values);
+      return !resolver.shouldAdd(trext);
+    }
+
     if (useMediaStore) {
       final trs = await _fetchMediaStoreTracks();
       tracksInfoList.clear();
@@ -1187,26 +1223,13 @@ class Indexer<T extends Track> {
       allTracksMappedByPath.clear();
       _clearTracksDBAndReOpen();
       allTracksMappedByYTID.clear();
-      _currentFileNamesMap.clear();
       for (var e in trs) {
+        if (isDuplicate(e)) continue;
         _addTrackToLists(e, null);
       }
     } else {
       // NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
-      final audioFilesWithoutDuplicates = <String>[];
-      if (prevDuplicated) {
-        /// skip duplicated tracks according to filename
-        for (final trackPath in audioFiles) {
-          if (_currentFileNamesMap.containsKey(trackPath.getFilename)) {
-            duplicatedTracksLength.value++;
-          } else {
-            audioFilesWithoutDuplicates.add(trackPath);
-          }
-        }
-      }
-
-      final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
-      final filesToExtractCount = finalAudios.length + modifiedFiles.length;
+      final filesToExtractCount = audioFiles.length + modifiedFiles.length;
       _indexingTotalCount.value += filesToExtractCount;
       final keyWrapper = ExtractingPathKey.create();
 
@@ -1226,7 +1249,8 @@ class Indexer<T extends Track> {
             final modifiedMS = fileStats?.modifiedMS;
             if (isModified || size == null || modifiedMS == null) return null;
             final durationMS = item.hasError ? 0 : item.durationMS ?? 0;
-            _filteredFiles.add(path, size: size, modifiedMS: modifiedMS, durationMS: durationMS);
+            final filteredFile = _FilteredFile(size: size, modifiedMS: modifiedMS, durationMS: durationMS);
+            _filteredFiles.add(path, filteredFile);
             return null;
           }
 
@@ -1257,26 +1281,35 @@ class Indexer<T extends Track> {
           final trext = await extractFunction(item);
           _indexingDoneCount.value++;
           if (trext == null) continue;
+          if (!isModified && isDuplicate(trext)) continue;
           _addTrackToLists(trext, item.tags.artwork);
         }
       }
 
-      await extractAll(finalAudios, isModified: false);
+      final newAudios = audioFiles.toList();
+      await extractAll(newAudios, isModified: false);
       if (modifiedFiles.isNotEmpty) {
         Indexer.clearMemoryImageCache();
         final modifiedAudios = modifiedFiles.toList();
         await extractAll(modifiedAudios, isModified: true);
       }
+
+      // -- after modified files, so kept tracks are checked with their new tags
+      final orphanDuplicatePaths = _duplicates.popOrphans();
+      _indexingTotalCount.value += orphanDuplicatePaths.length;
+      await extractAll(orphanDuplicatePaths, isModified: false);
     }
 
     final networkTrackMapsToRemove = await _addServerTracksIfAvailable(serversFetchQueue, forceReIndex: forceReIndex).toList();
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
+    final replacedDuplicatePaths = duplicatesResolver?.replacedPaths;
     int networkTracksRemoved = 0;
     tracksInfoList.removeWhere((tr) {
       final isFiltered = (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
-      final remove = isFiltered || networkTrackMapsToRemove.any((map) => map.containsKey(tr.path));
+      final isReplacedDuplicate = replacedDuplicatePaths?.contains(tr.path) == true;
+      final remove = isFiltered || isReplacedDuplicate || networkTrackMapsToRemove.any((map) => map.containsKey(tr.path));
       if (remove) {
         if (tr.isNetwork) {
           networkTracksRemoved++;
@@ -1284,33 +1317,16 @@ class Indexer<T extends Track> {
           filteredForSizeDurationTracks.value++;
           if (!useMediaStore) {
             final trExt = tr.toTrackExt();
-            _filteredFiles.add(tr.path, size: trExt.size, modifiedMS: trExt.dateModified, durationMS: trExt.durationMS);
+            final filteredFile = _FilteredFile(size: trExt.size, modifiedMS: trExt.dateModified, durationMS: trExt.durationMS);
+            _filteredFiles.add(tr.path, filteredFile);
           }
         }
         _removeFromYTIDMap(tr.youtubeID, tr);
         allTracksMappedByPath.remove(tr.path);
-        _currentFileNamesMap.remove(tr.path.getFilename);
         unawaited(_tracksDBManager.delete(tr.path));
       }
       return remove;
     });
-
-    /// removes duplicated tracks after a refresh
-    if (prevDuplicated) {
-      final uniquedSet = <String>{};
-      final lengthBefore = tracksInfoList.value.length;
-      tracksInfoList.value.retainWhere((e) {
-        final keep = uniquedSet.add(e.filename);
-        if (!keep) {
-          if (e.isNetwork) networkTracksRemoved++;
-          unawaited(_tracksDBManager.delete(e.path));
-        }
-        return keep;
-      });
-      final lengthAfter = tracksInfoList.value.length;
-      final removedNumber = lengthBefore - lengthAfter;
-      duplicatedTracksLength.value = removedNumber;
-    }
 
     networkTracksCount.value -= networkTracksRemoved;
 
@@ -1322,6 +1338,7 @@ class Indexer<T extends Track> {
     SearchSortController.inst.refreshPortsIfNecessary();
 
     await _filteredFiles.saveIfChanged();
+    await _duplicates.onRefreshed(duplicatesResolver);
   }
 
   List<_ServerTracksFetchInfo> _startServersTracksCountFetch() {
@@ -2170,12 +2187,16 @@ class Indexer<T extends Track> {
 
   Future<IndexerFilesDiff> getPathsDifference(DirsFileFilterResult currentFiles) async {
     final filteredFiles = _filteredFiles;
+    final duplicateFiles = _duplicates.files;
+    final isPreventingDuplicates = settings.preventDuplicatedTracks.value;
     await filteredFiles.ensureLoaded();
+    if (isPreventingDuplicates) await duplicateFiles.ensureLoaded();
 
     final newPaths = <String>{};
     final modifiedPaths = <String>{};
     final deletedPaths = _getPhysicalMediasPaths();
     final filteredPaths = <String>{};
+    final duplicatePaths = <String>{};
     final newAndModifiedStats = <String, FileStatsAdv>{};
 
     final allTracksMappedByPath = this.allTracksMappedByPath;
@@ -2195,10 +2216,18 @@ class Indexer<T extends Track> {
         if (isSameDate && trExt.size == stats.sizeAt(index)) continue;
         modifiedPaths.add(path);
       } else {
-        final isStillFiltered = stats != null && filteredFiles.isStillFiltered(path, stats, index, minSize: minSize, minDurMS: minDurMS);
-        if (isStillFiltered) {
-          filteredPaths.add(path);
-          continue;
+        if (stats != null) {
+          final filteredFile = filteredFiles.getUnchanged(path, stats, index);
+          final isStillFiltered = filteredFile != null && filteredFile.isFiltered(minSize: minSize, minDurMS: minDurMS);
+          if (isStillFiltered) {
+            filteredPaths.add(path);
+            continue;
+          }
+          final isStillDuplicate = isPreventingDuplicates && duplicateFiles.getUnchanged(path, stats, index) != null;
+          if (isStillDuplicate) {
+            duplicatePaths.add(path);
+            continue;
+          }
         }
         newPaths.add(path);
       }
@@ -2211,6 +2240,7 @@ class Indexer<T extends Track> {
       modifiedPaths: modifiedPaths,
       deletedPaths: deletedPaths,
       filteredPaths: filteredPaths,
+      duplicatePaths: duplicatePaths,
       stats: newAndModifiedStats,
     );
   }
@@ -2245,7 +2275,9 @@ class Indexer<T extends Track> {
     final allPaths = result.allPaths;
 
     allAudioFiles.value = allPaths;
-    tracksExcludedByNoMedia.value += result.excludedByNoMedia.length;
+    final excludedByNoMedia = result.excludedByNoMedia;
+    _excludedByNoMedia = excludedByNoMedia;
+    tracksExcludedByNoMedia.value += excludedByNoMedia.values.fold(0, (count, files) => count + files.length);
     _allFolderCovers = result.folderCovers;
 
     printy("Paths Found: ${allPaths.length}");
@@ -2661,6 +2693,9 @@ class IndexerFilesDiff {
   /// unchanged files still filtered by size or duration, left out of [newPaths].
   final Set<String> filteredPaths;
 
+  /// unchanged copies of library tracks, left out of [newPaths].
+  final Set<String> duplicatePaths;
+
   /// of new and modified files.
   final Map<String, FileStatsAdv> stats;
 
@@ -2669,6 +2704,7 @@ class IndexerFilesDiff {
     required this.modifiedPaths,
     required this.deletedPaths,
     required this.filteredPaths,
+    required this.duplicatePaths,
     required this.stats,
   });
 
@@ -2678,6 +2714,7 @@ class IndexerFilesDiff {
       modifiedPaths: modifiedPaths,
       deletedPaths: const {},
       filteredPaths: filteredPaths,
+      duplicatePaths: duplicatePaths,
       stats: stats,
     );
   }

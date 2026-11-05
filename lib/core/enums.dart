@@ -805,6 +805,9 @@ enum RouteType {
   SUBPAGE_mostPlayedTracks,
   SUBPAGE_queueTracks,
   SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS(isOpenableFromSettings: true),
+  SUBPAGE_INDEXER_DUPLICATE_TRACKS(isOpenableFromSettings: true),
+  SUBPAGE_INDEXER_FILTERED_TRACKS(isOpenableFromSettings: true),
+  SUBPAGE_INDEXER_NOMEDIA_FOLDERS(isOpenableFromSettings: true),
 
   // ----- Subpages -----
   SETTINGS_page(isOpenableFromSettings: true),

@@ -72,6 +72,15 @@ void main() {
     expect(diff.newPaths, pathsOf(['small.mp3', 'resized.mp3', 'touched.mp3', 'subsecond.mp3', 'new.mp3']));
   });
 
+  test('filtered files are listed by path with their size and duration', () async {
+    final files = await Indexer.inst.getFilteredFiles();
+    final paths = files.map((e) => e.path).toList();
+    expect(paths, [...paths]..sort());
+    final short = files.firstWhere((e) => e.path == pathOf('short.mp3'));
+    expect(short.size, 100);
+    expect(short.durationMS, 5000);
+  });
+
   test('lowering min duration brings back the rest', () async {
     final diff = await difference(minSize: 50, minDurSec: 3);
     expect(diff.filteredPaths, <String>{});

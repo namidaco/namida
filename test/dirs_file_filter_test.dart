@@ -86,6 +86,8 @@ void main() {
   // -- dart can't list long paths on windows, it should only skip them
   bool isLongPath(String path) => path.length > 260;
 
+  Map<String, Set<String>> excludedByNoMediaOf(DirsFileFilterResult result) => {for (final e in result.excludedByNoMedia.entries) e.key: e.value.toSet()};
+
   void expectSameResults(DirsFileFilterResult native, DirsFileFilterResult dart) {
     final nativeStats = statsByPath(native);
     final longPaths = native.allPaths.where(isLongPath).toList();
@@ -95,7 +97,7 @@ void main() {
     nativeStats.remove(longPaths.first);
 
     expect(nativeStats.keys.toSet(), dart.allPaths);
-    expect(native.excludedByNoMedia, dart.excludedByNoMedia);
+    expect(excludedByNoMediaOf(native), excludedByNoMediaOf(dart));
     final nativeCovers = {for (final e in native.folderCovers.entries) e.key.path: e.value};
     final dartCovers = {for (final e in dart.folderCovers.entries) e.key.path: e.value};
     expect(nativeCovers, dartCovers);
@@ -110,11 +112,14 @@ void main() {
         final dart = await filter(useNativeLister: false, strictNoMedia: strictNoMedia);
         expectSameResults(native, dart);
 
-        final expectedExcluded = <String>{
-          if (respectNoMedia) pathOf(['nomedia', 'e.mp3']),
-          if (respectNoMedia && strictNoMedia) pathOf(['nomedia', 'child', 'f.mp3']),
+        final expectedExcluded = <String, Set<String>>{
+          if (respectNoMedia)
+            pathOf(['nomedia']): {
+              pathOf(['nomedia', 'e.mp3']),
+              if (strictNoMedia) pathOf(['nomedia', 'child', 'f.mp3']),
+            },
         };
-        expect(native.excludedByNoMedia, expectedExcluded);
+        expect(excludedByNoMediaOf(native), expectedExcluded);
         expect(native.allPaths.contains(pathOf(['a.mp3'])), true);
         expect(native.allPaths.contains(pathOf(['b.FLAC'])), true);
         expect(native.allPaths.contains(pathOf(['日本語 ñ', 'sóng 🎵.mp3'])), true);

@@ -1,13 +1,18 @@
 // by claude
 part of 'indexer_controller.dart';
 
-class _FilteredFilesMemory {
+class _SkippedFilesMemory<E extends _SkippedFile> {
   final String _filePath;
-  _FilteredFilesMemory(this._filePath);
+  final E Function(List json) _fromJson;
+  _SkippedFilesMemory(this._filePath, this._fromJson);
 
-  final _files = <String, _FilteredFile>{};
+  final _files = <String, E>{};
   Future<void>? _loadFuture;
   bool _didChange = false;
+
+  int get length => _files.length;
+  bool get isEmpty => _files.isEmpty;
+  Iterable<MapEntry<String, E>> get entries => _files.entries;
 
   Future<void> ensureLoaded() => _loadFuture ??= _load();
 
@@ -18,23 +23,40 @@ class _FilteredFilesMemory {
       try {
         final String path = e.key;
         final List fileJson = e.value;
-        _files[path] = _FilteredFile.fromJson(fileJson);
+        _files[path] = _fromJson(fileJson);
       } catch (_) {}
     }
   }
 
-  bool isStillFiltered(String path, FilesStats stats, int index, {required int minSize, required int minDurMS}) {
+  E? get(String path) => _files[path];
+
+  E? getUnchanged(String path, FilesStats stats, int index) {
     final file = _files[path];
-    if (file == null || !stats.isKnownAt(index)) return false;
+    if (file == null || !stats.isKnownAt(index)) return null;
     // -- seconds, same as library tracks
     final isSameDate = file.modifiedMS ~/ 1000 == stats.modifiedMSAt(index) ~/ 1000;
-    if (!isSameDate || file.size != stats.sizeAt(index)) return false;
-    return file.isFiltered(minSize: minSize, minDurMS: minDurMS);
+    if (!isSameDate || file.size != stats.sizeAt(index)) return null;
+    return file;
   }
 
-  void add(String path, {required int size, required int modifiedMS, required int durationMS}) {
-    _files[path] = _FilteredFile(size: size, modifiedMS: modifiedMS, durationMS: durationMS);
+  void add(String path, E file) {
+    _files[path] = file;
     _didChange = true;
+  }
+
+  void remove(String path) {
+    final removed = _files.remove(path);
+    if (removed != null) _didChange = true;
+  }
+
+  int removeAll(Iterable<String> paths) {
+    final lengthBefore = _files.length;
+    for (final path in paths) {
+      _files.remove(path);
+    }
+    final removedCount = lengthBefore - _files.length;
+    if (removedCount > 0) _didChange = true;
+    return removedCount;
   }
 
   void retainOnly(Set<String> paths) {
@@ -62,8 +84,16 @@ class _FilteredFilesMemory {
   }
 }
 
-class _FilteredFile {
+abstract interface class _SkippedFile {
+  int get size;
+  int get modifiedMS;
+  List<Object?> toJson();
+}
+
+class _FilteredFile implements _SkippedFile {
+  @override
   final int size;
+  @override
   final int modifiedMS;
 
   /// 0 when unknown.
@@ -83,6 +113,7 @@ class _FilteredFile {
     );
   }
 
+  @override
   List<int> toJson() => [size, modifiedMS, durationMS];
 
   /// same checks as [Indexer.convertTagToTrack].
@@ -92,3 +123,5 @@ class _FilteredFile {
     return isTooSmall || isTooShort;
   }
 }
+
+typedef FilteredTrackFile = ({String path, int size, int durationMS});
