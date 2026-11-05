@@ -253,6 +253,39 @@ class _YoutubeInfoUtils {
         (await _getMissingInfo(videoId))?.channelName?.nullifyEmpty();
   }
 
+  static const _kTopicChannelSuffix = '- Topic';
+
+  /// a square cover saved to [tempFilePath]: the yt music one for `- Topic` channels, or cropped from a thumbnail holding
+  /// a square cover between solid bars. the cached video thumbnail otherwise.
+  Future<({File file, bool isTemp})?> getVideoThumbnailOrSquareCover(String videoId, {required String tempFilePath}) async {
+    try {
+      final channelName = await getVideoChannelName(videoId);
+      if (channelName != null && channelName.endsWith(_kTopicChannelSuffix)) {
+        final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, tempFilePath);
+        if (thumbFile != null) return (file: thumbFile, isTemp: true);
+      }
+    } catch (_) {}
+    final thumbnailFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+      id: videoId,
+      isImportantInCache: true,
+      type: ThumbnailType.video,
+    );
+    if (thumbnailFile == null) return null;
+    try {
+      final squareCoverRows = await ThumbnailSquareCover.findSquareCoverRowsInFile(thumbnailFile);
+      if (squareCoverRows != null) {
+        final didCrop = await NamidaFFMPEG.inst.cropImageCenterSquare(
+          imagePath: thumbnailFile.path,
+          outputPath: tempFilePath,
+          topFraction: squareCoverRows.top,
+          bottomFraction: squareCoverRows.bottom,
+        );
+        if (didCrop) return (file: File(tempFilePath), isTemp: true);
+      }
+    } catch (_) {}
+    return (file: thumbnailFile, isTemp: false);
+  }
+
   Future<String?> getVideoChannelID(String videoId) async {
     return _tempInfoChannelID[videoId] ??=
         tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??

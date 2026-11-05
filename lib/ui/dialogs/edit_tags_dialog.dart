@@ -1,10 +1,17 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:super_clipboard/super_clipboard.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_matcher.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -37,7 +44,11 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/text_suggestions.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+
+part 'edit_tags_dialog.crop.dart';
 
 final _editingInProgress = <String, bool>{}.obs;
 
@@ -335,6 +346,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   final canEditTags = false.obs;
   final didAutoExtractFromFilename = false.obs;
   final currentImagePath = ''.obs;
+  final isArtworkRemoved = false.obs;
   bool isDialogOpen = true;
 
   TextEditingController? fieldToController(FTags tags, TagField f) {
@@ -436,14 +448,36 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
 
   final formKey = GlobalKey<FormState>();
 
+  void onNewArtwork(String imagePath) {
+    currentImagePath.value = imagePath;
+    isArtworkRemoved.value = false;
+    canEditTags.value = true;
+  }
+
   Future<void> onArtworkEditTap() async {
     final pickedFile = await NamidaFileBrowser.pickFile(note: lang.editArtwork, memeType: NamidaStorageFileMemeType.image);
     final path = pickedFile?.path ?? '';
-    if (pickedFile != null && path != '') {
-      currentImagePath.value = path;
-      canEditTags.value = true;
-    }
+    if (pickedFile != null && path != '') onNewArtwork(path);
   }
+
+  void onArtworkRemove() {
+    currentImagePath.value = '';
+    isArtworkRemoved.value = true;
+    canEditTags.value = true;
+  }
+
+  bool canRemoveArtwork() => !isArtworkRemoved.value && (currentImagePath.value != '' || artworkBytes?.isNotEmpty == true);
+
+  Future<Uint8List?> getCurrentArtworkBytes() async {
+    final imagePath = currentImagePath.value;
+    if (imagePath == '') return artworkBytes;
+    final imageFile = File(imagePath);
+    return imageFile.readAsBytes();
+  }
+
+  final artworkSearchQuery = _ArtworkEditMenu.buildSearchQuery(artist: tags.artist, album: tags.album, title: tags.title, filenameWOExt: track.filenameWOExt);
+  final youtubeId = track.youtubeID.nullifyEmpty();
+  final folderCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
 
   if (instantEditArtwork) {
     // -- ensure dialog opened first
@@ -459,6 +493,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       canEditTags.close();
       didAutoExtractFromFilename.close();
       currentImagePath.close();
+      isArtworkRemoved.close();
       for (final c in tagsControllers.values) {
         c?.dispose();
       }
@@ -507,6 +542,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             tracks: [track],
                             editedTags: editedTags,
                             imagePath: currentImagePath.value,
+                            removeArtwork: isArtworkRemoved.value,
                             onEdit: (didUpdate, error, track) {
                               if (!didUpdate) {
                                 snackyy(title: lang.metadataEditFailed, message: error ?? 'Unknown Error', isError: true);
@@ -540,26 +576,41 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                                   alignment: Alignment.bottomRight,
                                   children: [
                                     Obx(
-                                      (context) => ArtworkWidget(
-                                        key: Key(currentImagePath.valueR),
-                                        extractInternally: false,
-                                        fadeMilliSeconds: 0,
-                                        icon: track is Video ? Broken.video : Broken.musicnote,
-                                        thumbnailSize: maxWidth * 0.36,
-                                        bytes: currentImagePath.valueR != '' ? null : artworkBytes,
-                                        path: currentImagePath.valueR != '' ? currentImagePath.valueR : null,
-                                        onTopWidgets: [
-                                          Positioned(
-                                            bottom: 0,
-                                            right: 0,
-                                            child: NamidaBlurryContainer(
-                                              onTap: onArtworkEditTap,
-                                              borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
-                                              child: const Icon(Broken.edit_2),
+                                      (context) {
+                                        final imagePath = currentImagePath.valueR;
+                                        final isRemoved = isArtworkRemoved.valueR;
+                                        return ArtworkWidget(
+                                          key: Key('$imagePath$isRemoved'),
+                                          extractInternally: false,
+                                          fadeMilliSeconds: 0,
+                                          icon: track is Video ? Broken.video : Broken.musicnote,
+                                          thumbnailSize: maxWidth * 0.36,
+                                          bytes: imagePath != '' || isRemoved ? null : artworkBytes,
+                                          path: imagePath != '' ? imagePath : null,
+                                          onTopWidgets: [
+                                            Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: _ArtworkEditMenu(
+                                                onPickFromStorage: onArtworkEditTap,
+                                                onArtworkObtained: onNewArtwork,
+                                                onRemove: onArtworkRemove,
+                                                canRemove: canRemoveArtwork,
+                                                canCrop: canRemoveArtwork,
+                                                getArtworkBytes: getCurrentArtworkBytes,
+                                                searchQuery: artworkSearchQuery,
+                                                youtubeId: youtubeId,
+                                                folderCoverPath: folderCoverPath,
+                                                childBuilder: (openMenu) => NamidaBlurryContainer(
+                                                  onTap: openMenu,
+                                                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
+                                                  child: const Icon(Broken.edit_2),
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -760,6 +811,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
 
   final canEditTags = false.obs;
   final currentImagePath = ''.obs;
+  final isArtworkRemoved = false.obs;
   final autoTrackNumbersRx = false.obs;
   final showMoreFieldsRx = false.obs;
 
@@ -794,20 +846,52 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
     statsEditor: statsEditor,
     autoTrackNumbers: autoTrackNumbersRx.value,
     imagePath: currentImagePath.value,
+    removeArtwork: isArtworkRemoved.value,
   );
 
   final suggestionsProvider = TextSuggestionsProvider();
 
   final formKey = GlobalKey<FormState>();
 
+  void onNewArtwork(String imagePath) {
+    currentImagePath.value = imagePath;
+    isArtworkRemoved.value = false;
+    canEditTags.value = true;
+  }
+
   Future<void> onArtworkEditTap() async {
     final pickedFile = await NamidaFileBrowser.pickFile(note: lang.editArtwork, memeType: NamidaStorageFileMemeType.image);
     final path = pickedFile?.path ?? '';
-    if (pickedFile != null && path != '') {
-      currentImagePath.value = path;
-      canEditTags.value = true;
-    }
+    if (pickedFile != null && path != '') onNewArtwork(path);
   }
+
+  void onArtworkRemove() {
+    currentImagePath.value = '';
+    isArtworkRemoved.value = true;
+    canEditTags.value = true;
+  }
+
+  bool canRemoveArtwork() => !isArtworkRemoved.value;
+
+  bool canCropArtwork() => currentImagePath.value != '';
+
+  Future<Uint8List?> getCurrentArtworkBytes() {
+    final imageFile = File(currentImagePath.value);
+    return imageFile.readAsBytes();
+  }
+
+  final firstTrackFolder = tracksPre.first.folder;
+  final isOneFolder = tracksPre.every((e) => e.folder == firstTrackFolder);
+  final folderCoverPath = isOneFolder ? Indexer.inst.getFallbackFolderArtworkPath(folder: firstTrackFolder) : null;
+
+  final firstTrackExt = tracksExtended.first;
+  final firstTrackAlbumArtist = firstTrackExt.albumArtist.nullifyEmpty() ?? firstTrackExt.originalArtist;
+  final artworkSearchQuery = _ArtworkEditMenu.buildSearchQuery(
+    artist: firstTrackAlbumArtist,
+    album: firstTrackExt.originalAlbum,
+    title: firstTrackExt.title,
+    filenameWOExt: firstTrackExt.filenameWOExt,
+  );
 
   if (instantEditArtwork) {
     // -- ensure dialog opened first
@@ -821,6 +905,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
       tracksGoingToBeEditedRx.close();
       canEditTags.close();
       currentImagePath.close();
+      isArtworkRemoved.close();
       autoTrackNumbersRx.close();
       showMoreFieldsRx.close();
       for (final f in multiFields) {
@@ -992,6 +1077,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                                   editedTags: plan.editedTags,
                                   editedTagsPerTrack: plan.editedTagsPerTrack,
                                   imagePath: plan.imagePath,
+                                  removeArtwork: plan.removeArtwork,
                                   onEdit: (didUpdate, error, track) {
                                     if (didUpdate) {
                                       successfullEdits.value++;
@@ -1085,38 +1171,42 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                                       alignment: Alignment.bottomRight,
                                       children: [
                                         Obx(
-                                          (context) => currentImagePath.valueR != ''
-                                              ? ArtworkWidget(
-                                                  key: Key(currentImagePath.valueR),
-                                                  extractInternally: false,
-                                                  fadeMilliSeconds: 0,
-                                                  thumbnailSize: imageWidth,
-                                                  path: currentImagePath.valueR,
-                                                )
-                                              : MultiArtworkContainer(
-                                                  heroTag: 'edittags_artwork',
-                                                  fadeMilliSeconds: 0,
-                                                  size: imageWidth,
-                                                  tracks: tracksGoingToBeEdited.toImageTracks(),
-                                                  fallbackToFolderCover: false,
-                                                  onTopWidget: tracksGoingToBeEdited.length > 3
-                                                      ? Positioned(
-                                                          right: 0,
-                                                          bottom: 0,
-                                                          child: NamidaBlurryContainer(
-                                                            width: innerImageWidth,
-                                                            height: innerImageWidth,
-                                                            borderRadius: BorderRadius.zero,
-                                                            child: Center(
-                                                              child: NamidaText(
-                                                                "+${tracksGoingToBeEdited.length - 3}",
-                                                                style: NText.large,
+                                          (context) {
+                                            final imagePath = currentImagePath.valueR;
+                                            final isRemoved = isArtworkRemoved.valueR;
+                                            return imagePath != '' || isRemoved
+                                                ? ArtworkWidget(
+                                                    key: Key('$imagePath$isRemoved'),
+                                                    extractInternally: false,
+                                                    fadeMilliSeconds: 0,
+                                                    thumbnailSize: imageWidth,
+                                                    path: imagePath.nullifyEmpty(),
+                                                  )
+                                                : MultiArtworkContainer(
+                                                    heroTag: 'edittags_artwork',
+                                                    fadeMilliSeconds: 0,
+                                                    size: imageWidth,
+                                                    tracks: tracksGoingToBeEdited.toImageTracks(),
+                                                    fallbackToFolderCover: false,
+                                                    onTopWidget: tracksGoingToBeEdited.length > 3
+                                                        ? Positioned(
+                                                            right: 0,
+                                                            bottom: 0,
+                                                            child: NamidaBlurryContainer(
+                                                              width: innerImageWidth,
+                                                              height: innerImageWidth,
+                                                              borderRadius: BorderRadius.zero,
+                                                              child: Center(
+                                                                child: NamidaText(
+                                                                  "+${tracksGoingToBeEdited.length - 3}",
+                                                                  style: NText.large,
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                        )
-                                                      : null,
-                                                ),
+                                                          )
+                                                        : null,
+                                                  );
+                                          },
                                         ),
                                       ],
                                     ),
@@ -1158,9 +1248,20 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                                           ),
                                           SizedBox(
                                             width: namida.width,
-                                            child: NamidaButton(
-                                              text: lang.editArtwork,
-                                              onTap: onArtworkEditTap,
+                                            child: _ArtworkEditMenu(
+                                              onPickFromStorage: onArtworkEditTap,
+                                              onArtworkObtained: onNewArtwork,
+                                              onRemove: onArtworkRemove,
+                                              canRemove: canRemoveArtwork,
+                                              canCrop: canCropArtwork,
+                                              getArtworkBytes: getCurrentArtworkBytes,
+                                              searchQuery: artworkSearchQuery,
+                                              youtubeId: null,
+                                              folderCoverPath: folderCoverPath,
+                                              childBuilder: (openMenu) => NamidaButton(
+                                                text: lang.editArtwork,
+                                                onTap: openMenu,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -1397,6 +1498,7 @@ class _MultiTracksEditPlan {
   final Map<TagField, String> editedTags;
   final Map<Track, Map<TagField, String>> editedTagsPerTrack;
   final String imagePath;
+  final bool removeArtwork;
   final List<_MultiTracksEditSummaryEntry> summary;
 
   const _MultiTracksEditPlan._({
@@ -1404,6 +1506,7 @@ class _MultiTracksEditPlan {
     required this.editedTags,
     required this.editedTagsPerTrack,
     required this.imagePath,
+    required this.removeArtwork,
     required this.summary,
   });
 
@@ -1414,6 +1517,7 @@ class _MultiTracksEditPlan {
     required TrackStatsEditController statsEditor,
     required bool autoTrackNumbers,
     required String imagePath,
+    required bool removeArtwork,
   }) {
     final summary = <_MultiTracksEditSummaryEntry>[];
     final editedTagsPerTrack = statsEditor.buildEditedTagsPerTrack(selectedTracks);
@@ -1421,6 +1525,8 @@ class _MultiTracksEditPlan {
 
     if (imagePath.isNotEmpty) {
       summary.add(_MultiTracksEditSummaryEntry(icon: Broken.gallery_edit, title: lang.artwork, subtitle: lang.changed));
+    } else if (removeArtwork) {
+      summary.add(_MultiTracksEditSummaryEntry(icon: Broken.gallery_remove, title: lang.artwork, subtitle: lang.removed));
     }
 
     for (final field in fields) {
@@ -1483,12 +1589,13 @@ class _MultiTracksEditPlan {
       summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: changesText, tracksCount: changedCount));
     }
 
-    final hasEditsForAll = editedTags.isNotEmpty || imagePath.isNotEmpty;
+    final hasEditsForAll = editedTags.isNotEmpty || imagePath.isNotEmpty || removeArtwork;
     return _MultiTracksEditPlan._(
       tracksToEdit: hasEditsForAll ? selectedTracks : selectedTracks.where(editedTagsPerTrack.containsKey).toList(),
       editedTags: editedTags,
       editedTagsPerTrack: editedTagsPerTrack,
       imagePath: imagePath,
+      removeArtwork: removeArtwork,
       summary: summary,
     );
   }
@@ -1758,6 +1865,222 @@ class _MultiTracksEditSummaryEntry {
     required this.subtitle,
     this.tracksCount,
   });
+}
+
+// by claude
+class _ArtworkEditMenu extends StatelessWidget {
+  final Widget Function(VoidCallback openMenu) childBuilder;
+  final VoidCallback onPickFromStorage;
+  final void Function(String imagePath) onArtworkObtained;
+  final VoidCallback onRemove;
+  final bool Function() canRemove;
+  final bool Function() canCrop;
+  final Future<Uint8List?> Function() getArtworkBytes;
+  final String searchQuery;
+  final String? youtubeId;
+  final String? folderCoverPath;
+
+  const _ArtworkEditMenu({
+    required this.childBuilder,
+    required this.onPickFromStorage,
+    required this.onArtworkObtained,
+    required this.onRemove,
+    required this.canRemove,
+    required this.canCrop,
+    required this.getArtworkBytes,
+    required this.searchQuery,
+    required this.youtubeId,
+    required this.folderCoverPath,
+  });
+
+  static const _kClipboardImageFormats = [
+    (format: Formats.png, extension: 'png'),
+    (format: Formats.jpeg, extension: 'jpg'),
+    (format: Formats.webp, extension: 'webp'),
+  ];
+
+  static Future<String> _writeTempImage(Uint8List bytes, String extension) async {
+    final tempDirectoryPath = Directory.systemTemp.path;
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final tempFilePath = FileParts.joinPath(tempDirectoryPath, 'namida_artwork_$stamp.$extension');
+    final tempFile = File(tempFilePath);
+    await tempFile.writeAsBytes(bytes);
+    return tempFilePath;
+  }
+
+  static Future<String?> _readClipboardImageToTempFile(SystemClipboard clipboard) async {
+    final reader = await clipboard.read();
+    final imageFormat = _kClipboardImageFormats.firstWhereEff((e) => reader.canProvide(e.format));
+    if (imageFormat == null) return null;
+    final completer = Completer<String?>();
+    final progress = reader.getFile(
+      imageFormat.format,
+      (file) async {
+        try {
+          final bytes = await file.readAll();
+          final imagePath = await _writeTempImage(bytes, imageFormat.extension);
+          completer.completeIfWasnt(imagePath);
+        } catch (_) {
+          completer.completeIfWasnt(null);
+        }
+      },
+      onError: (_) => completer.completeIfWasnt(null),
+    );
+    if (progress == null) return null;
+    return completer.future;
+  }
+
+  Future<void> _onPasteTap(SystemClipboard clipboard) async {
+    String? imagePath;
+    try {
+      imagePath = await _readClipboardImageToTempFile(clipboard);
+    } catch (_) {}
+    if (imagePath == null) {
+      snackyy(title: lang.error, message: '${lang.failed}: ${lang.paste}', isError: true);
+      return;
+    }
+    onArtworkObtained(imagePath);
+  }
+
+  Future<void> _onCropTap() async {
+    final ui.Image image;
+    try {
+      final bytes = await getArtworkBytes();
+      if (bytes == null || bytes.isEmpty) return;
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      codec.dispose();
+      image = frame.image;
+    } catch (e) {
+      snackyy(title: lang.error, message: '$e', isError: true);
+      return;
+    }
+    final croppedBytes = await _ArtworkCropDialog.show(image);
+    if (croppedBytes == null) return;
+    final imagePath = await _writeTempImage(croppedBytes, 'png');
+    onArtworkObtained(imagePath);
+  }
+
+  /// `artist album cover`, the title takes the place of a missing album.
+  static String buildSearchQuery({required String? artist, required String? album, required String? title, required String filenameWOExt}) {
+    final knownAlbum = album == UnknownTags.ALBUM ? null : album?.nullifyEmpty();
+    final name = knownAlbum ?? title?.nullifyEmpty();
+    if (name == null) return filenameWOExt;
+    final knownArtist = artist == UnknownTags.ARTIST ? null : artist?.nullifyEmpty();
+    return knownArtist == null ? '$name cover' : '$knownArtist $name cover';
+  }
+
+  void _onSearchOnlineTap() {
+    final query = Uri.encodeComponent(searchQuery);
+    final url = 'https://www.google.com/search?tbm=isch&q=$query';
+    NamidaLinkUtils.openLink(url, preferredMode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _onYoutubeThumbnailTap(String youtubeId) async {
+    final tempDirectoryPath = Directory.systemTemp.path;
+    final tempFilePath = FileParts.joinPath(tempDirectoryPath, '$youtubeId.png');
+    final res = await YoutubeInfoController.utils.getVideoThumbnailOrSquareCover(youtubeId, tempFilePath: tempFilePath);
+    if (res == null) {
+      snackyy(title: lang.error, message: '${lang.failed}: ${lang.youtube}', isError: true);
+      return;
+    }
+    onArtworkObtained(res.file.path);
+  }
+
+  void _onRemoveTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: '${lang.remove}: ${lang.artwork}?',
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.remove.toUpperCase(),
+            onTap: () {
+              onRemove();
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<NamidaPopupItem> _getMenuItems() {
+    final youtubeId = this.youtubeId;
+    final folderCoverPath = this.folderCoverPath;
+    final clipboard = SystemClipboard.instance;
+    return [
+      NamidaPopupItem(
+        icon: Broken.gallery_import,
+        title: lang.pickFromStorage,
+        onTap: onPickFromStorage,
+      ),
+      if (clipboard != null)
+        NamidaPopupItem(
+          icon: Broken.clipboard_import,
+          title: lang.paste,
+          onTap: () => _onPasteTap(clipboard),
+        ),
+      NamidaPopupItem(
+        icon: Broken.global_search,
+        title: '${lang.search}: Google',
+        onTap: _onSearchOnlineTap,
+      ),
+      if (folderCoverPath != null)
+        NamidaPopupItem(
+          icon: Broken.folder,
+          title: lang.folder,
+          trailing: ArtworkWidget(
+            key: Key(folderCoverPath),
+            path: folderCoverPath,
+            thumbnailSize: 24.0,
+            borderRadius: 4.0,
+            fadeMilliSeconds: 0,
+            extractInternally: false,
+            fallbackToFolderCover: false,
+          ),
+          onTap: () => onArtworkObtained(folderCoverPath),
+        ),
+      if (youtubeId != null)
+        NamidaPopupItem(
+          icon: Broken.video_square,
+          title: lang.youtube,
+          trailing: YoutubeThumbnail(
+            key: Key(youtubeId),
+            type: ThumbnailType.video,
+            videoId: youtubeId,
+            width: 40.0,
+            height: 40.0 * 9 / 16,
+            borderRadius: 4.0,
+            iconSize: 12.0,
+            isImportantInCache: true,
+          ),
+          onTap: () => _onYoutubeThumbnailTap(youtubeId),
+        ),
+      if (canCrop())
+        NamidaPopupItem(
+          icon: Broken.crop,
+          title: lang.crop,
+          onTap: _onCropTap,
+        ),
+      if (canRemove())
+        NamidaPopupItem(
+          icon: Broken.gallery_remove,
+          title: lang.remove,
+          onTap: _onRemoveTap,
+        ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: _getMenuItems,
+      childBuilder: childBuilder,
+    );
+  }
 }
 
 class _YTLinkOffsetRow extends StatelessWidget {

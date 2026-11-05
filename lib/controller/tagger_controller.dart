@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/split_config.dart';
@@ -107,6 +108,7 @@ class NamidaTaggerController {
     required Map<TagField, String> editedTags,
     Map<Track, Map<TagField, String>>? editedTagsPerTrack,
     String imagePath = '',
+    bool removeArtwork = false,
     String commentToInsert = '',
     void Function(bool didUpdate, String? error, Track track)? onEdit,
     void Function()? onUpdatingTracksStart,
@@ -115,6 +117,9 @@ class NamidaTaggerController {
     bool displayFFmpegFallbackWarning = true,
   }) async {
     final imageFile = imagePath.isNotEmpty ? File(imagePath) : null;
+    // -- empty bytes make taglib remove the cover
+    final artwork = removeArtwork ? FArtwork(bytes: Uint8List(0)) : FArtwork(file: imageFile);
+    final isArtworkEdited = imageFile != null || removeArtwork;
 
     String oldComment = '';
     if (commentToInsert.isNotEmpty) {
@@ -138,7 +143,7 @@ class NamidaTaggerController {
             comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             artwork: FArtwork(),
           )
-        : _editedTagsToFTags(editedTags, imageFile);
+        : _editedTagsToFTags(editedTags, artwork);
 
     const kStatsFields = {TagField.mood, TagField.tags, TagField.rating};
 
@@ -150,7 +155,7 @@ class NamidaTaggerController {
 
       final trackOnlyEditedTags = editedTagsPerTrack?[track];
       final trackEditedTags = trackOnlyEditedTags == null ? editedTags : {...editedTags, ...trackOnlyEditedTags};
-      final trackNewTags = trackOnlyEditedTags == null ? newTags : _editedTagsToFTags(trackEditedTags, imageFile);
+      final trackNewTags = trackOnlyEditedTags == null ? newTags : _editedTagsToFTags(trackEditedTags, artwork);
       final shouldEditStats = kStatsFields.any((f) => trackEditedTags[f] != null);
 
       if (shouldEditStats && track.isNetwork) {
@@ -203,6 +208,10 @@ class NamidaTaggerController {
               final newTrExt = trExt.copyWithTag(tag: trackNewTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
               tracksMap[track] = newTrExt;
               if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
+              if (removeArtwork) {
+                final oldImageFile = File(trExt.pathToImage);
+                await oldImageFile.tryDeleting();
+              }
             }
             printo('Did Update Metadata: $error', isError: error != null);
             if (onEdit != null) onEdit(error == null, error, track);
@@ -226,7 +235,13 @@ class NamidaTaggerController {
           // -- otherwise refreshing the library sees the file as modified
           final newStat = await file.stat();
           final newDateModified = newStat.modified.millisecondsSinceEpoch;
-          tracksMap[track] = newTrExt.copyWith(size: newStat.size, dateModified: newDateModified, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+          final hasNoEmbeddedArtwork = removeArtwork ? true : null;
+          tracksMap[track] = newTrExt.copyWith(
+            size: newStat.size,
+            dateModified: newDateModified,
+            hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
+            generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
+          );
         }
       }
     }
@@ -240,7 +255,7 @@ class NamidaTaggerController {
       NamidaChannel.inst.scanMediaFilesTry(editedPaths);
       await Indexer.inst.updateTrackMetadata(
         tracksMap: tracksMap,
-        artworkWasEdited: imageFile != null,
+        artworkWasEdited: isArtworkEdited,
       );
     }
   }
@@ -282,10 +297,10 @@ class NamidaTaggerController {
     }
   }
 
-  FTags _editedTagsToFTags(Map<TagField, String> editedTags, File? imageFile) {
+  FTags _editedTagsToFTags(Map<TagField, String> editedTags, FArtwork artwork) {
     return FTags.edit(
       path: '',
-      artwork: FArtwork(file: imageFile),
+      artwork: artwork,
       title: editedTags[TagField.title],
       album: editedTags[TagField.album],
       artist: editedTags[TagField.artist],

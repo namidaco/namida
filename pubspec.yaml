@@ -240,6 +240,10 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
       path: super_drag_and_drop
+  super_clipboard:
+    git:
+      url: https://github.com/MSOB7YY/super_native_extensions
+      path: super_clipboard
   windows_single_instance:
     git:
       url: https://github.com/MSOB7YY/flutter_windows_single_instance

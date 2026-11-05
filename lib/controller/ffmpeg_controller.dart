@@ -12,13 +12,11 @@ import 'package:namida/class/tag_rating.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
-import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 import 'platform/ffmpeg_executer/ffmpeg_executer.dart';
 
@@ -157,6 +155,14 @@ class NamidaFFMPEG {
     if (didSuccess) return File(thumbnailSavePath);
 
     return null;
+  }
+
+  /// the square between [topFraction] and [bottomFraction] of the image height, centered horizontally.
+  Future<bool> cropImageCenterSquare({required String imagePath, required String outputPath, required double topFraction, required double bottomFraction}) {
+    final sideText = (bottomFraction - topFraction).toStringAsFixed(6);
+    final topText = topFraction.toStringAsFixed(6);
+    final cropFilter = 'crop=w=ih*$sideText:h=ih*$sideText:x=(iw-ow)/2:y=ih*$topText';
+    return _executer.ffmpegExecute(['-i', imagePath, '-vf', cropFilter, '-y', outputPath]);
   }
 
   Future<bool> editAudioThumbnail({
@@ -454,27 +460,11 @@ class NamidaFFMPEG {
         final videoId = tr.youtubeID;
         if (videoId.isEmpty) continue;
 
-        File? thumbnailFile;
-        bool isTempThumbnail = false;
-        try {
-          // -- try getting cropped version if required
-          final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
-          const topic = '- Topic';
-          if (channelName != null && channelName.endsWith(topic)) {
-            final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
-            final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
-            if (thumbFile != null) {
-              thumbnailFile = thumbFile;
-              isTempThumbnail = true;
-            }
-          }
-        } catch (_) {}
-
-        thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-          id: videoId,
-          isImportantInCache: true,
-          type: ThumbnailType.video,
-        );
+        final tempDirectoryPath = Directory.systemTemp.path;
+        final tempFilePath = FileParts.joinPath(tempDirectoryPath, '$videoId.png');
+        final thumbnail = await YoutubeInfoController.utils.getVideoThumbnailOrSquareCover(videoId, tempFilePath: tempFilePath);
+        final thumbnailFile = thumbnail?.file;
+        final isTempThumbnail = thumbnail?.isTemp ?? false;
 
         if (thumbnailFile == null) {
           currentFailed++;

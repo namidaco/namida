@@ -29,8 +29,10 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/http.dart';
 import 'package:youtipie/youtipie.dart' hide logger;
 
+import 'package:namida/class/thumbnail_square_cover.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';

@@ -1146,25 +1146,11 @@ class YoutubeController {
         thumbnailCompleter = Completer<File?>();
 
         final videoId = videoID.videoId;
-        File? thumbnailFile;
-        try {
-          // -- try getting cropped version if required
-          final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
-          const topic = '- Topic';
-          if (channelName != null && channelName.endsWith(topic)) {
-            final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '${videoId}_${config.filename.key}.png');
-            final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
-            if (thumbFile != null) {
-              thumbnailFile = thumbFile;
-              isTempThumbnail = true;
-            }
-          }
-        } catch (_) {}
-        thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-          id: videoId,
-          isImportantInCache: true,
-          type: ThumbnailType.video,
-        );
+        final tempDirectoryPath = Directory.systemTemp.path;
+        final tempFilePath = FileParts.joinPath(tempDirectoryPath, '${videoId}_${config.filename.key}.png');
+        final thumbnail = await YoutubeInfoController.utils.getVideoThumbnailOrSquareCover(videoId, tempFilePath: tempFilePath);
+        final thumbnailFile = thumbnail?.file;
+        isTempThumbnail = thumbnail?.isTemp ?? false;
 
         thumbnailCompleter!.complete(thumbnailFile);
 
