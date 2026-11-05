@@ -5,14 +5,13 @@ final class SmartPlaylistRuleBoolean extends SmartPlaylistRuleBase<Null, Null, S
     required super.filter,
     required super.source,
     required super.enableCleanup,
-  }) : super(type: SmartPlaylistFilterType.boolean, data: null, data2: null, clockOnly: false, relativeDuration: null);
+  }) : super(type: SmartPlaylistFilterType.boolean, data: null, data2: null, relativeDuration: null);
 
   @override
   SmartPlaylistRuleBoolean copyWith({
     (Null data, Null data2)? datas,
     SmartPlaylistRuleFilterBoolean? filter,
     bool? enableCleanup,
-    bool? clockOnly,
     SmartPlaylistRelativeDuration? relativeDuration,
   }) => SmartPlaylistRuleBoolean(
     filter: filter ?? this.filter,
@@ -134,9 +133,6 @@ enum SmartPlaylistRuleFilterBooleanSource with SmartPlaylistRuleFilterSource {
 
   @override
   bool get supportsCleanup => false;
-
-  @override
-  bool get supportsClockOnly => false;
 
   @override
   String toText() => switch (this) {

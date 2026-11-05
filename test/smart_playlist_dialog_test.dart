@@ -177,6 +177,68 @@ void main() {
     expect(find.text('${SmartPlaylistRuleFilterDateTime.isSame.toText()}: = 2019'), findsOneWidget);
   });
 
+  group('date parts', () {
+    Future<void> toggleParts(WidgetTester tester, List<SmartPlaylistDatePart> parts) async {
+      await tapText(tester, lang.compareBy);
+      for (final part in parts) {
+        await tester.tap(find.text(part.toText()).last);
+        await frames(tester, 3);
+      }
+      NamidaNavigator.inst.popMenu();
+      await frames(tester);
+    }
+
+    Future<void> addSameDateRule(WidgetTester tester) async {
+      await addRule(tester, SmartPlaylistRuleFilterDateTimeSource.dateAdded);
+      await pickFilter(tester, SmartPlaylistRuleFilterDateTime.isSame);
+    }
+
+    String sameText(String value) => '${SmartPlaylistRuleFilterDateTime.isSame.toText()}: = $value';
+
+    testWidgets('a month of any year', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await toggleParts(tester, const [.year, .day]);
+      await tester.enterText(valueField(), '12');
+      await tapText(tester, lang.add);
+      expect(isRuleDialogOpen(), isFalse);
+      expect(find.text(sameText(SmartPlaylistDatePartsValue.monthToText(12))), findsOneWidget);
+    });
+
+    testWidgets('a weekday replaces the day', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await toggleParts(tester, const [.weekday, .year, .month]);
+      await tester.tap(valueField());
+      await frames(tester);
+      await tapText(tester, SmartPlaylistDatePartsValue.weekdayToText(DateTime.friday));
+      await tapText(tester, lang.add);
+      expect(isRuleDialogOpen(), isFalse);
+      expect(find.text(sameText(SmartPlaylistDatePartsValue.weekdayToText(DateTime.friday))), findsOneWidget);
+    });
+
+    testWidgets('turning the clock on keeps the typed date', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await tester.enterText(valueField(), '2019-05-14');
+      await frames(tester, 2);
+      await toggleParts(tester, const [.time]);
+      expect(tester.widget<TextField>(valueField()).controller!.text, '2019-05-14');
+      await tapText(tester, lang.add);
+      expect(isRuleDialogOpen(), isFalse);
+    });
+
+    testWidgets('now instead of a typed date', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await tester.tap(find.byIcon(Broken.timer_1).first);
+      await frames(tester, 3);
+      await tapText(tester, lang.add);
+      expect(isRuleDialogOpen(), isFalse);
+      expect(find.text(sameText('${lang.now} (${lang.days})')), findsOneWidget);
+    });
+  });
+
   testWidgets('editing a rule without changes closes quietly', (tester) async {
     final rule = SmartPlaylistRuleNumber(
       data: 50,

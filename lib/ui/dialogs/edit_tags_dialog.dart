@@ -2381,6 +2381,8 @@ class CustomTagTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final bool obscureText;
+  final bool readOnly;
+  final bool showChangedMark;
   final Widget? suffixIcon;
   final bool markChanged;
   final double? height;
@@ -2408,6 +2410,8 @@ class CustomTagTextField extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.obscureText = false,
+    this.readOnly = false,
+    this.showChangedMark = true,
   });
 
   @override
@@ -2463,6 +2467,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     return NBuilder(
       builder: (context, colors) => TextFormField(
         obscureText: widget.obscureText,
+        readOnly: widget.readOnly,
         onTap: widget.onTap,
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,
@@ -2478,7 +2483,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
         onChanged: widget.onChanged,
         onFieldSubmitted: widget.onFieldSubmitted,
         decoration: InputDecoration(
-          label: widget.labelText != '' ? Text('${widget.labelText} ${didChange || widget.markChanged ? '(${lang.changed})' : ''}') : null,
+          label: widget.labelText != '' ? Text('${widget.labelText} ${widget.showChangedMark && (didChange || widget.markChanged) ? '(${lang.changed})' : ''}') : null,
           floatingLabelBehavior: FloatingLabelBehavior.always,
           hintMaxLines: widget.hintMaxLines,
           isDense: isDense,

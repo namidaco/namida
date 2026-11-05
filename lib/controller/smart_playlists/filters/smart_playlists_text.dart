@@ -10,7 +10,6 @@ final class SmartPlaylistRuleText
     required super.enableCleanup,
   }) : super(
          type: SmartPlaylistFilterType.text,
-         clockOnly: false,
          relativeDuration: null,
        );
 
@@ -19,7 +18,6 @@ final class SmartPlaylistRuleText
     (List<SmartPlaylistTextDataToken>? data, List<SmartPlaylistTextDataToken>? data2)? datas,
     SmartPlaylistRuleFilterText? filter,
     bool? enableCleanup,
-    bool? clockOnly,
     SmartPlaylistRelativeDuration? relativeDuration,
   }) => SmartPlaylistRuleText(
     data: datas != null ? datas.$1 : this.data,
@@ -459,9 +457,6 @@ enum SmartPlaylistRuleFilterTextSource with SmartPlaylistRuleFilterSource {
 
   @override
   bool get supportsCleanup => true;
-
-  @override
-  bool get supportsClockOnly => false;
 
   @override
   String toText() => switch (this) {

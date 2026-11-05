@@ -9,7 +9,7 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     required super.enableCleanup,
     this.scope = SmartPlaylistNumberScope.track,
     this.aggregate = SmartPlaylistNumberAggregate.sum,
-  }) : super(type: SmartPlaylistFilterType.number, clockOnly: false, relativeDuration: null);
+  }) : super(type: SmartPlaylistFilterType.number, relativeDuration: null);
 
   final SmartPlaylistNumberScope scope;
   final SmartPlaylistNumberAggregate aggregate;
@@ -21,7 +21,6 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     (int? data, int? data2)? datas,
     SmartPlaylistRuleFilterNumber? filter,
     bool? enableCleanup,
-    bool? clockOnly,
     SmartPlaylistRelativeDuration? relativeDuration,
     SmartPlaylistNumberScope? scope,
     SmartPlaylistNumberAggregate? aggregate,
@@ -393,9 +392,6 @@ enum SmartPlaylistRuleFilterNumberSource with SmartPlaylistRuleFilterSource {
 
   @override
   bool get supportsCleanup => false;
-
-  @override
-  bool get supportsClockOnly => false;
 
   @override
   String toText() => switch (this) {

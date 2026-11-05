@@ -104,7 +104,7 @@ void main() {
         filter: SmartPlaylistRuleFilterDateTime.isWithinLast,
         source: SmartPlaylistRuleFilterDateTimeSource.anyListen,
         enableCleanup: false,
-        clockOnly: false,
+        parts: SmartPlaylistDateParts.date,
         relativeDuration: const SmartPlaylistRelativeDuration(amount: 30, unit: SmartPlaylistRelativeUnit.days),
       ),
       'number totalListens > 5': SmartPlaylistRuleNumber(

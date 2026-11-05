@@ -240,7 +240,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
           filter: s.recommendedFilter,
           source: s,
           enableCleanup: s.supportsCleanup,
-          clockOnly: false,
+          dateParts: SmartPlaylistDateParts.date,
           relativeDuration: null,
         );
 
@@ -752,6 +752,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
   List<SmartPlaylistTextDataToken>? _textTokens;
   List<SmartPlaylistTextDataToken>? _textTokens2;
   SmartPlaylistRelativeDuration? _relativeDuration;
+  final _datePartsNotifier = ValueNotifier(SmartPlaylistDateParts.date);
+  SmartPlaylistDateValue? _dateValue;
+  SmartPlaylistDateValue? _dateValue2;
 
   // -- used to keep previous filters while changing sources
   final _tempFilterForTypeMap = <SmartPlaylistFilterType?, SmartPlaylistRuleFilter?>{};
@@ -772,6 +775,11 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         _dataController.text = selectedRule.dataToText(selectedRule.data) ?? '';
         _data2Controller.text = selectedRule.data2ToText(selectedRule.data2) ?? '';
       }
+      if (selectedRule is SmartPlaylistRuleDateTime) {
+        _datePartsNotifier.value = selectedRule.parts;
+        _dateValue = selectedRule.data;
+        _dateValue2 = selectedRule.data2;
+      }
     } else {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _selectFilterSource(),
@@ -783,6 +791,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
   void dispose() {
     _dataController.dispose();
     _data2Controller.dispose();
+    _datePartsNotifier.dispose();
     super.dispose();
   }
 
@@ -795,6 +804,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         // -- auto add literal text if field had data
         final data = _withPendingLiteral(_textTokens, _dataController.text);
         final data2 = _withPendingLiteral(_textTokens2, _data2Controller.text);
+        rule = selectedRule.copyWith(datas: (data, data2));
+      } else if (selectedRule is SmartPlaylistRuleDateTime) {
+        final data = _dateValueOf(selectedRule, _dateValue, _dataController);
+        final data2 = _dateValueOf(selectedRule, _dateValue2, _data2Controller);
         rule = selectedRule.copyWith(datas: (data, data2));
       } else {
         final data = selectedRule.textToData(_dataController.text);
@@ -814,6 +827,33 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
   static List<SmartPlaylistTextDataToken>? _withPendingLiteral(List<SmartPlaylistTextDataToken>? tokens, String pendingText) {
     if (pendingText.isEmpty) return tokens;
     return [...?tokens, SmartPlaylistTextDataTokenLiteral(pendingText)];
+  }
+
+  /// full dates are typed, the other parts and "now" values come from their own fields.
+  static SmartPlaylistDateValue? _dateValueOf(SmartPlaylistRuleDateTime rule, SmartPlaylistDateValue? draft, TextEditingController controller) {
+    if (draft is SmartPlaylistNowDate || !rule.parts.isCalendarDate) return draft;
+    return rule.textToData(controller.text);
+  }
+
+  static SmartPlaylistDateValue? _nowValueOrNull(SmartPlaylistDateValue? value) => value is SmartPlaylistNowDate ? value : null;
+
+  void _toggleDatePart(SmartPlaylistDatePart part) {
+    final selectedRule = _selectedRule;
+    if (selectedRule is! SmartPlaylistRuleDateTime) return;
+    final previousParts = _datePartsNotifier.value;
+    final parts = previousParts.toggled(part);
+    if (parts == previousParts) return;
+    final keepsTypedDates = previousParts.isCalendarDate && parts.isCalendarDate;
+    if (!keepsTypedDates) {
+      _dataController.clear();
+      _data2Controller.clear();
+    }
+    _datePartsNotifier.value = parts;
+    setState(() {
+      _dateValue = _nowValueOrNull(_dateValue);
+      _dateValue2 = _nowValueOrNull(_dateValue2);
+      _selectedRule = selectedRule.copyWith(parts: parts);
+    });
   }
 
   void _setRelativeDuration(SmartPlaylistRelativeDuration relativeDuration) {
@@ -959,9 +999,11 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               _textTokens = null;
               _textTokens2 = null;
               _relativeDuration = null;
+              _datePartsNotifier.value = SmartPlaylistDateParts.date;
+              _dateValue = null;
+              _dateValue2 = null;
             }
             final filter = _tempFilterForTypeMap[s.type] ?? s.recommendedFilter;
-            final clockOnly = keptDateRule?.clockOnly ?? false;
             setState(() {
               _selectedRule = null; // avoid subtype errors
               _selectedRule = SmartPlaylistRuleBase.buildFrom(
@@ -969,7 +1011,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                 filter: filter,
                 source: s,
                 enableCleanup: s.supportsCleanup,
-                clockOnly: clockOnly,
+                dateParts: _datePartsNotifier.value,
                 relativeDuration: _relativeDuration,
               );
             });
@@ -1023,6 +1065,21 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     );
   }
 
+  Iterable<Widget> _getDatePartsChildren() {
+    return SmartPlaylistDatePart.values.map(
+      (part) => ValueListenableBuilder(
+        valueListenable: _datePartsNotifier,
+        builder: (context, parts, _) => _PopupChoiceItem(
+          isSelected: parts.has(part),
+          icon: part.toIcon(),
+          iconText: null,
+          text: part.toText(),
+          onTap: () => _toggleDatePart(part),
+        ),
+      ),
+    );
+  }
+
   Iterable<Widget> _getFilterTypeChildren() {
     final selectedRule = _selectedRule;
     if (selectedRule == null) return [];
@@ -1034,12 +1091,12 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         text: filter.toText(),
         onTap: () {
           final relativeDuration = _relativeDuration ?? const SmartPlaylistRelativeDuration.initial();
-          setState(() {
-            _selectedRule = selectedRule.copyWith(
-              filter: filter,
-              relativeDuration: relativeDuration,
-            );
-          });
+          final rule = selectedRule.copyWith(
+            filter: filter,
+            relativeDuration: relativeDuration,
+          );
+          final ruleWithDateParts = rule is SmartPlaylistRuleDateTime ? rule.copyWith(parts: _datePartsNotifier.value) : rule;
+          setState(() => _selectedRule = ruleWithDateParts);
           _tempFilterForTypeMap[_selectedRule?.type] = filter;
           NamidaNavigator.inst.popMenu();
         },
@@ -1136,113 +1193,70 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                   });
                 },
               ),
-            if (selectedRule != null &&
-                selectedRule.source.supportsClockOnly &&
-                !selectedRule.filter.isRelativeDate &&
-                (selectedRule.filter.requiresDataField || selectedRule.filter.requiresData2Field))
-              CustomSwitchListTile(
-                icon: Broken.clock,
-                title: lang.clockOnly,
-                value: selectedRule.clockOnly,
-                onChanged: (_) {
-                  _dataController.text = '';
-                  _data2Controller.text = '';
-                  setState(() {
-                    _selectedRule = selectedRule.copyWith(
-                      clockOnly: !selectedRule.clockOnly,
-                    );
-                  });
-                },
+            if (selectedRule is SmartPlaylistRuleDateTime && !selectedRule.filter.isRelativeDate && selectedRule.filter.requiresDataField)
+              NamidaPopupWrapper(
+                children: _getDatePartsChildren,
+                childBuilder: (openMenu) => CustomListTile(
+                  icon: Broken.calendar_search,
+                  title: lang.compareBy,
+                  trailing: NamidaPopupWrapper(
+                    children: _getDatePartsChildren,
+                    child: _InfoRowRaw(
+                      filterIcon: selectedRule.parts.toIcon(),
+                      filterIconText: null,
+                      filterText: selectedRule.parts.toText(),
+                    ),
+                  ),
+                  onTap: openMenu,
+                ),
               ),
 
             if (selectedRule != null && selectedRule.filter.requiresDataField) ...[
               const SizedBox(height: 12.0),
-              if (selectedRule is SmartPlaylistRuleText)
-                _TextDataTokensEditor(
+              switch (selectedRule) {
+                SmartPlaylistRuleText() => _TextDataTokensEditor(
                   rule: selectedRule,
                   tokens: _textTokens,
                   controller: _dataController,
                   onChanged: (tokens) => setState(() => _textTokens = tokens),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTagTextField(
-                        controller: _dataController,
-                        hintText: selectedRule.toHintText() ?? lang.value,
-                        labelText: lang.value,
-                        validator: selectedRule.dataValidator,
-                      ),
-                    ),
-                    ?switch (selectedRule) {
-                      SmartPlaylistRuleDateTime() => Padding(
-                        padding: const EdgeInsetsGeometry.only(left: 8.0),
-                        child: _CalendarPickerIconWidget(
-                          clockOnly: selectedRule.clockOnly,
-                          onSelect: (date) {
-                            _dataController.text = selectedRule.dataToText(date) ?? '';
-                          },
-                        ),
-                      ),
-                      SmartPlaylistRuleNumber() => Padding(
-                        padding: const EdgeInsetsGeometry.only(left: 8.0),
-                        child: _NumberSliderWidget(
-                          key: ValueKey(selectedRule.source),
-                          rule: selectedRule,
-                          controller: _dataController,
-                        ),
-                      ),
-                      SmartPlaylistRuleText() => null,
-                      SmartPlaylistRuleBoolean() => null,
-                    },
-                  ],
                 ),
+                SmartPlaylistRuleDateTime() => _DateValueEditor(
+                  key: ValueKey((selectedRule.parts, isData2: false)),
+                  rule: selectedRule,
+                  textController: _dataController,
+                  value: _dateValue,
+                  onChanged: (value) => setState(() => _dateValue = value),
+                ),
+                SmartPlaylistRuleNumber() => _NumberValueField(
+                  rule: selectedRule,
+                  controller: _dataController,
+                ),
+                SmartPlaylistRuleBoolean() => const SizedBox(),
+              },
             ],
 
             if (selectedRule != null && selectedRule.filter.requiresData2Field) ...[
               const SizedBox(height: 12.0),
-              if (selectedRule is SmartPlaylistRuleText)
-                _TextDataTokensEditor(
+              switch (selectedRule) {
+                SmartPlaylistRuleText() => _TextDataTokensEditor(
                   rule: selectedRule,
                   tokens: _textTokens2,
                   controller: _data2Controller,
                   onChanged: (tokens) => setState(() => _textTokens2 = tokens),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTagTextField(
-                        controller: _data2Controller,
-                        hintText: selectedRule.toHintText() ?? lang.value,
-                        labelText: lang.value,
-                        validator: selectedRule.dataValidator,
-                      ),
-                    ),
-                    ?switch (selectedRule) {
-                      SmartPlaylistRuleDateTime() => Padding(
-                        padding: const EdgeInsetsGeometry.only(left: 8.0),
-                        child: _CalendarPickerIconWidget(
-                          clockOnly: selectedRule.clockOnly,
-                          onSelect: (date) {
-                            _data2Controller.text = selectedRule.data2ToText(date) ?? '';
-                          },
-                        ),
-                      ),
-                      SmartPlaylistRuleNumber() => Padding(
-                        padding: const EdgeInsetsGeometry.only(left: 8.0),
-                        child: _NumberSliderWidget(
-                          key: ValueKey(selectedRule.source),
-                          rule: selectedRule,
-                          controller: _data2Controller,
-                        ),
-                      ),
-                      SmartPlaylistRuleText() => null,
-                      SmartPlaylistRuleBoolean() => null,
-                    },
-                  ],
                 ),
+                SmartPlaylistRuleDateTime() => _DateValueEditor(
+                  key: ValueKey((selectedRule.parts, isData2: true)),
+                  rule: selectedRule,
+                  textController: _data2Controller,
+                  value: _dateValue2,
+                  onChanged: (value) => setState(() => _dateValue2 = value),
+                ),
+                SmartPlaylistRuleNumber() => _NumberValueField(
+                  rule: selectedRule,
+                  controller: _data2Controller,
+                ),
+                SmartPlaylistRuleBoolean() => const SizedBox(),
+              },
             ],
 
             if (selectedRule != null && selectedRule.filter.isRelativeDate) ...[
@@ -1383,13 +1397,13 @@ class _PopupChoiceItem extends StatelessWidget {
 
 class _ChoiceChipsWrap<T> extends StatelessWidget {
   final List<T> values;
-  final T selected;
+  final bool Function(T value) isSelected;
   final String Function(T value) toText;
   final void Function(T value) onSelect;
 
   const _ChoiceChipsWrap({
     required this.values,
-    required this.selected,
+    required this.isSelected,
     required this.toText,
     required this.onSelect,
   });
@@ -1402,7 +1416,7 @@ class _ChoiceChipsWrap<T> extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.start,
       runSpacing: 4.0,
       children: values.map((value) {
-        final isSelected = value == selected;
+        final isSelected = this.isSelected(value);
         final tickIcon =
             const Icon(
               Broken.tick_circle,
@@ -1432,16 +1446,17 @@ class _ChoiceChipsWrap<T> extends StatelessWidget {
 }
 
 class _CalendarPickerIconWidget extends StatelessWidget {
-  final bool clockOnly;
-  final void Function(SmartPlaylistDate date) onSelect;
-  const _CalendarPickerIconWidget({required this.clockOnly, required this.onSelect});
+  final bool pickClock;
+  final void Function(DateTime date) onSelect;
+  const _CalendarPickerIconWidget({required this.pickClock, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return NamidaIconButton(
-      icon: clockOnly ? Broken.clock : Broken.calendar,
+      horizontalPadding: 4.0,
+      icon: pickClock ? Broken.clock : Broken.calendar,
       onPressed: () async {
-        if (clockOnly) {
+        if (pickClock) {
           final res = await showTimePicker(
             context: context,
             useRootNavigator: true,
@@ -1449,8 +1464,7 @@ class _CalendarPickerIconWidget extends StatelessWidget {
             initialEntryMode: .dial,
           );
           if (res != null) {
-            final clock = DateTime(0, 1, 1, res.hour, res.minute);
-            onSelect(SmartPlaylistDate(clock, .minute));
+            onSelect(DateTime(0, 1, 1, res.hour, res.minute));
           }
         } else {
           showCalendarDialog(
@@ -1460,13 +1474,377 @@ class _CalendarPickerIconWidget extends StatelessWidget {
             calendarType: NamidaCalendarDatePickerType.single,
             onGenerate: (dates) {
               if (dates.isNotEmpty) {
-                onSelect(SmartPlaylistDate(dates.first, .day));
+                onSelect(dates.first);
               }
               NamidaNavigator.inst.closeDialog();
             },
           );
         }
       },
+    );
+  }
+}
+
+class _NumberValueField extends StatelessWidget {
+  final SmartPlaylistRuleNumber rule;
+  final TextEditingController controller;
+
+  const _NumberValueField({
+    required this.rule,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: CustomTagTextField(
+            controller: controller,
+            hintText: rule.toHintText() ?? lang.value,
+            labelText: lang.value,
+            validator: rule.dataValidator,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsetsGeometry.only(left: 8.0),
+          child: _NumberSliderWidget(
+            key: ValueKey(rule.source),
+            rule: rule,
+            controller: controller,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// a full date is typed in one field, other parts get a field each, and either can be "now" moved by an offset.
+class _DateValueEditor extends StatefulWidget {
+  final SmartPlaylistRuleDateTime rule;
+  final TextEditingController textController;
+  final SmartPlaylistDateValue? value;
+  final void Function(SmartPlaylistDateValue? value) onChanged;
+
+  const _DateValueEditor({
+    super.key,
+    required this.rule,
+    required this.textController,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DateValueEditor> createState() => _DateValueEditorState();
+}
+
+class _DateValueEditorState extends State<_DateValueEditor> {
+  final _yearController = TextEditingController();
+  final _monthController = TextEditingController();
+  final _dayController = TextEditingController();
+  final _weekdayController = TextEditingController();
+  final _clockController = TextEditingController();
+  final _offsetController = TextEditingController();
+  int? _weekday;
+
+  static const _kWeekdays = [
+    DateTime.monday, DateTime.tuesday, DateTime.wednesday, DateTime.thursday, //
+    DateTime.friday, DateTime.saturday, DateTime.sunday,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final value = widget.value;
+    if (value is SmartPlaylistDatePartsValue) {
+      final weekday = value.weekday;
+      final secondOfDay = value.secondOfDay;
+      _yearController.text = value.year?.toString() ?? '';
+      _monthController.text = value.month?.toString() ?? '';
+      _dayController.text = value.day?.toString() ?? '';
+      _weekday = weekday;
+      if (weekday != null) _weekdayController.text = SmartPlaylistDatePartsValue.weekdayToText(weekday, short: true);
+      if (secondOfDay != null) _clockController.text = SmartPlaylistDatePartsValue.clockToText(secondOfDay, hasSeconds: value.hasSeconds);
+    } else if (value is SmartPlaylistNowDate) {
+      _offsetController.text = value.offsetAmount.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _yearController.dispose();
+    _monthController.dispose();
+    _dayController.dispose();
+    _weekdayController.dispose();
+    _clockController.dispose();
+    _offsetController.dispose();
+    super.dispose();
+  }
+
+  SmartPlaylistDatePartsValue _partsValueFromFields() {
+    final clock = SmartPlaylistDatePartsValue.tryParseClock(_clockController.text);
+    return SmartPlaylistDatePartsValue(
+      year: int.tryParse(_yearController.text),
+      month: int.tryParse(_monthController.text),
+      day: int.tryParse(_dayController.text),
+      weekday: _weekday,
+      secondOfDay: clock?.secondOfDay,
+      hasSeconds: clock?.hasSeconds ?? false,
+    );
+  }
+
+  void _reportPartsValue() {
+    widget.onChanged(_partsValueFromFields());
+  }
+
+  void _setWeekday(int weekday) {
+    _weekday = weekday;
+    _weekdayController.text = SmartPlaylistDatePartsValue.weekdayToText(weekday, short: true);
+    _reportPartsValue();
+  }
+
+  void _setClock(DateTime clock) {
+    final secondOfDay = SmartPlaylistDatePartsValue.secondOfDayOf(clock);
+    _clockController.text = SmartPlaylistDatePartsValue.clockToText(secondOfDay, hasSeconds: false);
+    _reportPartsValue();
+  }
+
+  void _setPickedDate(DateTime date) {
+    final value = SmartPlaylistDate(date, .day);
+    widget.textController.text = widget.rule.dataToText(value) ?? '';
+  }
+
+  void _toggleNow() {
+    if (widget.value is SmartPlaylistNowDate) {
+      final fixedValue = widget.rule.parts.isCalendarDate ? null : _partsValueFromFields();
+      widget.onChanged(fixedValue);
+      return;
+    }
+    _offsetController.text = '0';
+    widget.onChanged(const SmartPlaylistNowDate(offsetAmount: 0, offsetUnit: .days));
+  }
+
+  void _setNowOffset({int? amount, SmartPlaylistRelativeUnit? unit}) {
+    final value = widget.value;
+    if (value is! SmartPlaylistNowDate) return;
+    final nowValue = SmartPlaylistNowDate(
+      offsetAmount: amount ?? value.offsetAmount,
+      offsetUnit: unit ?? value.offsetUnit,
+    );
+    widget.onChanged(nowValue);
+  }
+
+  List<NamidaPopupItem> _weekdayItems() {
+    return _kWeekdays
+        .map(
+          (weekday) => NamidaPopupItem(
+            icon: Broken.calendar_tick,
+            title: SmartPlaylistDatePartsValue.weekdayToText(weekday),
+            selected: weekday == _weekday,
+            onTap: () => _setWeekday(weekday),
+          ),
+        )
+        .toFixedList();
+  }
+
+  List<NamidaPopupItem> _offsetUnitItems() {
+    final value = widget.value;
+    final selectedUnit = value is SmartPlaylistNowDate ? value.offsetUnit : null;
+    return SmartPlaylistRelativeUnit.values
+        .map(
+          (unit) => NamidaPopupItem(
+            icon: Broken.timer_1,
+            title: unit.toText(),
+            selected: unit == selectedUnit,
+            onTap: () => _setNowOffset(unit: unit),
+          ),
+        )
+        .toFixedList();
+  }
+
+  static String? Function(String? text) _intValidator(int min, int max) {
+    return (text) {
+      final value = int.tryParse(text ?? '');
+      if (value == null) return lang.emptyValue;
+      if (value < min || value > max) return '$min - $max';
+      return null;
+    };
+  }
+
+  static String? _requiredValidator(String? text) {
+    if (text == null || text.isEmpty) return lang.emptyValue;
+    return null;
+  }
+
+  static String? _clockValidator(String? text) {
+    final clock = SmartPlaylistDatePartsValue.tryParseClock(text ?? '');
+    if (clock == null) return lang.nameContainsBadCharacter;
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final value = widget.value;
+    final rule = widget.rule;
+    final parts = rule.parts;
+    final nowToggle = NamidaToggleCard(
+      icon: Broken.timer_1,
+      title: lang.now,
+      active: value is SmartPlaylistNowDate,
+      padding: const EdgeInsets.all(12.0),
+      onTap: _toggleNow,
+    );
+
+    final rows = <Widget>[];
+    if (value is SmartPlaylistNowDate) {
+      rows.add(
+        CustomTagTextField(
+          controller: _offsetController,
+          hintText: '-1, 0, 2...',
+          labelText: '${lang.now} ±',
+          keyboardType: const TextInputType.numberWithOptions(signed: true),
+          validator: _intValidator(-9999, 9999),
+          onChanged: (text) {
+            final amount = int.tryParse(text);
+            if (amount != null) _setNowOffset(amount: amount);
+          },
+          suffixIcon: NamidaPopupWrapper(
+            childrenDefault: _offsetUnitItems,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Row(
+                mainAxisSize: .min,
+                children: [
+                  NamidaText(
+                    value.offsetUnit.toText(),
+                    style: NText.small,
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Icon(
+                    Broken.arrow_down_2,
+                    size: 14.0,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (parts.isCalendarDate) {
+      rows.add(
+        CustomTagTextField(
+          controller: widget.textController,
+          hintText: rule.toHintText() ?? lang.value,
+          labelText: lang.value,
+          validator: rule.dataValidator,
+          suffixIcon: _CalendarPickerIconWidget(
+            pickClock: false,
+            onSelect: _setPickedDate,
+          ),
+        ),
+      );
+    } else {
+      final fields = [
+        if (parts.has(.year))
+          CustomTagTextField(
+            controller: _yearController,
+            hintText: 'YYYY',
+            labelText: lang.year,
+            showChangedMark: false,
+            isNumeric: true,
+            validator: _intValidator(1, 9999),
+            onChanged: (_) => _reportPartsValue(),
+          ),
+        if (parts.has(.month))
+          CustomTagTextField(
+            controller: _monthController,
+            hintText: '1-12',
+            labelText: lang.month,
+            showChangedMark: false,
+            isNumeric: true,
+            validator: _intValidator(1, 12),
+            onChanged: (_) => _reportPartsValue(),
+          ),
+        if (parts.has(.day))
+          CustomTagTextField(
+            controller: _dayController,
+            hintText: '1-31',
+            labelText: lang.day,
+            showChangedMark: false,
+            isNumeric: true,
+            validator: _intValidator(1, 31),
+            onChanged: (_) => _reportPartsValue(),
+          ),
+        if (parts.has(.weekday))
+          NamidaPopupWrapper(
+            childrenDefault: _weekdayItems,
+            childBuilder: (openMenu) => CustomTagTextField(
+              controller: _weekdayController,
+              hintText: '',
+              labelText: lang.weekday,
+              showChangedMark: false,
+              readOnly: true,
+              validator: _requiredValidator,
+              onTap: openMenu,
+              suffixIcon: const Icon(
+                Broken.arrow_down_2,
+                size: 16.0,
+              ),
+            ),
+          ),
+      ];
+      // -- two per row, more get too narrow
+      for (int i = 0; i < fields.length; i += 2) {
+        final hasPair = i + 1 < fields.length;
+        rows.add(
+          Row(
+            children: [
+              Expanded(child: fields[i]),
+              if (hasPair) ...[
+                const SizedBox(width: 8.0),
+                Expanded(child: fields[i + 1]),
+              ],
+            ],
+          ),
+        );
+      }
+      if (parts.has(.time)) {
+        rows.add(
+          CustomTagTextField(
+            controller: _clockController,
+            hintText: 'HH:mm',
+            labelText: lang.clock,
+            showChangedMark: false,
+            validator: _clockValidator,
+            onChanged: (_) => _reportPartsValue(),
+            suffixIcon: _CalendarPickerIconWidget(
+              pickClock: true,
+              onSelect: _setClock,
+            ),
+          ),
+        );
+      }
+    }
+
+    return _ValueBox(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+      child: Row(
+        crossAxisAlignment: .start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              children: rows
+                  .addSeparators(
+                    separator: const SizedBox(height: 8.0),
+                  )
+                  .toFixedList(),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          nowToggle,
+        ],
+      ),
     );
   }
 }
@@ -1613,7 +1991,7 @@ class _RelativeDurationPickerState extends State<_RelativeDurationPicker> {
         const SizedBox(height: 8.0),
         _ChoiceChipsWrap(
           values: SmartPlaylistRelativeUnit.values,
-          selected: widget.relativeDuration.unit,
+          isSelected: (unit) => unit == widget.relativeDuration.unit,
           toText: (unit) => unit.toText(),
           onSelect: (unit) => widget.onUnitChanged(
             SmartPlaylistRelativeDuration(
@@ -1824,135 +2202,152 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
 
     final suggestionsSource = widget.rule.source.toSuggestionsSource();
 
+    return _ValueBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (tokens.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+              child: NamidaText(
+                lang.emptyValue,
+                style: NText.small,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 6.0,
+              runSpacing: 6.0,
+              children: [
+                ...tokens.mapIndexed(
+                  (token, index) {
+                    final (IconData? icon, String label, NColors bgColor, VoidCallback onTap) = switch (token) {
+                      SmartPlaylistTextDataTokenSource() => (
+                        token.source.toIcon(),
+                        token.displayText(),
+                        const NColors(.secondaryContainer, opacity: 0.4),
+                        () => _pickSource(replaceIndex: index),
+                      ),
+                      SmartPlaylistTextDataTokenLiteral() => (
+                        null,
+                        '"${token.text}"',
+                        NColors.card,
+                        () => _editLiteral(index, token),
+                      ),
+                    };
+                    return NamidaInkWell(
+                      borderRadius: 99.0,
+                      bgColor: bgColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
+                      onTap: onTap,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 4.0),
+                          if (icon != null) ...[
+                            Icon(
+                              icon,
+                              size: 14.0,
+                            ),
+                            const SizedBox(width: 4.0),
+                          ],
+                          Flexible(
+                            child: NamidaText(
+                              label,
+                              style: NText.small,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 2.0),
+                          NamidaIconButton(
+                            horizontalPadding: 4.0,
+                            icon: Broken.close_circle,
+                            iconSize: 14.0,
+                            onPressed: () => _removeAt(index),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          const SizedBox(height: 12.0),
+          Row(
+            children: [
+              Expanded(
+                child: CustomTagTextField(
+                  controller: widget.controller,
+                  hintText: isRegex ? '.*' : lang.value,
+                  labelText: lang.value,
+                  onFieldSubmitted: (_) => _addLiteralFromField(),
+                ),
+              ),
+              const SizedBox(width: 6.0),
+              ValueListenableBuilder(
+                valueListenable: widget.controller,
+                builder: (context, value, child) {
+                  final text = value.text;
+                  return text.isEmpty
+                      ? NamidaIconButton(
+                          tooltip: () => lang.source,
+                          icon: Broken.main_component,
+                          onPressed: _pickSource,
+                        )
+                      : NamidaIconButton(
+                          tooltip: () => lang.add,
+                          icon: Broken.add_square,
+                          onPressed: _addLiteralFromField,
+                        );
+                },
+              ),
+            ],
+          ),
+          if (suggestionsSource != null)
+            ValueListenableBuilder(
+              valueListenable: widget.controller,
+              builder: (context, value, child) {
+                final values = _suggestionsProvider.valuesFor(suggestionsSource);
+                final results = TextSuggestionsMatcher.filter(
+                  values: values,
+                  query: value.text,
+                  excludeLowercased: _buildAlreadyAddedLiterals(),
+                );
+                if (results.isEmpty) return const SizedBox();
+                return TextSuggestionsChipsRow(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  values: values,
+                  indices: results,
+                  onTap: _addLiteralFromSuggestion,
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ValueBox extends StatelessWidget {
+  final EdgeInsetsGeometry padding;
+  final Widget child;
+
+  const _ValueBox({
+    this.padding = const EdgeInsets.all(8.0),
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return NDecoratedBox(
       decoration: (colors) => BoxDecoration(
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         border: Border.all(color: colors.divider.withOpacityExt(0.4)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (tokens.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-                child: NamidaText(
-                  lang.emptyValue,
-                  style: NText.small,
-                ),
-              )
-            else
-              Wrap(
-                spacing: 6.0,
-                runSpacing: 6.0,
-                children: [
-                  ...tokens.mapIndexed(
-                    (token, index) {
-                      final (IconData? icon, String label, NColors bgColor, VoidCallback onTap) = switch (token) {
-                        SmartPlaylistTextDataTokenSource() => (
-                          token.source.toIcon(),
-                          token.displayText(),
-                          const NColors(.secondaryContainer, opacity: 0.4),
-                          () => _pickSource(replaceIndex: index),
-                        ),
-                        SmartPlaylistTextDataTokenLiteral() => (
-                          null,
-                          '"${token.text}"',
-                          NColors.card,
-                          () => _editLiteral(index, token),
-                        ),
-                      };
-                      return NamidaInkWell(
-                        borderRadius: 99.0,
-                        bgColor: bgColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
-                        onTap: onTap,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(width: 4.0),
-                            if (icon != null) ...[
-                              Icon(
-                                icon,
-                                size: 14.0,
-                              ),
-                              const SizedBox(width: 4.0),
-                            ],
-                            Flexible(
-                              child: NamidaText(
-                                label,
-                                style: NText.small,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 2.0),
-                            NamidaIconButton(
-                              horizontalPadding: 4.0,
-                              icon: Broken.close_circle,
-                              iconSize: 14.0,
-                              onPressed: () => _removeAt(index),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            const SizedBox(height: 12.0),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomTagTextField(
-                    controller: widget.controller,
-                    hintText: isRegex ? '.*' : lang.value,
-                    labelText: lang.value,
-                    onFieldSubmitted: (_) => _addLiteralFromField(),
-                  ),
-                ),
-                const SizedBox(width: 6.0),
-                ValueListenableBuilder(
-                  valueListenable: widget.controller,
-                  builder: (context, value, child) {
-                    final text = value.text;
-                    return text.isEmpty
-                        ? NamidaIconButton(
-                            tooltip: () => lang.source,
-                            icon: Broken.main_component,
-                            onPressed: _pickSource,
-                          )
-                        : NamidaIconButton(
-                            tooltip: () => lang.add,
-                            icon: Broken.add_square,
-                            onPressed: _addLiteralFromField,
-                          );
-                  },
-                ),
-              ],
-            ),
-            if (suggestionsSource != null)
-              ValueListenableBuilder(
-                valueListenable: widget.controller,
-                builder: (context, value, child) {
-                  final values = _suggestionsProvider.valuesFor(suggestionsSource);
-                  final results = TextSuggestionsMatcher.filter(
-                    values: values,
-                    query: value.text,
-                    excludeLowercased: _buildAlreadyAddedLiterals(),
-                  );
-                  if (results.isEmpty) return const SizedBox();
-                  return TextSuggestionsChipsRow(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    values: values,
-                    indices: results,
-                    onTap: _addLiteralFromSuggestion,
-                  );
-                },
-              ),
-          ],
-        ),
+        padding: padding,
+        child: child,
       ),
     );
   }
@@ -2123,7 +2518,7 @@ class _LimitDialogState extends State<_LimitDialog> {
             const SizedBox(height: 8.0),
             _ChoiceChipsWrap(
               values: SmartPlaylistLimitUnit.values,
-              selected: _limit.unit,
+              isSelected: (unit) => unit == _limit.unit,
               toText: (unit) => unit.toText(),
               onSelect: (unit) => setState(() => _limit = _limit.copyWith(unit: unit)),
             ),
