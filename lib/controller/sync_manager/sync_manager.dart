@@ -71,3 +71,4 @@ part 'sync_pairing.dart';
 part 'sync_sender.dart';
 part 'sync_server_wrapper.dart';
 part 'sync_utils.dart';
+part 'sync_windows_firewall.dart';

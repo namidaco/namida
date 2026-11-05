@@ -225,4 +225,28 @@ class SyncUtils {
 
     return localeInterfacesSet;
   }
+
+  static final _kConnectTimeoutErrorCode = Platform.isWindows ? 10060 : 110;
+
+  /// the timeout of [Socket.connect] itself, usually a firewall on the other device dropping the connection.
+  static bool isConnectTimeout(Object error) => error is SocketException && error.osError?.errorCode == _kConnectTimeoutErrorCode;
+
+  static Future<String> _runPowershell(String script, {Duration timeout = const Duration(seconds: 20)}) async {
+    final encodedScript = _encodePowershell(script);
+    final process = await Process.start('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encodedScript]);
+    final output = process.stdout.transform(systemEncoding.decoder).join();
+    process.stderr.drain<void>();
+    final exitCode = await process.exitCode.timeout(
+      timeout,
+      onTimeout: () {
+        process.kill();
+        return -1;
+      },
+    );
+    if (exitCode == -1) return 'timed out';
+    return (await output).trim();
+  }
+
+  /// what `-EncodedCommand` takes, no quoting needed.
+  static String _encodePowershell(String script) => base64.encode(Uint16List.fromList(script.codeUnits).buffer.asUint8List());
 }

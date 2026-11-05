@@ -240,6 +240,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
               if (device.isConnected) connectedCount++;
             }
             final blockedClientIds = settings.sync.blockedClientIds.value;
+            final isServerBlockedByFirewall = server.serverWrapper != null && server.isBlockedByFirewall == true;
 
             return SuperSmoothListView(
               padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
@@ -289,6 +290,17 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                                 ],
                               ),
                             ),
+                          ),
+                        ),
+                      ),
+                      AnimatedShow(
+                        show: isServerBlockedByFirewall,
+                        child: CustomListTile(
+                          icon: Broken.shield_cross,
+                          title: lang.firewallBlocksOtherDevicesFromConnecting,
+                          trailing: NamidaButton(
+                            text: lang.allowThroughFirewall,
+                            onTap: server.allowThroughFirewall,
                           ),
                         ),
                       ),
@@ -1236,7 +1248,9 @@ class _DeviceCard extends StatelessWidget {
             _DeviceAction(
               title: device.connectedAsClient ? lang.reconnect : lang.connect,
               enabled: networkDevice != null,
-              onTap: networkDevice == null ? null : () => SyncDiscovery.client.connectToServer(networkDevice, forceReconnect: device.connectedAsClient),
+              onTap: networkDevice == null
+                  ? null
+                  : () => SyncDiscovery.client.connectToServer(networkDevice, forceReconnect: device.connectedAsClient).catchError(_showConnectErrorSnack),
             ),
             _DeviceAction(
               title: lang.disconnect,
@@ -1617,9 +1631,11 @@ class _BlockedDevicesTile extends StatelessWidget {
 }
 
 void _showConnectErrorSnack(Object error) {
+  final isTimeout = SyncUtils.isConnectTimeout(error);
+  final message = isTimeout ? '${lang.otherDeviceDidNotAnswerItsFirewallMightBeBlockingNamida}\n$error' : '$error';
   snackyy(
     title: lang.error,
-    message: '$error',
+    message: message,
     isError: true,
   );
 }

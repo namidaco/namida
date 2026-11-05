@@ -153,6 +153,21 @@ class _ServerSide extends RxNotifier {
     }
 
     _refresh();
+    if (Platform.isWindows) _refreshFirewallState();
+  }
+
+  /// windows only, no firewall rule lets other devices connect. null until checked.
+  bool? get isBlockedByFirewall => _isBlockedByFirewall;
+  bool? _isBlockedByFirewall;
+
+  Future<void> _refreshFirewallState() async {
+    _isBlockedByFirewall = await _SyncWindowsFirewall.isBlocking();
+    _refresh();
+  }
+
+  Future<void> allowThroughFirewall() async {
+    await _SyncWindowsFirewall.allow();
+    await _refreshFirewallState();
   }
 
   _PairingSession _onClientSocket(Socket socket) {

@@ -95,10 +95,12 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     report.writeln('\n== windows network ==');
     final exePath = Platform.resolvedExecutable.replaceAll("'", "''");
     try {
-      report.writeln(await _runPowershell(_kWindowsNetworkScript.replaceFirst('{exe}', exePath)));
+      report.writeln(await SyncUtils._runPowershell(_kWindowsNetworkScript.replaceFirst('{exe}', exePath)));
     } catch (e) {
       report.writeln('failed: $e');
     }
+    final isBlockedByFirewall = await _SyncWindowsFirewall.isBlocking();
+    if (isBlockedByFirewall == true) report.writeln('! no firewall rule lets other devices connect to this server, use "${lang.allowThroughFirewall}" on the sync page');
   }
 
   static Future<void> _writeLinuxFirewall(StringBuffer report) async {
@@ -208,21 +210,5 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     } catch (e) {
       return 'failed: $e\n! a timeout usually means a firewall on that device blocks tcp ${SyncUtils.kDefaultNamidaPort}, other errors can be temporary, retry';
     }
-  }
-
-  static Future<String> _runPowershell(String script) async {
-    final encodedScript = base64.encode(Uint16List.fromList(script.codeUnits).buffer.asUint8List());
-    final process = await Process.start('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encodedScript]);
-    final output = process.stdout.transform(systemEncoding.decoder).join();
-    process.stderr.drain<void>();
-    final exitCode = await process.exitCode.timeout(
-      const Duration(seconds: 20),
-      onTimeout: () {
-        process.kill();
-        return -1;
-      },
-    );
-    if (exitCode == -1) return 'timed out';
-    return (await output).trim();
   }
 }
