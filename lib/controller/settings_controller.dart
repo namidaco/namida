@@ -528,6 +528,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   late final ignoreCommonPrefixForTypes = _keyList('ignoreCommonPrefixForTypes', const <TrackSearchFilter>[], item: TrackSearchFilter.values.asCodec());
   late final commonPrefixes = _keyList<String>('commonPrefixes', const ['the ', 'a ', 'an ']);
+  late final ignoreLeadingSymbols = _key('ignoreLeadingSymbols', true);
 
   late final fontScaleLRC = _key('fontScaleLRC', 1.0);
   late final fontScaleLRCFull = _key<double?>('fontScaleLRCFull', null);

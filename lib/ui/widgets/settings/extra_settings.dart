@@ -29,6 +29,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
+import 'package:namida/core/sort_key.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -143,7 +144,7 @@ class ExtrasSettings extends SettingSubpageProvider {
       ),
       SettingCustom(
         title: () => lang.ignoreCommonPrefixesWhileSorting,
-        keys: [settings.ignoreCommonPrefixForTypes, settings.commonPrefixes],
+        keys: [settings.ignoreCommonPrefixForTypes, settings.commonPrefixes, settings.ignoreLeadingSymbols],
         tile: (args) => _CommonPrefixesTile(
           bgColor: args.bgColor,
         ),
@@ -1150,18 +1151,7 @@ class _CommonPrefixesTile extends StatelessWidget {
 
   const _CommonPrefixesTile({required this.bgColor});
 
-  static const _kUnsortableTypes = {
-    TrackSearchFilter.comment, TrackSearchFilter.description, TrackSearchFilter.year, //
-    TrackSearchFilter.moods, TrackSearchFilter.tags, TrackSearchFilter.lyrics, //
-  };
-
-  void _onTypeTap(TrackSearchFilter type) {
-    if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
-      settings.ignoreCommonPrefixForTypes.update((list) => list.remove(type));
-    } else {
-      settings.ignoreCommonPrefixForTypes.update((list) => list.addNoDuplicates(type));
-    }
-  }
+  static const _kSymbolsSample = '" ( ¿ … ♪';
 
   void _onPrefixRemoveTap(String prefix) {
     if (settings.commonPrefixes.value.length <= 1) return showMinimumItemsSnack(1);
@@ -1169,9 +1159,15 @@ class _CommonPrefixesTile extends StatelessWidget {
     settings.commonPrefixes.update((prefixes) => prefixes.remove(prefix));
   }
 
-  void _onRestorePrefixesTap() {
+  void _onSymbolsTap() {
+    final ignoreLeadingSymbols = settings.ignoreLeadingSymbols.value;
+    settings.ignoreLeadingSymbols.save(!ignoreLeadingSymbols);
+  }
+
+  void _onRestoreTap() {
+    settings.ignoreCommonPrefixForTypes.reset();
     settings.commonPrefixes.reset();
-    NamidaNavigator.inst.closeDialog();
+    settings.ignoreLeadingSymbols.reset();
   }
 
   void _showAddPrefixDialog() {
@@ -1186,11 +1182,6 @@ class _CommonPrefixesTile extends StatelessWidget {
       dialog: CustomBlurryDialog(
         title: lang.add,
         actions: [
-          IconButton(
-            tooltip: lang.restoreDefaults,
-            onPressed: _onRestorePrefixesTap,
-            icon: const Icon(Broken.refresh),
-          ),
           const CancelButton(),
           NamidaButton(
             text: lang.save,
@@ -1211,14 +1202,20 @@ class _CommonPrefixesTile extends StatelessWidget {
   }
 
   void _showDialog(ThemeData theme) {
-    final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
-    final types = TrackSearchFilter.values.where((e) => !_kUnsortableTypes.contains(e)).toFixedList();
+    final originalTypes = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
+    final originalPrefixes = List<String>.from(settings.commonPrefixes.value);
+    final originalIgnoreSymbols = settings.ignoreLeadingSymbols.value;
     final chipColor = theme.cardTheme.color;
     final addChipColor = chipColor?.withOpacityExt(1.0);
 
     void resortIfNecessary() {
-      final didChange = settings.ignoreCommonPrefixForTypes.value.didChangeFrom(original);
-      if (didChange) Indexer.inst.resortAllAfterSortKeysChange();
+      final ignoreCommonPrefixForTypes = settings.ignoreCommonPrefixForTypes.value;
+      final didChangeTypes = ignoreCommonPrefixForTypes.didChangeFrom(originalTypes);
+      final didChangePrefixes = settings.commonPrefixes.value.didChangeFrom(originalPrefixes);
+      final didChangeSymbols = settings.ignoreLeadingSymbols.value != originalIgnoreSymbols;
+      final didChangeMatching = didChangePrefixes || didChangeSymbols;
+      final shouldResort = didChangeTypes || (didChangeMatching && ignoreCommonPrefixForTypes.isNotEmpty);
+      if (shouldResort) Indexer.inst.resortAllAfterSortKeysChange();
     }
 
     NamidaNavigator.inst.navigateDialog(
@@ -1229,7 +1226,7 @@ class _CommonPrefixesTile extends StatelessWidget {
           IconButton(
             icon: const Icon(Broken.refresh),
             tooltip: lang.restoreDefaults,
-            onPressed: settings.ignoreCommonPrefixForTypes.reset,
+            onPressed: _onRestoreTap,
           ),
           DoneButton(
             additional: resortIfNecessary,
@@ -1238,11 +1235,22 @@ class _CommonPrefixesTile extends StatelessWidget {
         child: SmoothSingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _PrefixesSectionTitle(
+                title: lang.preview,
+              ),
+              const _PrefixesPreview(),
+              const SizedBox(height: 16.0),
+              _PrefixesSectionTitle(
+                title: lang.ignore,
+              ),
               ObxO(
                 rx: settings.commonPrefixes,
                 builder: (context, commonPrefixes) => Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6.0,
+                  runSpacing: 6.0,
                   children: [
                     ...commonPrefixes.map(
                       (e) => _PrefixChip(
@@ -1252,34 +1260,31 @@ class _CommonPrefixesTile extends StatelessWidget {
                         onTap: () => _onPrefixRemoveTap(e),
                       ),
                     ),
-                    const NamidaContainerDivider(
-                      height: 24.0,
-                      width: 1.5,
-                      margin: EdgeInsets.symmetric(horizontal: 2.0),
-                    ),
-                    _PrefixChip(
-                      text: lang.add,
-                      icon: Broken.add_circle,
-                      color: addChipColor,
-                      onTap: _showAddPrefixDialog,
+                    NamidaTooltip(
+                      message: () => lang.add,
+                      child: _PrefixChip(
+                        text: null,
+                        icon: Broken.add_circle,
+                        color: addChipColor,
+                        onTap: _showAddPrefixDialog,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4.0),
-              const NamidaContainerDivider(),
-              ...types.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: Obx(
-                    (context) => ListTileWithCheckMark(
-                      title: e.toText(),
-                      onTap: () => _onTypeTap(e),
-                      active: settings.ignoreCommonPrefixForTypes.valueR.contains(e),
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 8.0),
+              ListTileWithCheckMark(
+                activeRx: settings.ignoreLeadingSymbols,
+                icon: Broken.omega_circle,
+                title: lang.symbols,
+                subtitle: _kSymbolsSample,
+                onTap: _onSymbolsTap,
               ),
+              const SizedBox(height: 16.0),
+              _PrefixesSectionTitle(
+                title: lang.applyTo,
+              ),
+              const _PrefixTypesTile(),
             ],
           ),
         ),
@@ -1291,7 +1296,11 @@ class _CommonPrefixesTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       (context) {
-        final prefixesText = settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', ');
+        final prefixesTexts = settings.commonPrefixes.valueR.map((e) => e.addDQuotation());
+        final prefixesText = [
+          if (settings.ignoreLeadingSymbols.valueR) lang.symbols,
+          ...prefixesTexts,
+        ].join(', ');
         final typesCount = settings.ignoreCommonPrefixForTypes.valueR.length;
         return CustomListTile(
           bgColor: bgColor,
@@ -1306,8 +1315,123 @@ class _CommonPrefixesTile extends StatelessWidget {
   }
 }
 
-class _PrefixChip extends StatelessWidget {
+class _PrefixesSectionTitle extends StatelessWidget {
+  final String title;
+
+  const _PrefixesSectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0, bottom: 6.0),
+      child: NamidaText(
+        title,
+        style: const NText(.small, weight: FontWeight.w600),
+        color: const NColors(.onSurface, opacity: 0.7),
+      ),
+    );
+  }
+}
+
+class _PrefixesPreview extends StatelessWidget {
+  const _PrefixesPreview();
+
+  /// plain ascii, so offsets in their sort keys match the text.
+  static const _kSamples = ['The Beatles', '...And Justice for All', '"A Perfect Circle"'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final ignorer = SortKeyPrefixIgnorer(settings.commonPrefixes.valueR, ignoreSymbols: settings.ignoreLeadingSymbols.valueR, normalize: SortKey.of);
+        final isApplied = settings.ignoreCommonPrefixForTypes.valueR.isNotEmpty;
+        return AnimatedOpacity(
+          opacity: isApplied ? 1.0 : 0.4,
+          duration: const Duration(milliseconds: 200),
+          child: NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
+              color: colors.cardTheme,
+              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              child: Column(
+                children: _kSamples
+                    .map(
+                      (e) => _PrefixesPreviewLine(
+                        text: e,
+                        ignoredLength: ignorer.ignoredLengthOf(SortKey.of(e)),
+                      ),
+                    )
+                    .toFixedList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PrefixesPreviewLine extends StatelessWidget {
   final String text;
+  final int ignoredLength;
+
+  const _PrefixesPreviewLine({
+    required this.text,
+    required this.ignoredLength,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ignoredText = text.substring(0, ignoredLength);
+    final keptText = text.substring(ignoredLength);
+    final sortLetter = keptText[0].toUpperCase();
+    final ignoredTextWidget = ignoredLength == 0
+        ? null
+        : NamidaText(
+            ignoredText,
+            style: NText.medium,
+            color: const NColors(.onSurface, opacity: 0.3),
+          );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
+              color: colors.secondaryContainer,
+              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+            ),
+            child: SizedBox(
+              width: 24.0,
+              height: 24.0,
+              child: Center(
+                child: NamidaText(
+                  sortLetter,
+                  style: const NText(.small, weight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10.0),
+          ?ignoredTextWidget,
+          Expanded(
+            child: NamidaText(
+              keptText,
+              style: NText.medium,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrefixChip extends StatelessWidget {
+  final String? text;
   final IconData icon;
   final Color? color;
   final void Function() onTap;
@@ -1321,29 +1445,104 @@ class _PrefixChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(2.0),
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    final text = this.text;
+    return NamidaInkWell(
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 14.0),
+      bgColor: NColors.fixed(color),
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (text != null) ...[
             NamidaText(
               text,
               style: NText.medium,
             ),
-            const SizedBox(width: 6.0),
-            Icon(
-              icon,
-              size: 18.0,
-            ),
+            const SizedBox(width: 8.0),
           ],
-        ),
+          Icon(
+            icon,
+            size: 20.0,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrefixTypesTile extends StatelessWidget {
+  const _PrefixTypesTile();
+
+  static const _kUnsortableTypes = {
+    TrackSearchFilter.comment, TrackSearchFilter.description, TrackSearchFilter.year, //
+    TrackSearchFilter.moods, TrackSearchFilter.tags, TrackSearchFilter.lyrics, //
+  };
+
+  void _onTypeTap(TrackSearchFilter type) {
+    if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
+      settings.ignoreCommonPrefixForTypes.update((list) => list.remove(type));
+    } else {
+      settings.ignoreCommonPrefixForTypes.update((list) => list.addNoDuplicates(type));
+    }
+  }
+
+  Iterable<NamidaPopupItem> _getTypesItems() {
+    return TrackSearchFilter.values
+        .where((e) => !_kUnsortableTypes.contains(e))
+        .map(
+          (e) => NamidaPopupItem(
+            icon: e.toIcon(),
+            title: e.toText(),
+            popOnTap: false,
+            onTap: () => _onTypeTap(e),
+            trailing: _PrefixTypeCheckMark(
+              type: e,
+            ),
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: _getTypesItems,
+      childBuilder: (openMenu) => ObxO(
+        rx: settings.ignoreCommonPrefixForTypes,
+        builder: (context, ignoreCommonPrefixForTypes) {
+          final isNoneSelected = ignoreCommonPrefixForTypes.isEmpty;
+          final selectedTypesTexts = TrackSearchFilter.values.where(ignoreCommonPrefixForTypes.contains).map((e) => e.toText());
+          final typesText = isNoneSelected ? lang.none : selectedTypesTexts.join(', ');
+          final colors = NColorsData.of(context);
+          final bgColor = isNoneSelected ? colors.secondaryContainer.withOpacityExt(0.6) : colors.cardTheme;
+          return CustomListTile(
+            bgColor: bgColor,
+            icon: Broken.task_square,
+            title: typesText,
+            trailing: const Icon(
+              Broken.arrow_down_2,
+              size: 20.0,
+            ),
+            onTap: openMenu,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PrefixTypeCheckMark extends StatelessWidget {
+  final TrackSearchFilter type;
+
+  const _PrefixTypeCheckMark({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.ignoreCommonPrefixForTypes,
+      builder: (context, ignoreCommonPrefixForTypes) => NamidaCheckMark(
+        size: 16.0,
+        active: ignoreCommonPrefixForTypes.contains(type),
       ),
     );
   }

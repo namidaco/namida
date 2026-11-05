@@ -381,13 +381,19 @@ class SearchSortController extends SearchPortsProvider {
     return SortKey.of;
   }
 
+  SortKeyPrefixIgnorer createSortKeyPrefixIgnorer(String Function(String text) normalize) {
+    return SortKeyPrefixIgnorer(settings.commonPrefixes.value, ignoreSymbols: settings.ignoreLeadingSymbols.value, normalize: normalize);
+  }
+
   Comparable Function(MapEntry<String, List<Track>>)? _getMediaSortingComparable(GroupSortType type, {GroupSortType? overrideKey, TrackSearchFilter? filter}) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
     final normalize = sortKeyNormalizer;
+    SortKeyPrefixIgnorer? prefixIgnorer;
 
     String Function(MapEntry<String, List<Track>> e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
-        return (e) => comparable(e).ignoreCommonPrefixes();
+        final ignorer = prefixIgnorer ??= createSortKeyPrefixIgnorer(normalize);
+        return (e) => ignorer.ignorePrefixes(comparable(e));
       } else {
         return comparable;
       }
@@ -479,9 +485,11 @@ class SearchSortController extends SearchPortsProvider {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
     final normalize = sortKeyNormalizer;
     String? normalizeOrNull(String? text) => text == null || text.isEmpty ? null : normalize(text);
+    SortKeyPrefixIgnorer? prefixIgnorer;
     String Function(Track e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
-        return (e) => comparable(e).ignoreCommonPrefixes();
+        final ignorer = prefixIgnorer ??= createSortKeyPrefixIgnorer(normalize);
+        return (e) => ignorer.ignorePrefixes(comparable(e));
       } else {
         return comparable;
       }
@@ -1532,11 +1540,13 @@ class SearchSortController extends SearchPortsProvider {
   SortChainComparables<MapEntry<AlbumIdentifierWrapper, List<Track>>> _getAlbumsComparables(SortChain<GroupSortType> sorting) {
     String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) encapsulateSortCanIgnorePrefix(
       TrackSearchFilter filter,
+      String Function(String text) normalize,
       String Function(MapEntry<AlbumIdentifierWrapper, List<Track>> e) comparable,
     ) {
       final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
       if (ignoreCommonPrefix.contains(filter)) {
-        return (e) => comparable(e).ignoreCommonPrefixes();
+        final ignorer = createSortKeyPrefixIgnorer(normalize);
+        return (e) => ignorer.ignorePrefixes(comparable(e));
       } else {
         return comparable;
       }
@@ -1545,7 +1555,7 @@ class SearchSortController extends SearchPortsProvider {
     Comparable<dynamic> Function(MapEntry<AlbumIdentifierWrapper, List<Track>>)? comparableOf(GroupSortType s) {
       if (s == GroupSortType.album) {
         final normalize = sortKeyNormalizer;
-        final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.key.displayAlbumName));
+        final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, normalize, (e) => normalize(e.key.displayAlbumName));
         return (e) => mainFn(e);
       } else if (s == GroupSortType.lastPlayed) {
         final latestPlayedForSource = QueueController.latestPlayedForSourceManager;

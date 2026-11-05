@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:dart_extensions/dart_extensions.dart';
+
 import 'package:namida/controller/romanizer/romanizer_engine.dart';
 
 /// Lower case key that ignores diacritics & orders digit runs by value, comparable using [String.compareTo].
@@ -15,6 +17,8 @@ class SortKey {
   static const _combiningMarksEnd = 0x36F;
   static const _digitZero = 0x30;
   static const _digitNine = 0x39;
+  static const _digitsCountPrefixSymbolsStart = 0x3A;
+  static const _digitsCountPrefixEnd = _digitZero + _maxDigitsCountPrefix;
 
   /// char at `codeUnit - start` is the base letter of that code unit, `ÀÁÂÃÄÅ` => `aaaaaa`. generated from unicode decompositions.
   static const _baseLettersOfLatinExtended =
@@ -115,5 +119,119 @@ class SortKey {
     }
     _seenScripts |= scripts;
     return String.fromCharCodes(buffer, 0, outputLength).toLowerCase();
+  }
+
+  /// code units taken by the symbol (punctuation, space, emoji..) at [index] of a key made by [of], 0 for letters & digits.
+  static int _symbolLengthAt(String key, int index) {
+    final codeUnit = key.codeUnitAt(index);
+    return switch (codeUnit) {
+      >= 0x61 && <= 0x7A || >= 0x30 && <= 0x39 || >= 0x41 && <= 0x5A => 0,
+      >= _digitsCountPrefixSymbolsStart && <= _digitsCountPrefixEnd => _isDigitsCountPrefixAt(key, index, codeUnit) ? 0 : 1,
+      < 0x80 => 1,
+      0xAA || 0xB2 || 0xB3 || 0xB5 || 0xB9 || 0xBA || 0xBC || 0xBD || 0xBE => 0, // -- ª ² ³ µ ¹ º ¼ ½ ¾
+      <= 0xBF => 1, // -- nbsp, ¡ ¿ « »
+      >= 0x2000 && <= 0x206F => 1, // -- general punctuation, “ ” ‘ ’ …
+      >= 0x20A0 && <= 0x20FF => 1, // -- currency, keycaps
+      >= 0x2190 && <= 0x245F || >= 0x2500 && <= 0x2775 || >= 0x2794 && <= 0x2BFF => 1, // -- arrows, shapes, ♪ ★, without circled numbers
+      >= 0x2E00 && <= 0x2E7F => 1,
+      >= 0x3000 && <= 0x3004 || >= 0x3008 && <= 0x3020 || 0x3030 || 0x303D => 1, // -- 「」【】〜
+      >= 0xFE00 && <= 0xFE6F => 1, // -- variation selectors, vertical & small forms
+      >= 0xFF01 && <= 0xFF0F || >= 0xFF1A && <= 0xFF20 || >= 0xFF3B && <= 0xFF40 || >= 0xFF5B && <= 0xFF65 => 1, // -- fullwidth punctuation
+      >= 0xD83C && <= 0xD83E => 2, // -- emoji
+      _ => 0,
+    };
+  }
+
+  /// digit runs of 10+ get a count prefix in `:;<=>?`, told apart from those symbols by the digits after it.
+  static bool _isDigitsCountPrefixAt(String key, int index, int codeUnit) {
+    final digitsCount = codeUnit - _digitZero;
+    final length = key.length;
+    var end = index + 1;
+    while (end < length) {
+      final digit = key.codeUnitAt(end);
+      if (digit < _digitZero || digit > _digitNine) break;
+      end++;
+    }
+    final followingDigitsCount = end - index - 1;
+    if (digitsCount == _maxDigitsCountPrefix) return followingDigitsCount >= digitsCount;
+    return followingDigitsCount == digitsCount;
+  }
+}
+
+/// Skips [prefixes] & spaces at the start of a [SortKey], and symbols too when [ignoreSymbols].
+/// Prefixes are bucketed by their first code unit, so keys that match none cost the same no matter how many prefixes there are.
+///
+/// by claude
+class SortKeyPrefixIgnorer {
+  static const _asciiEnd = 0x80;
+  static const _space = 0x20;
+
+  final bool ignoreSymbols;
+  final List<List<String>?> _asciiPrefixesByFirstCodeUnit;
+  final Map<int, List<String>>? _otherPrefixesByFirstCodeUnit;
+
+  const SortKeyPrefixIgnorer._(this.ignoreSymbols, this._asciiPrefixesByFirstCodeUnit, this._otherPrefixesByFirstCodeUnit);
+
+  factory SortKeyPrefixIgnorer(List<String> prefixes, {required bool ignoreSymbols, required String Function(String text) normalize}) {
+    final asciiPrefixes = List<List<String>?>.filled(_asciiEnd, null);
+    final otherPrefixes = <int, List<String>>{};
+    for (final prefix in prefixes) {
+      final prefixKey = normalize(prefix).trimLeft();
+      if (prefixKey.isEmpty) continue;
+      final firstCodeUnit = prefixKey.codeUnitAt(0);
+      if (firstCodeUnit < _asciiEnd) {
+        (asciiPrefixes[firstCodeUnit] ??= []).add(prefixKey);
+      } else {
+        (otherPrefixes[firstCodeUnit] ??= []).add(prefixKey);
+      }
+    }
+    for (final bucket in asciiPrefixes) {
+      bucket?.sortByReverse((e) => e.length);
+    }
+    for (final bucket in otherPrefixes.values) {
+      bucket.sortByReverse((e) => e.length);
+    }
+    return SortKeyPrefixIgnorer._(ignoreSymbols, asciiPrefixes, otherPrefixes.isEmpty ? null : otherPrefixes);
+  }
+
+  String ignorePrefixes(String key) {
+    final ignoredLength = ignoredLengthOf(key);
+    if (ignoredLength == 0) return key;
+    return key.substring(ignoredLength);
+  }
+
+  int ignoredLengthOf(String key) {
+    final length = key.length;
+    var start = 0;
+    while (start < length) {
+      final codeUnit = key.codeUnitAt(start);
+      if (codeUnit == _space) {
+        start++;
+        continue;
+      }
+      if (ignoreSymbols) {
+        final symbolLength = SortKey._symbolLengthAt(key, start);
+        if (symbolLength > 0) {
+          start += symbolLength;
+          continue;
+        }
+      }
+      final prefixLength = _prefixLengthAt(key, start, codeUnit);
+      if (prefixLength == 0) break;
+      start += prefixLength;
+    }
+    // -- keys made of prefixes & symbols only stay as is
+    if (start >= length) return 0;
+    return start;
+  }
+
+  int _prefixLengthAt(String key, int start, int codeUnit) {
+    final prefixes = codeUnit < _asciiEnd ? _asciiPrefixesByFirstCodeUnit[codeUnit] : _otherPrefixesByFirstCodeUnit?[codeUnit];
+    if (prefixes == null) return 0;
+    for (int i = 0; i < prefixes.length; i++) {
+      final prefix = prefixes[i];
+      if (key.startsWith(prefix, start)) return prefix.length;
+    }
+    return 0;
   }
 }

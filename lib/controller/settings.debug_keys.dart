@@ -431,6 +431,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     imageSourceArtist,
     ignoreCommonPrefixForTypes,
     commonPrefixes,
+    ignoreLeadingSymbols,
     fontScaleLRC,
     fontScaleLRCFull,
     fontScaleLRCWidescreen,

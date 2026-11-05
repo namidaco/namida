@@ -3076,6 +3076,25 @@ extension TrackSearchFilterL10n on TrackSearchFilter {
     TrackSearchFilter.tags => lang.tags,
     TrackSearchFilter.lyrics => lang.lyrics,
   };
+
+  IconData toIcon() => switch (this) {
+    TrackSearchFilter.filename => SortType.filename.toIcon(),
+    TrackSearchFilter.folder => MediaType.folder.toIcon(),
+    TrackSearchFilter.title => TagField.title.toIcon(),
+    TrackSearchFilter.album => TagField.album.toIcon(),
+    TrackSearchFilter.artist => TagField.artist.toIcon(),
+    TrackSearchFilter.albumartist => TagField.albumArtist.toIcon(),
+    TrackSearchFilter.genre => TagField.genre.toIcon(),
+    TrackSearchFilter.style => TagField.style.toIcon(),
+    TrackSearchFilter.language => TagField.language.toIcon(),
+    TrackSearchFilter.composer => TagField.composer.toIcon(),
+    TrackSearchFilter.comment => TagField.comment.toIcon(),
+    TrackSearchFilter.description => TagField.description.toIcon(),
+    TrackSearchFilter.year => TagField.year.toIcon(),
+    TrackSearchFilter.moods => TagField.mood.toIcon(),
+    TrackSearchFilter.tags => TagField.tags.toIcon(),
+    TrackSearchFilter.lyrics => TagField.lyrics.toIcon(),
+  };
 }
 
 extension VibrationTypeL10n on VibrationType {

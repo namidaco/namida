@@ -246,8 +246,14 @@ class FoldersController<T extends Folder, E extends Track> {
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {
     final ignorePrefix = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder);
     final normalize = SearchSortController.inst.sortKeyNormalizer;
+    final prefixIgnorer = ignorePrefix ? SearchSortController.inst.createSortKeyPrefixIgnorer(normalize) : null;
     final namesCache = <T, String>{};
-    String folderToNameCompare(T folder) => namesCache[folder] ??= normalize(ignorePrefix ? folder.folderNameLower.ignoreCommonPrefixes() : folder.folderNameLower);
+    String computeNameCompare(T folder) {
+      final key = normalize(folder.folderNameLower);
+      return prefixIgnorer?.ignorePrefixes(key) ?? key;
+    }
+
+    String folderToNameCompare(T folder) => namesCache[folder] ??= computeNameCompare(folder);
 
     final sorted = map.entries.toFixedList()
       ..sort(

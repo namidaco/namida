@@ -387,7 +387,7 @@ extension ListieListieUtils<T> on List<T> {
 ///
 /// [sortBy] & friends from `dart_extensions` evaluate the key extractor on *every* comparison,
 /// i.e `2 * n * log(n)` times. these evaluate it exactly `n` times, which matters a lot when
-/// the key costs an allocation (`toLowerCase()`, `join()`, `ignoreCommonPrefixes()`) or a lookup
+/// the key costs an allocation (`toLowerCase()`, `join()`, `ignorePrefixes()`) or a lookup
 /// over a sublist (`getTotalListenCount()`, `getDateAddedEffective()`).
 ///
 /// by claude
@@ -1405,29 +1405,6 @@ extension StringPathUtils on String {
   String? nullifyEmpty() {
     if (isEmpty) return null;
     return this;
-  }
-
-  /// walks an offset instead of re-slicing: this is called once per item while sorting the
-  /// whole library, and the overwhelmingly common case is "no prefix", which now allocates nothing.
-  String ignoreCommonPrefixes() {
-    final prefixes = settings.commonPrefixes.value;
-    final prefixesLength = prefixes.length;
-    if (prefixesLength == 0) return this;
-
-    int start = 0;
-    bool stripped = true;
-    while (stripped) {
-      stripped = false;
-      for (int i = 0; i < prefixesLength; i++) {
-        final prefix = prefixes[i];
-        // -- an empty prefix would always match & never advance.
-        if (prefix.isNotEmpty && startsWith(prefix, start)) {
-          start += prefix.length;
-          stripped = true;
-        }
-      }
-    }
-    return start == 0 ? this : substring(start);
   }
 
   String toFastHashKey() {

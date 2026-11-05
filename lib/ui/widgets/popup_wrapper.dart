@@ -138,7 +138,7 @@ class NamidaPopupWrapper extends StatelessWidget {
             enableSecondaryTap: true,
             bgColor: NColors.fixed(e.selected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null),
             onTap: () {
-              popMenu();
+              if (e.popOnTap) popMenu();
               e.onTap();
             },
             onLongPress: e.onLongPress != null
@@ -266,6 +266,7 @@ class NamidaPopupItem {
   final Widget Function(TextStyle? style)? titleBuilder;
   final String subtitle;
   final void Function() onTap;
+  final bool popOnTap;
   final void Function()? onLongPress;
   final bool enabled;
   final bool selected;
@@ -281,6 +282,7 @@ class NamidaPopupItem {
     this.titleBuilder,
     this.subtitle = '',
     required this.onTap,
+    this.popOnTap = true,
     this.onLongPress,
     this.enabled = true,
     this.selected = false,
