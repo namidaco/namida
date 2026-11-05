@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -155,6 +156,7 @@ class _BookmarksSheetState extends State<_BookmarksSheet> with _ItemBookmarksMix
                       return _BookmarkTile(
                         bookmark: bookmark,
                         onTap: () => BookmarksController.inst.play(widget.item, bookmark),
+                        onRoleTap: (role) => _onToggleRole(bookmark, role),
                         menuItems: () => _menuItems(bookmark),
                       );
                     },
@@ -220,6 +222,11 @@ mixin _ItemBookmarksMixin<T extends StatefulWidget> on State<T> {
     if (bookmarks != null && mounted) _bookmarks.value = bookmarks;
   }
 
+  void _onToggleRole(PlayableBookmark bookmark, PlayableBookmarkRole role) async {
+    final bookmarks = await BookmarksController.inst.toggleRole(_item, bookmark, role);
+    if (bookmarks != null && mounted) _bookmarks.value = bookmarks;
+  }
+
   void _onRename(PlayableBookmark bookmark) {
     showNamidaBottomSheetWithTextField(
       title: lang.rename,
@@ -258,11 +265,13 @@ mixin _ItemBookmarksMixin<T extends StatefulWidget> on State<T> {
 class _BookmarkTile extends StatelessWidget {
   final PlayableBookmark bookmark;
   final VoidCallback onTap;
+  final void Function(PlayableBookmarkRole role) onRoleTap;
   final List<NamidaPopupItem> Function() menuItems;
 
   const _BookmarkTile({
     required this.bookmark,
     required this.onTap,
+    required this.onRoleTap,
     required this.menuItems,
   });
 
@@ -301,6 +310,19 @@ class _BookmarkTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
             ),
+            const SizedBox(width: 6.0),
+            ...PlayableBookmarkRole.values
+                .map(
+                  (role) => NamidaToggleCard(
+                    icon: role.toIcon(),
+                    title: role.toText(),
+                    active: bookmark.role == role,
+                    onTap: () => onRoleTap(role),
+                    padding: const EdgeInsets.all(6.0),
+                    iconSize: 16.0,
+                  ),
+                )
+                .addSeparators(separator: const SizedBox(width: 4.0)),
             NamidaPopupWrapper(
               childrenDefault: menuItems,
               child: const MoreIcon(

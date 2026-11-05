@@ -3469,3 +3469,15 @@ extension RomanizationScriptL10n on RomanizationScript {
     RomanizationScript.georgian => 'ქართული (Georgian)',
   };
 }
+
+extension PlayableBookmarkRoleL10n on PlayableBookmarkRole {
+  String toText() => switch (this) {
+    PlayableBookmarkRole.start => lang.start,
+    PlayableBookmarkRole.end => lang.stop,
+  };
+
+  IconData toIcon() => switch (this) {
+    PlayableBookmarkRole.start => Broken.play_circle,
+    PlayableBookmarkRole.end => Broken.stop_circle,
+  };
+}

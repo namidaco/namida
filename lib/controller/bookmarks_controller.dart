@@ -1,6 +1,8 @@
 // by claude
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -17,10 +19,12 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 class BookmarksController {
   static final inst = BookmarksController._();
 
-  BookmarksController._() {
-    _refreshCurrent();
+  BookmarksController._();
+
+  void initialize() {
     Player.inst.currentItem.addListener(_refreshCurrent);
     Indexer.inst.trackStatsMap.addListener(_onTrackStatsChanged);
+    _refreshCurrent();
   }
 
   static const _kNearbyRangeMS = 1000;
@@ -33,7 +37,16 @@ class BookmarksController {
     final item = Player.inst.currentItem.value;
     final bookmarks = item == null ? null : await getBookmarks(item);
     if (!identical(item, Player.inst.currentItem.value)) return;
-    _currentBookmarks.value = bookmarks ?? const [];
+    _setCurrent(bookmarks ?? const []);
+  }
+
+  void _setCurrent(List<PlayableBookmark> bookmarks) {
+    _currentBookmarks.value = bookmarks;
+    final item = Player.inst.currentItem.value;
+    if (item == null) return;
+    final startMS = PlayableBookmark.findRolePositionMS(bookmarks, PlayableBookmarkRole.start);
+    final endMS = PlayableBookmark.findRolePositionMS(bookmarks, PlayableBookmarkRole.end);
+    Player.inst.setItemPlaybackRange(item, startMS: startMS, endMS: endMS);
   }
 
   void _onTrackStatsChanged() {
@@ -72,7 +85,7 @@ class BookmarksController {
     final item = Player.inst.currentItem.value;
     if (item == null) return;
     final positionLabel = positionMS.milliSecondsLabel;
-    final bookmark = PlayableBookmark(positionMS: positionMS, title: null);
+    final bookmark = PlayableBookmark(positionMS: positionMS, title: null, role: null);
     final newBookmarks = await _edit(item, (bookmarks) {
       final alreadyExists = bookmarks.any((e) => (e.positionMS - positionMS).abs() < _kNearbyRangeMS);
       if (alreadyExists) return null;
@@ -99,8 +112,39 @@ class BookmarksController {
 
   Future<List<PlayableBookmark>?> rename(Playable item, PlayableBookmark bookmark, String title) {
     final newTitle = title.trim().nullifyEmpty();
-    final renamedBookmark = PlayableBookmark(positionMS: bookmark.positionMS, title: newTitle);
-    return _edit(item, (bookmarks) => bookmarks.map((e) => e.positionMS == bookmark.positionMS ? renamedBookmark : e).toFixedList());
+    return _edit(item, (bookmarks) {
+      return bookmarks.map((e) {
+        if (e.positionMS != bookmark.positionMS) return e;
+        return PlayableBookmark(positionMS: e.positionMS, title: newTitle, role: e.role);
+      }).toFixedList();
+    });
+  }
+
+  Future<List<PlayableBookmark>?> toggleRole(Playable item, PlayableBookmark bookmark, PlayableBookmarkRole role) {
+    return _edit(item, (bookmarks) => toggledRole(bookmarks, bookmark.positionMS, role));
+  }
+
+  /// one start and one end per item, with the start before the end. null when no bookmark sits at [positionMS].
+  @visibleForTesting
+  static List<PlayableBookmark>? toggledRole(List<PlayableBookmark> bookmarks, int positionMS, PlayableBookmarkRole role) {
+    final target = bookmarks.firstWhereEff((e) => e.positionMS == positionMS);
+    if (target == null) return null;
+    final newRole = target.role == role ? null : role;
+    return bookmarks.map((e) {
+      if (e.positionMS == positionMS) return PlayableBookmark(positionMS: e.positionMS, title: e.title, role: newRole);
+      if (newRole != null && _losesRoleTo(e, positionMS, newRole)) return PlayableBookmark(positionMS: e.positionMS, title: e.title, role: null);
+      return e;
+    }).toFixedList();
+  }
+
+  static bool _losesRoleTo(PlayableBookmark other, int positionMS, PlayableBookmarkRole role) {
+    final otherRole = other.role;
+    if (otherRole == null) return false;
+    if (otherRole == role) return true;
+    return switch (role) {
+      PlayableBookmarkRole.start => other.positionMS <= positionMS,
+      PlayableBookmarkRole.end => other.positionMS >= positionMS,
+    };
   }
 
   var _editLock = Future<void>.value();
@@ -122,7 +166,7 @@ class BookmarksController {
       selectable: (finalItem) => Indexer.inst.updateTrackStats(finalItem.track, bookmarks: bookmarks),
       youtubeID: (finalItem) => YoutubeController.inst.statsManager.updateStats(finalItem, bookmarks: bookmarks),
     );
-    if (Player.inst.isCurrentItem(item)) _currentBookmarks.value = bookmarks;
+    if (Player.inst.isCurrentItem(item)) _setCurrent(bookmarks);
   }
 
   void play(Playable item, PlayableBookmark bookmark) {

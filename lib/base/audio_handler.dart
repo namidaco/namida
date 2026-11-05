@@ -294,8 +294,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     }
   }
 
-  Future<void> _updateTrackLastPosition(Track track, int lastPositionMS) async {
-    int dur = track.durationMS;
+  Future<void> _updateTrackLastPosition(Track track, int lastPositionMS, int? itemEndMS) async {
+    int dur = itemEndMS ?? track.durationMS;
     if (dur <= 0) dur = currentItemDuration.value?.inMilliseconds ?? 0;
 
     if (dur > 0) {
@@ -307,8 +307,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     await Indexer.inst.updateTrackStats(track, lastPositionInMs: lastPositionMS);
   }
 
-  Future<void> _updateYoutubeIDLastPosition(YoutubeID item, int lastPositionMS) async {
-    int? dur = (await YoutubeInfoController.utils.getVideoDuration(item.id))?.inMilliseconds;
+  Future<void> _updateYoutubeIDLastPosition(YoutubeID item, int lastPositionMS, int? itemEndMS) async {
+    int? dur = itemEndMS ?? (await YoutubeInfoController.utils.getVideoDuration(item.id))?.inMilliseconds;
 
     if (dur == null || dur <= 0) dur = currentItemDuration.value?.inMilliseconds ?? 0;
 
@@ -348,39 +348,47 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     return requested.key == item.key ? requested.position : null;
   }
 
+  /// the last position when restoring applies to [item], unless the start bookmark is further.
   FutureOr<Duration?> _getItemInitialPosition(Q item, Duration? itemDuration) async {
     final minValueInSetMinutes = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
+    final canRestoreLastPos = minValueInSetMinutes >= 0;
+    final canUseStartBookmark = canUseItemPlaybackRange;
+    if (!canRestoreLastPos && !canUseStartBookmark) return null;
 
-    if (minValueInSetMinutes >= 0) {
+    final statsAndDurationMSFn = item.executeAsync<(PlayableItemStats?, int?)>(
+      selectable: (finalItem) {
+        final track = finalItem.track.toTrackExt();
+        final duration = itemDuration?.inMilliseconds ?? track.durationMS;
+        return (track.statsRaw, duration);
+      },
+      youtubeID: (finalItem) async {
+        Duration? duration;
+        if (canRestoreLastPos) duration = itemDuration ?? await YoutubeInfoController.utils.getVideoDuration(finalItem.id);
+        final stats = await YoutubeController.inst.statsManager.getStats(finalItem);
+        return (stats, duration?.inMilliseconds);
+      },
+    );
+
+    final statsAndDurationMS = statsAndDurationMSFn is Future ? await statsAndDurationMSFn : statsAndDurationMSFn;
+    final stats = statsAndDurationMS?.$1;
+    if (stats == null) return null;
+
+    int lastPosMS = 0;
+    if (canRestoreLastPos) {
       final minValueInSetMS = minValueInSetMinutes * 60 * 1000;
       final seekValueInMS = settings.player.seekDurationInSeconds.value * 1000;
-
-      final lastPosAndDurationMSFn = item.executeAsync(
-        selectable: (finalItem) {
-          final track = finalItem.track.toTrackExt();
-          final duration = itemDuration?.inMilliseconds ?? track.durationMS;
-          return (track.statsRaw?.lastPositionInMs, duration);
-        },
-        youtubeID: (finalItem) async {
-          final duration = itemDuration ?? await YoutubeInfoController.utils.getVideoDuration(finalItem.id);
-          final stats = await YoutubeController.inst.statsManager.getStats(finalItem);
-          return (stats?.lastPositionInMs, duration?.inMilliseconds);
-        },
-      );
-
-      final lastPosAndDurationMS = lastPosAndDurationMSFn is Future ? await lastPosAndDurationMSFn : lastPosAndDurationMSFn;
-      if (lastPosAndDurationMS != null) {
-        final lastPosMS = lastPosAndDurationMS.$1;
-        final durationMS = lastPosAndDurationMS.$2;
-        // -- only seek if not at the start of track.
-        if (lastPosMS != null && durationMS != null && lastPosMS >= seekValueInMS) {
-          if (durationMS >= minValueInSetMS) {
-            return lastPosMS.milliseconds;
-          }
+      final durationMS = statsAndDurationMS!.$2;
+      final statsLastPosMS = stats.lastPositionInMs;
+      // -- only seek if not at the start of track.
+      if (durationMS != null && statsLastPosMS >= seekValueInMS) {
+        if (durationMS >= minValueInSetMS) {
+          lastPosMS = statsLastPosMS;
         }
       }
     }
-    return null;
+    final startMS = canUseStartBookmark ? PlayableBookmark.findRolePositionMS(stats.bookmarks, PlayableBookmarkRole.start) : null;
+    final positionMS = lastPosMS.withMinimum(startMS ?? 0);
+    return positionMS > 0 ? positionMS.milliseconds : null;
   }
 
   // =================================================================================
@@ -960,7 +968,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
               QueueController.inst.updateLatestPlayedForCurrentQueue(finalItem, alreadyUpdatedSource: qs);
             }
 
-            await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo);
+            await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo, requestedStartPosition: requestedStartPosition);
           },
           youtubeID: (finalItem) async {
             final qs = finalItem.queueSource;
@@ -1087,6 +1095,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     int index,
     Function skipItem, {
     required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
+    required Duration? requestedStartPosition,
   }) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
@@ -1158,7 +1167,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
         index: index,
         item: config.item,
         videoOptions: config.videoOptions,
-        initialPosition: config.initialPosition,
+        initialPosition: requestedStartPosition ?? config.initialPosition,
         audioTrackId: config.audioTrackId,
         initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         isVideoFile: true,
@@ -2507,9 +2516,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   @override
   Future<void> onItemLastPositionReport(Q? currentItem, int currentPositionMs) async {
+    final itemEndMS = getCurrentItemEndMS();
     await currentItem?.execute(
-      selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMs),
-      youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMs),
+      selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMs, itemEndMS),
+      youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMs, itemEndMS),
     );
   }
 
@@ -2679,6 +2689,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   int getListenRestartPositionThresholdMS() => _getSeekDurationSeconds() * 1000;
 
   @override
+  bool get canUseItemPlaybackRange => _partyGate == null;
+
+  @override
   int get maximumSleepTimerMins => kMaximumSleepTimerMins;
 
   @override
@@ -2714,7 +2727,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     if (!previousButtonReplays) return false;
 
     final secondsToReplay = _getSeekDurationSeconds();
-    return secondsToReplay > 0 && currentPositionMS.value > secondsToReplay * 1000;
+    final itemStartMS = getCurrentItemStartMS() ?? 0;
+    final playedSinceStartMS = currentPositionMS.value - itemStartMS;
+    return secondsToReplay > 0 && playedSinceStartMS > secondsToReplay * 1000;
   }
 
   bool _hasPreviousItem() => currentIndex.value != 0 || playerInfiniyQueueOnNextPrevious || shufflePeekPreviousIndex() != null;
@@ -2916,7 +2931,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     }
 
     if (previousButtonWillReplay) {
-      await seek(Duration.zero);
+      await seekToItemStart();
       return;
     }
 

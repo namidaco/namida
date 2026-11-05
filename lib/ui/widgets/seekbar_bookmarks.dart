@@ -127,13 +127,24 @@ class _BookmarkTicksPainter extends CustomPainter {
       ..color = lineColor
       ..strokeWidth = tickWidth;
     final dotPaint = Paint()..color = color;
+    final innerDotPaint = Paint()..color = _contrastShadeOf(color);
+    final innerDotRadius = dotRadius * 0.45;
     final lineTop = hasDot ? dotRadius * 2 : 0.0;
     for (final bookmark in bookmarks) {
       final fraction = (bookmark.positionMS / durationMS).clampDouble(0.0, 1.0);
       final x = size.width * fraction;
       canvas.drawLine(Offset(x, lineTop), Offset(x, size.height), linePaint);
-      if (hasDot) canvas.drawCircle(Offset(x, dotRadius), dotRadius, dotPaint);
+      if (!hasDot) continue;
+      final dotCenter = Offset(x, dotRadius);
+      canvas.drawCircle(dotCenter, dotRadius, dotPaint);
+      if (bookmark.role != null) canvas.drawCircle(dotCenter, innerDotRadius, innerDotPaint);
     }
+  }
+
+  static Color _contrastShadeOf(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    final lightness = hsl.lightness > 0.5 ? hsl.lightness - 0.4 : hsl.lightness + 0.4;
+    return hsl.withLightness(lightness).toColor();
   }
 
   @override

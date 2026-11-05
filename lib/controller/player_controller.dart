@@ -974,6 +974,15 @@ class Player {
 
   Future<void> seekToLiveEdge() => _audioHandler.userSeekToLiveEdge();
 
+  Future<void> seekToItemStart() {
+    final startMS = _audioHandler.getCurrentItemStartMS() ?? 0;
+    return seek(Duration(milliseconds: startMS));
+  }
+
+  void setItemPlaybackRange(Playable item, {required int? startMS, required int? endMS}) {
+    _audioHandler.setItemPlaybackRange(item, startMS: startMS, endMS: endMS);
+  }
+
   bool isCurrentItem(Playable item) {
     final current = _audioHandler.currentItem.value;
     if (current == null) return false;

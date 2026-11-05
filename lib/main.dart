@@ -25,6 +25,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/backup_controller.dart';
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -332,6 +333,7 @@ Future<bool> _mainAppInitialization() async {
     ScrollSearchController.inst.initialize();
     Subtitles.inst.initialize();
     ChaptersController.inst.initialize();
+    BookmarksController.inst.initialize();
   } catch (e, st) {
     logger.error('_mainAppInitialization 2', e: e, st: st);
   }

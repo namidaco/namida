@@ -1253,7 +1253,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         geometry: geometry,
                                         icon: Broken.previous,
                                         onPressed: MiniPlayerController.inst.snapToPrev,
-                                        onLongPress: () => Player.inst.seek(Duration.zero),
+                                        onLongPress: Player.inst.seekToItemStart,
                                       ),
                                     ),
                                     _ScaleLayoutBox(

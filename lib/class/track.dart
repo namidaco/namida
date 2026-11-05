@@ -236,23 +236,37 @@ class PlayableItemStats {
 class PlayableBookmark {
   final int positionMS;
   final String? title;
+  final PlayableBookmarkRole? role;
 
   const PlayableBookmark({
     required this.positionMS,
     required this.title,
+    required this.role,
   });
 
   factory PlayableBookmark.fromJson(Map<String, dynamic> json) {
     return PlayableBookmark(
       positionMS: json['p'] ?? 0,
       title: json['t'],
+      role: PlayableBookmarkRole.values.getEnum(json['r']),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'p': positionMS,
     't': ?title,
+    'r': ?role?.name,
   };
+
+  static int? findRolePositionMS(List<PlayableBookmark>? bookmarks, PlayableBookmarkRole role) {
+    return bookmarks?.firstWhereEff((e) => e.role == role)?.positionMS;
+  }
+}
+
+/// where an item starts and finishes playing.
+enum PlayableBookmarkRole {
+  start,
+  end,
 }
 
 enum PlayableType {
