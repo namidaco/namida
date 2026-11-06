@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:typed_data';
+
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/core/enums.dart';
@@ -27,7 +30,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     return items;
   }
 
-  static Iterable<R> getRandomItems<R>(List<R> list, {R? exclude, int? min, int? max}) {
+  static Iterable<R> getRandomItems<R>(List<R> list, {R? exclude, int? min, int? max, math.Random? random}) {
     final itemslist = list;
     final itemslistLength = itemslist.length;
 
@@ -43,12 +46,58 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     // number of resulting tracks.
     final range = max - min;
-    int randomNumber = range > 0 ? range.getRandomNumberBelow(min) : min;
+    random ??= math.Random();
+    int randomNumber = range > 0 ? min + random.nextInt(range) : min;
     if (randomNumber <= 0) randomNumber = list.length;
 
-    final randomList = list.getRandomSample(randomNumber);
+    final randomList = list.getRandomSample(randomNumber, random);
     if (exclude != null) randomList.remove(exclude);
     return randomList;
+  }
+
+  static const _kTimeOfDayWindowMinutes = 120;
+  static const _kTimeOfDayMinListens = 3;
+  static const _kTimeOfDayMinListensInWindow = 2;
+  static const _kTimeOfDayMinShare = 1 / 3;
+
+  /// items mostly listened to around the clock time of [now], in a weighted random order.
+  static List<E> getItemsAroundTimeOfDay<E>(Iterable<MapEntry<E, List<int>>> listensEntriesSortedByCount, DateTime now, {required int count, math.Random? random}) {
+    random ??= math.Random();
+
+    final nowMinuteOfDay = now.hour * 60 + now.minute;
+    final isMinuteInWindow = Uint8List(Duration.minutesPerDay);
+    for (int i = -_kTimeOfDayWindowMinutes; i <= _kTimeOfDayWindowMinutes; i++) {
+      final minuteOfDay = (nowMinuteOfDay + i) % Duration.minutesPerDay;
+      isMinuteInWindow[minuteOfDay] = 1;
+    }
+
+    final timeZoneOffsets = _PastTimeZoneOffsets(now.millisecondsSinceEpoch);
+    final picks = <_WeightedPick<E>>[];
+    for (final e in listensEntriesSortedByCount) {
+      final listens = e.value;
+      final listensCount = listens.length;
+      if (listensCount < _kTimeOfDayMinListens) break;
+
+      int listensInWindow = 0;
+      for (final listenMSSE in listens) {
+        final offsetMS = timeZoneOffsets.offsetMSOf(listenMSSE);
+        final localMSOfDay = (listenMSSE + offsetMS) % Duration.millisecondsPerDay;
+        final minuteOfDay = localMSOfDay ~/ Duration.millisecondsPerMinute;
+        listensInWindow += isMinuteInWindow[minuteOfDay];
+      }
+
+      if (listensInWindow < _kTimeOfDayMinListensInWindow) continue;
+      final share = listensInWindow / listensCount;
+      if (share < _kTimeOfDayMinShare) continue;
+      final weight = listensInWindow * share;
+      final randomValue = random.nextDouble();
+      final priority = math.pow(randomValue, 1 / weight).toDouble();
+      picks.add((item: e.key, priority: priority));
+    }
+
+    picks.sortByReverse((e) => e.priority);
+    // -- growable, home removes invalid items from it
+    return picks.take(count).map((e) => e.item).toList();
   }
 
   Iterable<E> generateRecommendedSimilarDiscoverDateFor(E item, E Function(T current) itemToSub) {

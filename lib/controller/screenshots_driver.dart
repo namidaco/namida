@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
@@ -69,6 +70,7 @@ import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/artists_map_page.dart';
 import 'package:namida/ui/pages/discover_page.dart';
+import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/pages/lyrics_editor_page.dart';
 import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -80,6 +82,7 @@ import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/ui/widgets/stats_widgets.dart';
@@ -127,6 +130,31 @@ class ScreenshotsDriver {
   bool get hidesSystemBars => _hidesSystemBars;
   bool _hidesSystemBars = false;
 
+  /// the home mixes pick at random, each scene showing home gets its own picks from `mixesSeed` and its id.
+  math.Random newMixesRandom() => math.Random(_sceneMixesSeed);
+  int _mixesSeed = 1;
+  int _sceneMixesSeed = 1;
+
+  /// a scene's `recommendedFirst` is its recommended mix's cover, the mix's tracks follow the run's hour so a seed
+  /// alone can't pick it. a track the mix doesn't hold comes from the library.
+  void pinRecommendedFirst<E>(List<E> items, String? Function(E item) titleOf, List<E> libraryItems) {
+    final title = _recommendedFirst;
+    if (title == null) return;
+    final index = items.indexWhere((e) => titleOf(e) == title);
+    if (index == 0) return;
+    if (index > 0) {
+      items.insert(0, items.removeAt(index));
+      return;
+    }
+    final libraryIndex = libraryItems.indexWhere((e) => titleOf(e) == title);
+    if (libraryIndex >= 0) items.insert(0, libraryItems[libraryIndex]);
+  }
+
+  String? _recommendedFirst;
+
+  /// set by the `jellys` step, the invasion stops again after the scene.
+  bool _isJellysInvading = false;
+
   Future<void> run() async {
     if (isInteractive) {
       HardwareKeyboard.instance.addHandler(_onInteractiveKey);
@@ -141,6 +169,8 @@ class ScreenshotsDriver {
       final config = await scenesFile.readAsJson() as Map<String, dynamic>;
       final platformOverrides = (config['platformOverrides'] as Map<String, dynamic>?)?[Platform.operatingSystem] as Map<String, dynamic>?;
       if (platformOverrides != null) config.addAll(platformOverrides);
+      _mixesSeed = config['mixesSeed'] as int? ?? _mixesSeed;
+      _sceneMixesSeed = _mixesSeed;
       await _logFile.create(recursive: true);
       await _waitForLibrary();
 
@@ -159,6 +189,9 @@ class ScreenshotsDriver {
         await _runStep(step);
       }
       _sceneSettingsToRestore.clear();
+      // -- home filled its mixes at launch, before the tracks were indexed (added dates read as now) and before the
+      // -- setup's last track played (supremacy follows it)
+      HomePageRefresher.requestRefresh();
       await _resetUi();
 
       for (final themeName in themes) {
@@ -175,6 +208,7 @@ class ScreenshotsDriver {
             await _applyWindow(window);
             await _resetUi();
             final steps = (scene['steps'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+            _applySceneMixes(scene, steps);
             for (final step in steps) {
               await _runStep(step);
             }
@@ -201,6 +235,7 @@ class ScreenshotsDriver {
             _restoreScrolledRows();
             await _party.leave();
             _restoreSceneSettings();
+            _stopJellys();
           }
         }
       }
@@ -604,6 +639,12 @@ class ScreenshotsDriver {
       case 'wait':
         final waitMS = step['ms'] as int? ?? 500;
         await Future.delayed(Duration(milliseconds: waitMS));
+      case 'jellys':
+        NamidaJellys.setInvasion(true);
+        _isJellysInvading = true;
+      case 'waitVideoCached':
+        final timeoutMS = step['timeoutMS'] as int? ?? _kVideoCacheTimeoutMS;
+        await _waitForVideoCached(step['id'] as String, timeoutMS);
       default:
         throw ArgumentError.value(action, 'do', 'unknown step');
     }
@@ -809,6 +850,31 @@ class ScreenshotsDriver {
     _sceneSettingsToRestore.add((file: file, values: previousValues));
   }
 
+  /// only a scene that shows home refills it, its tab step lets the new mixes settle before the capture.
+  void _applySceneMixes(Map<String, dynamic> scene, List<Map<String, dynamic>> steps) {
+    final recommendedFirst = scene['recommendedFirst'] as String?;
+    final showsHome = recommendedFirst != null || steps.any((step) => step['do'] == 'tab' && step['name'] == 'home');
+    if (!showsHome) return;
+    _sceneMixesSeed = _mixesSeed + _stableHashOf(scene['id'] as String);
+    _recommendedFirst = recommendedFirst;
+    HomePageRefresher.requestRefresh();
+  }
+
+  /// fnv-1a, String.hashCode isn't promised to stay the same between dart versions.
+  static int _stableHashOf(String text) {
+    var hash = 0x811c9dc5;
+    for (final codeUnit in text.codeUnits) {
+      hash = ((hash ^ codeUnit) * 0x01000193) & 0xffffffff;
+    }
+    return hash;
+  }
+
+  void _stopJellys() {
+    if (!_isJellysInvading) return;
+    NamidaJellys.setInvasion(false);
+    _isJellysInvading = false;
+  }
+
   void _restoreSceneSettings() {
     for (final restore in _sceneSettingsToRestore.reversed) {
       _applySettings(restore.file, restore.values);
@@ -919,11 +985,13 @@ class ScreenshotsDriver {
     return _pickMatch(step, matches, step['text'] as String);
   }
 
-  /// lazy lists only build what is near the viewport, so the topmost list pages down until the text is built.
+  /// lazy lists only build what is near the viewport, so the topmost list (or the `within` row) pages on until the text is built.
   Future<Element> _scrollUntilTextBuilt(Map<String, dynamic> step) async {
+    // -- a row is found first so it goes back after the capture, ensureVisible scrolls it even when the text was built
+    final rowPosition = step['within'] == null ? null : _findScrollPositionFor(step);
     var matches = _collectTextMatches(step, onlyHittable: false);
     if (matches.isEmpty) {
-      final position = _findScrollPosition();
+      final position = rowPosition ?? _findScrollPosition();
       while (matches.isEmpty && position.pixels < position.maxScrollExtent) {
         position.jumpTo((position.pixels + position.viewportDimension).withMaximum(position.maxScrollExtent));
         await WidgetsBinding.instance.endOfFrame;
@@ -1176,6 +1244,29 @@ class ScreenshotsDriver {
     final videoPath = VideoController.inst.currentVideo.value?.path;
     await _log('video after ${waitedMS}ms: $videoPath');
   }
+
+  static const _kVideoCacheTimeoutMS = 20 * 60 * 1000;
+  static const _kVideoCachePollMS = 1000;
+
+  /// a finished cache is `<id>_<quality>.mp4`, an unfinished one still ends in `.part`.
+  Future<void> _waitForVideoCached(String videoId, int timeoutMS) async {
+    final prefix = '${videoId}_';
+    final videosDirectory = Directory(AppDirs.VIDEOS_CACHE);
+    var waitedMS = 0;
+    while (waitedMS < timeoutMS) {
+      final isCached = videosDirectory.listSyncSafe().any((e) {
+        final filename = e.path.getFilename;
+        return filename.startsWith(prefix) && filename.endsWith('.mp4');
+      });
+      if (isCached) {
+        await _log('$videoId cached after ${waitedMS}ms');
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: _kVideoCachePollMS));
+      waitedMS += _kVideoCachePollMS;
+    }
+    throw StateError('$videoId not cached after ${timeoutMS}ms');
+  }
 }
 
 /// the app's root in screenshots mode: the capture boundary, and a full page capture's taller layout. the tree stays the
@@ -1196,12 +1287,16 @@ class ScreenshotsRoot extends StatelessWidget {
       builder: (context, tallHeight, boundary) {
         final mediaQuery = MediaQuery.of(context);
         final size = tallHeight == null ? mediaQuery.size : Size(mediaQuery.size.width, tallHeight);
+        // -- hidden bars still leave a camera cutout's inset, the shots have no system ui so the emulator's cutout goes too
+        final hidesSystemBars = driver.hidesSystemBars;
+        final padding = hidesSystemBars ? mediaQuery.padding.copyWith(top: 0.0) : mediaQuery.padding;
+        final viewPadding = hidesSystemBars ? mediaQuery.viewPadding.copyWith(top: 0.0) : mediaQuery.viewPadding;
         return OverflowBox(
           alignment: Alignment.topCenter,
           minHeight: tallHeight,
           maxHeight: tallHeight,
           child: MediaQuery(
-            data: mediaQuery.copyWith(size: size),
+            data: mediaQuery.copyWith(size: size, padding: padding, viewPadding: viewPadding),
             child: boundary!,
           ),
         );

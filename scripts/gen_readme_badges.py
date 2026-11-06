@@ -93,7 +93,7 @@ def _rows(stats):
             _Chip('stars', 'star_1', 'Stars', f'https://github.com/{REPO}/stargazers', stats.stars),
             _Chip('downloads', 'import', 'Downloads', f'https://github.com/{REPO}/releases', stats.downloads),
             _Chip('beta_downloads', 'import', 'Beta downloads', f'https://github.com/{SNAPSHOTS_REPO}/releases', stats.beta_downloads),
-            _Chip('issues', 'tick_circle', 'Issues closed', f'https://github.com/{REPO}/issues', stats.issues),
+            _Chip('issues', 'tick_circle', 'Issues closed', f'https://github.com/{REPO}/issues?q=is%3Aissue+is%3Aclosed', stats.issues),
             _Chip('hits_of_code', 'code_1', 'Hits-of-Code', f'https://hitsofcode.com/github/{REPO}/view?branch=main', stats.hits_of_code),
             _Chip('flutter', 'si:flutter', 'Built in', 'https://github.com/flutter/flutter', fixed_value='Flutter'),
         ],

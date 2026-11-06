@@ -4,48 +4,31 @@
 
 A Beautiful and Feature-rich Music & Video Player with YouTube Support, Built in Flutter
 
-<a href="https://namida.app">![](https://img.shields.io/badge/-Website-%23463e35)
-</a>
-<a href="https://docs.namida.app">![](https://img.shields.io/badge/-Docs-%23f1d6b6)
-</a>
-<a href="https://t.me/namida_official">![](https://img.shields.io/badge/Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_officialt&logo=telegram&logoColor=white)
-</a>
-<a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk&logo=telegram&logoColor=white)
-</a>
-<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/discord/1156253663803740271?label=Discord&logo=discord&logoColor=white&color=7B55C1)
-</a>
-<a href="#installation">![](https://img.shields.io/badge/Platforms-Android_%7C_Windows_%7C_Linux_%7C_macOS_%7C_iOS-slateblue)
-</a><br>
-<a href="https://github.com/namidaco/namida/releases/latest">![](https://img.shields.io/github/v/release/namidaco/namida?label=Stable)
-</a>
-<a href="https://github.com/namidaco/namida-snapshots/releases/latest">![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fnamidaco.github.io%2Fnamida-snapshots%2Faltstore-source.json&query=%24.apps%5B0%5D.versions%5B0%5D.version&label=Beta&prefix=v&color=f5a623)
-</a>
-<a href="https://github.com/namidaco/namida/commits/main">![](https://img.shields.io/github/commits-since/namidaco/namida/latest?label=Commits%20since%20stable)
-</a>
-<a href="https://github.com/namidaco/namida/commits/main">![](https://img.shields.io/github/last-commit/namidaco/namida?label=Last%20commit)
-</a>
-<a href="https://aur.archlinux.org/packages/namida-bin">![](https://img.shields.io/aur/version/namida-bin?logo=archlinux&label=AUR)
-</a>
-<a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida">![](https://img.shields.io/winget/v/namidaco.Namida?label=winget)
-</a><br>
-<a href="https://github.com/namidaco/namida/stargazers">![](https://img.shields.io/github/stars/namidaco/namida?style=flat&logo=github&label=Stars)
-</a>
-<a href="https://github.com/namidaco/namida/releases">![](https://img.shields.io/github/downloads/namidaco/namida/total?label=Downloads)
-</a>
-<a href="https://github.com/namidaco/namida-snapshots/releases">![](https://img.shields.io/github/downloads/namidaco/namida-snapshots/total?label=Beta%20downloads)
-</a>
-<a href="https://github.com/namidaco/namida/issues?q=is%3Aissue+is%3Aclosed">![](https://img.shields.io/github/issues-closed/namidaco/namida?label=Issues)
-</a>
-<a href="https://hitsofcode.com/github/namidaco/namida/view?branch=main">![](https://hitsofcode.com/github/namidaco/namida?branch=main)
-</a>
-<a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
-</a>
+<a href="https://namida.app"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/website_dark.svg"><img src="https://namidaco.github.io/namida/badges/website_light.svg" height="24" alt="Website"></picture></a>
+<a href="https://docs.namida.app"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/docs_dark.svg"><img src="https://namidaco.github.io/namida/badges/docs_light.svg" height="24" alt="Docs"></picture></a>
+<a href="https://t.me/namida_official"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/channel_dark.svg"><img src="https://namidaco.github.io/namida/badges/channel_light.svg" height="24" alt="Channel"></picture></a>
+<a href="https://t.me/+FmdfsgKoGmM1ZGFk"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/chat_dark.svg"><img src="https://namidaco.github.io/namida/badges/chat_light.svg" height="24" alt="Chat"></picture></a>
+<a href="https://discord.gg/WeY7DTVChT"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/discord_dark.svg"><img src="https://namidaco.github.io/namida/badges/discord_light.svg" height="24" alt="Discord"></picture></a>
+<a href="#installation"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/platforms_dark.svg"><img src="https://namidaco.github.io/namida/badges/platforms_light.svg" height="24" alt="Platforms"></picture></a><br>
+<a href="https://github.com/namidaco/namida/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/stable_dark.svg"><img src="https://namidaco.github.io/namida/badges/stable_light.svg" height="24" alt="Stable"></picture></a>
+<a href="https://github.com/namidaco/namida-snapshots/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/beta_dark.svg"><img src="https://namidaco.github.io/namida/badges/beta_light.svg" height="24" alt="Beta"></picture></a>
+<a href="https://github.com/namidaco/namida/commits/main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/since_stable_dark.svg"><img src="https://namidaco.github.io/namida/badges/since_stable_light.svg" height="24" alt="Since stable"></picture></a>
+<a href="https://github.com/namidaco/namida/commits/main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/last_commit_dark.svg"><img src="https://namidaco.github.io/namida/badges/last_commit_light.svg" height="24" alt="Last commit"></picture></a>
+<a href="https://aur.archlinux.org/packages/namida-bin"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/aur_dark.svg"><img src="https://namidaco.github.io/namida/badges/aur_light.svg" height="24" alt="AUR"></picture></a>
+<a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/winget_dark.svg"><img src="https://namidaco.github.io/namida/badges/winget_light.svg" height="24" alt="winget"></picture></a><br>
+<a href="https://github.com/namidaco/namida/stargazers"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/stars_dark.svg"><img src="https://namidaco.github.io/namida/badges/stars_light.svg" height="24" alt="Stars"></picture></a>
+<a href="https://github.com/namidaco/namida/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/downloads_dark.svg"><img src="https://namidaco.github.io/namida/badges/downloads_light.svg" height="24" alt="Downloads"></picture></a>
+<a href="https://github.com/namidaco/namida-snapshots/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/beta_downloads_dark.svg"><img src="https://namidaco.github.io/namida/badges/beta_downloads_light.svg" height="24" alt="Beta downloads"></picture></a>
+<a href="https://github.com/namidaco/namida/issues?q=is%3Aissue+is%3Aclosed"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/issues_dark.svg"><img src="https://namidaco.github.io/namida/badges/issues_light.svg" height="24" alt="Issues closed"></picture></a>
+<a href="https://hitsofcode.com/github/namidaco/namida/view?branch=main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/hits_of_code_dark.svg"><img src="https://namidaco.github.io/namida/badges/hits_of_code_light.svg" height="24" alt="Hits-of-Code"></picture></a>
+<a href="https://github.com/flutter/flutter"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/flutter_dark.svg"><img src="https://namidaco.github.io/namida/badges/flutter_light.svg" height="24" alt="Built in"></picture></a>
 
 Don't forget to 🌟 star the repo if you like the project ^^
 
 # Intro
 
-New to Namida? Take the [tour](https://docs.namida.app/tour/) for a quick look at the main features. Everything else is in the [docs](https://docs.namida.app)
+Take the [tour](https://docs.namida.app/tour/) for a quick look if ur new or wanna discover :3<br>
+The features section below mentions main things only, so visit the [docs](https://docs.namida.app) to see everynya about namida ^^ 
 
 <a href="#installation"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/installation_dark.svg"><img src="./some%20stuff/summaries/installation_light.svg" width="159" align="absmiddle" alt="Download"></picture></a>
 <a href="https://docs.namida.app/tour/"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/docs_tour_dark.svg"><img src="./some%20stuff/summaries/docs_tour_light.svg" width="121" align="absmiddle" alt="Take the tour"></picture></a>
@@ -248,9 +231,10 @@ Everything you might expect from a music player, in addition to the following:
 <details open>
 <summary><a name="usage-preview"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/usage_preview_dark.svg"><img src="./some%20stuff/summaries/usage_preview_light.svg" width="435" align="absmiddle" alt="Usage Preview"></picture></summary>
 
-| Animating Thumbnail | Recommends & Listens |
-| --- | --- |
-| <video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> | <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4"> |
+<table>
+<tr><th width="50%">Animating Thumbnail</th><th width="50%">Recommends &amp; Listens</th></tr>
+<tr><td><video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4" width="100%"></video></td><td><video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4" width="100%"></video></td></tr>
+</table>
 
 </details>
 
@@ -376,17 +360,17 @@ Full installation steps for every platform (which file to pick, dependencies and
 
 # Translate & Contribute
 
-You can help translating Namida to your language on the Translation Repo.
+Wanna see namida in ur language? Help translate it on the translations repo!
 
 <a href="https://github.com/namidaco/namida-translations"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/translations_dark.svg"><img src="./some%20stuff/summaries/translations_light.svg" width="174" align="absmiddle" alt="Translations"></picture></a>
 
-Building is not currently directly possible, see why on [#37](https://github.com/namidaco/namida/issues/37#issuecomment-1780341883).
+Building is not currently directly possible :( see why on [#37](https://github.com/namidaco/namida/issues/37#issuecomment-1780341883).
 
 <!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->
 
 # Community
 
-Join us on our platforms for updates, tips, discussion & ideas.
+Come hang out with us for updates, tips, ideas or just to chat（。＾▽＾）
 
 <a href="https://t.me/namida_official"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_tg_channel_dark.svg"><img src="./some%20stuff/summaries/social_tg_channel_light.svg" width="176" align="absmiddle" alt="Telegram"></picture></a>
 <a href="https://t.me/+FmdfsgKoGmM1ZGFk"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_tg_chat_dark.svg"><img src="./some%20stuff/summaries/social_tg_chat_light.svg" width="176" align="absmiddle" alt="Telegram"></picture></a>
@@ -395,7 +379,9 @@ Join us on our platforms for updates, tips, discussion & ideas.
 <details>
 <summary><a name="companion-apps"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/companion_apps_dark.svg"><img src="./some%20stuff/summaries/companion_apps_light.svg" width="435" align="absmiddle" alt="Companion Apps"></picture></summary>
 
-> **Community-built tools for an enhanced namida experience**
+> **Cool tools made by the community**
+>
+> Well most of these are built into namida now ([Sync](https://docs.namida.app/features/sync/), [Charts](https://docs.namida.app/pages/other/#charts), [Your Year](https://docs.namida.app/pages/other/#your-year)), but they still get updates, so check them out too ^^
 >
 > - 🔄 [Namida Sync](https://github.com/010101-sans/namida_sync), a tool for syncing namida backups & files across android, windows and linux
 >   - by [@010101-sans](https://github.com/010101-sans)
@@ -408,7 +394,7 @@ Join us on our platforms for updates, tips, discussion & ideas.
 
 # Donate
 
-Donation will help improve namida and will show appreciation.
+Donationsss really helps with improving namida and showing appreciation (tho i alr enjoy working on it hehe, donate to keep me alive and support teto)
 
 <a href="https://www.buymeacoffee.com/namidaco"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/donate_bmc_dark.svg"><img src="./some%20stuff/summaries/donate_bmc_light.svg" width="201" align="absmiddle" alt="Buy me a coffee"></picture></a>
 <a href="https://ko-fi.com/namidaco"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/donate_kofi_dark.svg"><img src="./some%20stuff/summaries/donate_kofi_light.svg" width="201" align="absmiddle" alt="Ko-fi"></picture></a>
@@ -438,7 +424,7 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 
 <a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-Don't forget to 🌟 star the repo if you like the project ^^
+🌟 Star the repoooo!! star star if you like the project :3
 
 <a href="https://www.star-history.com/?repos=namidaco%2Fnamida&amp;type=date">
   <picture>
@@ -451,5 +437,5 @@ Don't forget to 🌟 star the repo if you like the project ^^
 <br>
 
 > Made by human, **not** vibe coded. AI usage is minimal and very selective.
-> Every design choice comes after thoughtful decisions and series of refining, down to every pixel.
+> Every design choice comes after thoughtful decisions and series of refining, to every pixel.
 > Parts that are built by ai will have a disclaimer. [See here](https://github.com/namidaco/namida/issues/945) for more info.

@@ -34,6 +34,10 @@ pubspec_overrides.yaml
 app.*.symbols
 app.*.map.json
 
+# Screenshots work dirs (outside build/ so flutter clean keeps the youtube session)
+/.screenshots/
+/.screenshots_signedout/
+
 # Android
 .gradle/
 .cxx/

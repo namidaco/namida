@@ -1,6 +1,6 @@
 """Curates the youtube side of the screenshots: nightcore only, from the user's real caches.
 
-usage: python scripts/screenshots/seed_youtube.py [--work build/screenshots] [--source ~/.namida]
+usage: python scripts/screenshots/seed_youtube.py [--work .screenshots] [--source ~/.namida]
 
 edits the interactive session's youtube data kept in work/windows/keep (sign in with `shoot.py --interactive` first),
 so every later run restores it. the account caches (feed, history, notifications, playlists, video pages) get the
@@ -21,7 +21,7 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_WORK = ROOT / 'build' / 'screenshots'
+DEFAULT_WORK = ROOT / '.screenshots'
 DEFAULT_SOURCE = Path.home() / '.namida'
 
 KEYWORD = 'nightcore'
@@ -45,6 +45,10 @@ INVALID_FILENAME_REGEX = re.compile(r'[<>:"/\\|?*]')
 
 def is_nightcore(text) -> bool:
     return isinstance(text, str) and KEYWORD in text.lower()
+
+
+def has_channel(item: dict) -> bool:
+    return bool((item.get('channel') or {}).get('title'))
 
 
 def checkpoint(db_path: Path):
@@ -77,7 +81,9 @@ def put_all(db_path: Path, values: dict):
 
 
 def account_suffixes(youtipie_dir: Path) -> list:
-    return [db.stem.split('_', 1)[1] for db in youtipie_dir.glob('feed_*.db')]
+    # -- the restored account can read another partition than the signed in session wrote, both get filled
+    partition_dbs = [*youtipie_dir.glob('feed_*.db'), *youtipie_dir.glob('streamInfoItem_*.db')]
+    return list(dict.fromkeys(db.stem.split('_', 1)[1] for db in partition_dbs))
 
 
 def biggest_account(youtipie_dir: Path) -> str:
@@ -138,7 +144,7 @@ def collect_urls(value, urls: set):
 
 
 def pick_feed_items(existing_items: list, candidates: list) -> list:
-    picked = [item for item in existing_items if is_nightcore(item.get('title')) or item.get('isMix')]
+    picked = [item for item in existing_items if (is_nightcore(item.get('title')) or item.get('isMix')) and has_channel(item)]
     picked_ids = {item.get('id') for item in picked}
     per_channel = collections.Counter((item.get('channel') or {}).get('id') for item in picked)
     newest_first = sorted(candidates, key=lambda item: (item.get('publishedAt') or {}).get('date') or 0, reverse=True)
@@ -249,13 +255,15 @@ def main():
     print(f'accounts {accounts}, source account {real_account}')
 
     real_items = read_all(source_youtipie / f'streamInfoItem_{real_account}.db')
-    candidates = [item for item in real_items.values() if is_nightcore(item.get('title')) and thumbnails.has_video(item.get('id', ''))]
+    candidates = [item for item in real_items.values() if is_nightcore(item.get('title')) and has_channel(item) and thumbnails.has_video(item.get('id', ''))]
 
     real_history = read_all(source_youtipie / f'history_{real_account}.db').get('history')
     real_notifications = read_all(source_youtipie / f'notification_{real_account}.db').get('notification')
     real_user_playlists = read_all(source_youtipie / f'userPlaylists_{real_account}.db').get('userPlaylists')
     real_playlists = read_all(source_youtipie / f'playlist_{real_account}.db')
     real_video_pages = read_all(source_youtipie / f'videoPage_{real_account}.db')
+    real_comments = read_all(source_youtipie / f'comments_{real_account}.db')
+    real_related_videos = read_all(source_youtipie / f'relatedVideos_{real_account}.db')
 
     kept_ids = set()
     kept_urls = set()
@@ -315,6 +323,22 @@ def main():
             kept_ids.update(item.get('id') for item in related_items)
             collect_urls(page, kept_urls)
         put_all(keep_youtipie / f'videoPage_{account}.db', video_pages)
+
+        comment_rows = {video_id: real_comments[video_id] for video_id in video_pages if video_id in real_comments}
+        put_all(keep_youtipie / f'comments_{account}.db', comment_rows)
+        for row in comment_rows.values():
+            collect_urls(row, kept_urls)
+
+        related_rows = {}
+        for video_id in video_pages:
+            related = real_related_videos.get(video_id)
+            if related is None:
+                continue
+            related_items = [item for item in related.get('items') or [] if is_nightcore(item.get('title'))]
+            related_rows[video_id] = {**related, 'items': related_items, 'continuation': None}
+            kept_ids.update(item.get('id') for item in related_items)
+            collect_urls(related_rows[video_id], kept_urls)
+        put_all(keep_youtipie / f'relatedVideos_{account}.db', related_rows)
 
     # -- subscriptions and channel pages, only channels the kept videos come from
     kept_channel_ids = {(item.get('channel') or {}).get('id') for item in real_items.values() if item.get('id') in kept_ids}

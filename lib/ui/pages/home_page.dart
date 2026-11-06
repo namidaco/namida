@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -21,12 +22,16 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/pinned_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/screenshots_driver.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -251,8 +256,11 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       if (generation != _fillGeneration) return;
       final topTracksMapListens = historyManager.topTracksMapListens.value;
 
+      // -- each mix draws on its own, one mix's picks don't move another's
+      final newRandom = kScreenshotsMode ? ScreenshotsDriver.inst.newMixesRandom : math.Random.new;
+
       // -- Random --
-      if (_randomItems.isEmpty) _randomItems.addAll(NamidaGeneratorBase.getRandomItems(_allItemsInLibrary, min: 25, max: 26));
+      if (_randomItems.isEmpty) _randomItems.addAll(NamidaGeneratorBase.getRandomItems(_allItemsInLibrary, min: 25, max: 26, random: newRandom()));
 
       final int mostRecentAdded7DaysMSSE = timeNow.subtract(const Duration(days: 7)).millisecondsSinceEpoch;
       final int mostRecentListened14DaysMSSE = timeNow.subtract(const Duration(days: 14)).millisecondsSinceEpoch;
@@ -264,7 +272,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         if (getItemDateAdded(item) > mostRecentAdded7DaysMSSE) return false; // its very recently added
         if (listens.last > mostRecentListened14DaysMSSE) return false; // recently listened
         return true;
-      });
+      }, newRandom());
 
       // -- averaged over what actually exists (previously hardcoded 20)
       int topListensTotal = 0;
@@ -317,7 +325,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                 if (listensInWindow > 1) return false;
               }
               return true;
-            });
+            }, newRandom());
 
       await _yieldFrame();
       if (generation != _fillGeneration) return;
@@ -337,7 +345,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
           }
         }
         return listensCountWithinPeriod <= 5;
-      });
+      }, newRandom());
 
       await _yieldFrame();
       if (generation != _fillGeneration) return;
@@ -396,14 +404,16 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         // -- top items in the same time, a year ago
         ...sameTimeAyearAgo,
       }.toList();
-      recommendedMixItems.shuffle();
+      recommendedMixItems.shuffle(newRandom());
+      if (kScreenshotsMode) ScreenshotsDriver.inst.pinRecommendedFirst(recommendedMixItems, getItemTitle, _allItemsInLibrary);
 
       _mixes.addAll([
         MapEntry(lang.newTracksRecommended, recommendedMixItems),
         ?supremacyEntry,
         MapEntry(lang.topRecents, topRecentListenedKeys),
-        MapEntry(lang.underrated, underrated),
+        MapEntry(lang.nowAgo, nowAgo),
         MapEntry(lang.lostPartners, lostPartners),
+        MapEntry(lang.underrated, underrated),
         MapEntry(lang.discover, discover),
         MapEntry(lang.favourites, favsSample),
         MapEntry(lang.randomPicks, _randomItems),

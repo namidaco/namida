@@ -5,7 +5,7 @@ usage:
   python scripts/screenshots/seed.py music [--playlist <namida playlist json>] [--source ~/.namida] [--music-dir <dir>] [--drive E:=/mnt/Media]
   python scripts/screenshots/seed.py data --data-dir <app user data dir> --music-dir <music dir as the app sees it>
 
-every command takes --work (default build/screenshots). `pick` writes work/playlist.json, `music` copies into
+every command takes --work (default .screenshots). `pick` writes work/playlist.json, `music` copies into
 --music-dir (default work/music) and writes work/library.json, `data` turns library.json into settings, history,
 favourites and playlists. the playlist order is the priority: earlier tracks get more listens and become favourites.
 the user's namida playlists in PLACEMENT_PLAYLISTS pin what shows first on a page, their tracks join the library too.
@@ -33,7 +33,7 @@ from mutagen.id3 import COMM, ID3, TALB, TCOM, TCON, TDRC, TIT2, TLAN, TMOO, TPE
 from mutagen.mp4 import MP4, MP4FreeForm
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_WORK = ROOT / 'build' / 'screenshots'
+DEFAULT_WORK = ROOT / '.screenshots'
 DEFAULT_SOURCE = Path.home() / '.namida'
 
 AUDIO_EXTENSIONS = {'.m4a', '.mp3', '.ogg', '.opus', '.flac'}
@@ -58,7 +58,11 @@ FAVOURITES_COUNT = 35
 # -- pinned most played stay on top in the readme's 6 months range and in all time
 MOST_PLAYED_RECENT_DAYS = 180
 MOST_PLAYED_STEP = 4
+# -- the newest tracks stay minutes apart for the tracks tab order, older ones go back a day each so home's underrated
+# -- (not added within 7 days) finds some
+RECENTLY_ADDED_COUNT = 20
 TRACK_MODIFIED_GAP_SECONDS = 60
+OLDER_TRACK_MODIFIED_GAP_SECONDS = 24 * 3600
 LISTENED_RATIO = 0.85
 YOUTUBE_LISTEN_SECONDS = 150
 
@@ -104,6 +108,10 @@ PLACEMENT_PLAYLISTS = {
 # -- tracks with the best looking artworks/videos, in the user's order. they lead the priority and fill unpinned pages
 VISUALS_PLAYLIST = 'screenshots better visuals'
 AUTO_PLACEMENT_SIZES = {'tracks': 10, 'mostPlayed': 10, 'recentListens': 6, 'favourites': 10}
+# -- leads the tracks tab when the picks hold it, customization's track tile preview shows that first track (the 2023 one)
+TRACKS_FIRST_TITLE = '초월ㆍTranscend'
+# -- names holding a separator that stay one artist
+ARTISTS_SEPARATORS_BLACKLIST = ['T & Sugah', 'Miles & Miles']
 PREFERRED_FOLDERS = {'[YT] Music', '[YT] Nightcore'}
 NIGHTCORE_SCORE = 3
 SYREX_SCORE = 2
@@ -426,9 +434,8 @@ def copy_whole(source: Path, dest: Path):
 
 
 def collect_video(youtube_id: str, source_videos_dir: Path, videos_dir: Path) -> Path | None:
-    # -- a video with a .metadata companion is still downloading
-    candidates = source_videos_dir.glob(f'{youtube_id}_*.mp4')
-    complete = [v for v in candidates if not v.with_name(f'{v.name}.metadata').exists()]
+    # -- a video still downloading is a .mp4.part, the glob leaves it out
+    complete = list(source_videos_dir.glob(f'{youtube_id}_*.mp4'))
     if not complete:
         return None
     best = max(complete, key=lambda v: v.stat().st_size)
@@ -644,6 +651,9 @@ def cmd_music(args):
     for key, size in AUTO_PLACEMENT_SIZES.items():
         if not placement_items[key]:
             placement_items[key] = take_folder_groups(items, visual_ranks, auto_placed_ids, size)
+    first_track = next((item for item in items if item['title'] == TRACKS_FIRST_TITLE), None)
+    if first_track is not None:
+        placement_items['tracks'] = [first_track, *(item for item in placement_items['tracks'] if item is not first_track)]
 
     user_playlists = []
     for name in PLAYLISTS_WITH_TRACKS + PLAYLISTS_MAPPED:
@@ -748,11 +758,15 @@ def cmd_music(args):
     ranked_paths = [item['relativePath'] for item in sorted(items, key=lambda item: item['rank'])]
     newest_modified = time.time()
     modified_order = list(dict.fromkeys([*pinned_paths, *ranked_paths]))
+    modified_ms_by_path = {}
     for index, relative_path in enumerate(modified_order):
-        modified = newest_modified - index * TRACK_MODIFIED_GAP_SECONDS
+        modified = newest_modified - modified_age_seconds(index)
         os.utime(music_dir / relative_path, (modified, modified))
+        modified_ms_by_path[relative_path] = int(modified * 1000)
+    for library_item in library:
+        library_item['modifiedMS'] = modified_ms_by_path[library_item['path']]
     # -- loop videos sort after every track
-    loop_videos_modified = newest_modified - len(modified_order) * TRACK_MODIFIED_GAP_SECONDS
+    loop_videos_modified = newest_modified - modified_age_seconds(len(modified_order))
     for loop_video in loop_videos:
         os.utime(loop_video, (loop_videos_modified, loop_videos_modified))
 
@@ -787,6 +801,13 @@ def to_ms(dt: datetime.datetime) -> int:
     return int(dt.timestamp() * 1000)
 
 
+def modified_age_seconds(index: int) -> int:
+    if index < RECENTLY_ADDED_COUNT:
+        return index * TRACK_MODIFIED_GAP_SECONDS
+    older_index = index - RECENTLY_ADDED_COUNT + 1
+    return RECENTLY_ADDED_COUNT * TRACK_MODIFIED_GAP_SECONDS + older_index * OLDER_TRACK_MODIFIED_GAP_SECONDS
+
+
 def build_weights(count: int, rng: random.Random) -> list:
     # -- zipf-ish over the playlist order, the priority. jitter keeps it from being a straight line
     return [1.0 / (rank + 3) ** 0.9 * rng.uniform(0.6, 1.4) for rank in range(count)]
@@ -797,27 +818,25 @@ def generate_history(library: list, paths: list, rng: random.Random) -> dict:
     track_indices = range(len(library))
     today = datetime.date.today()
     days = {}
-    for day_offset in range(HISTORY_DAYS):
-        date = today - datetime.timedelta(days=day_offset)
-        is_weekend = date.weekday() >= 5
-        if day_offset > 0 and rng.random() < 0.08:
+    # -- each day draws from its own offset, so the history is the same relative to today whatever the run's date or hour.
+    # -- today only holds the pinned recent listens, the run's hour decided what home's recent listens showed otherwise
+    for day_offset in range(1, HISTORY_DAYS):
+        day_rng = random.Random(f'{RNG_SEED}:{day_offset}')
+        if day_rng.random() < 0.08:
             continue
-        sessions_count = rng.randint(1, 3) + (1 if is_weekend else 0)
+        date = today - datetime.timedelta(days=day_offset)
+        is_weekend = day_offset % 7 >= 5
+        sessions_count = day_rng.randint(1, 3) + (1 if is_weekend else 0)
         entries = []
         for _ in range(sessions_count):
-            hour = rng.choice([8, 13, 17, 19, 21, 22, 23])
-            session_start = datetime.time(hour, rng.randint(0, 59))
+            hour = day_rng.choice([8, 13, 17, 19, 21, 22, 23])
+            session_start = datetime.time(hour, day_rng.randint(0, 59))
             cursor = datetime.datetime.combine(date, session_start)
-            for _ in range(rng.randint(3, 12)):
-                index = rng.choices(track_indices, weights=weights)[0]
+            for _ in range(day_rng.randint(3, 12)):
+                index = day_rng.choices(track_indices, weights=weights)[0]
                 entries.append({'dateAdded': to_ms(cursor), 'track': paths[index]})
                 duration_ms = library[index]['durationMS']
-                cursor += datetime.timedelta(milliseconds=duration_ms + rng.randint(0, 20000))
-        # -- today stays in the past, the app would otherwise show listens from the future
-        now_ms = int(time.time() * 1000)
-        entries = [e for e in entries if e['dateAdded'] < now_ms]
-        if not entries:
-            continue
+                cursor += datetime.timedelta(milliseconds=duration_ms + day_rng.randint(0, 20000))
         entries.sort(key=lambda e: e['dateAdded'], reverse=True)
         days[days_since_1970(date)] = entries
     return days
@@ -964,6 +983,7 @@ def cmd_data(args):
         'libraryTabs': LIBRARY_TABS,
         'forceSquaredTrackThumbnail': True,
         'forceSquaredAlbumThumbnail': True,
+        'trackArtistsSeparatorsBlacklist': ARTISTS_SEPARATORS_BLACKLIST,
         'trackThumbnailSizeinList': 65.0,
         'trackListTileHeight': 65.0,
         'borderRadiusMultiplier': 0.9,

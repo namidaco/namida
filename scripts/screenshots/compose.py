@@ -30,7 +30,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPTS = Path(__file__).resolve().parent
 TEMPLATES = SCRIPTS / 'templates'
-DEFAULT_WORK = ROOT / 'build' / 'screenshots'
+DEFAULT_WORK = ROOT / '.screenshots'
 ASSETS_DIR = ROOT / 'external' / 'namida-assets' / 'screenshots'
 PUBLISHED_FOLDERS = ['readme', 'docs', 'flathub', 'designs']
 FONTS_DIR = ROOT / 'assets' / 'fonts' / 'LexendDeca'
