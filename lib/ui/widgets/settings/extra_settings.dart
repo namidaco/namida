@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -493,6 +494,36 @@ class _ExtrasFlagsOptions extends StatelessWidget {
     );
   }
 
+  static Iterable<NamidaPopupItem> _getScrollbarTrackChildren() {
+    return [
+      ...ScrollbarTrackMode.values.map(
+        (e) => NamidaPopupItem(
+          icon: e.toIcon(),
+          title: e.toText(),
+          selected: e == settings.scrollbarTrackMode.value,
+          onTap: () => settings.scrollbarTrackMode.save(e),
+        ),
+      ),
+      NamidaPopupItem(
+        icon: Broken.flash,
+        title: 'instant thumb grab',
+        hasDividerAbove: true,
+        onTap: () {
+          final isInstantThumbGrab = settings.instantThumbGrab.value == true;
+          settings.instantThumbGrab.save(!isInstantThumbGrab);
+        },
+        trailing: ObxO(
+          rx: settings.instantThumbGrab,
+          builder: (context, instantThumbGrab) => CustomSwitch(
+            active: instantThumbGrab == true,
+            width: 37.0,
+            height: 20.0,
+          ),
+        ),
+      ),
+    ];
+  }
+
   static Iterable<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) {
     return SearchType.values.map(
       (e) => NamidaPopupItem(
@@ -606,46 +637,48 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   subtitle: 'show the current letter/section next to the scrollbar while dragging it',
                 ),
               ),
-              ObxO(
-                rx: settings.enhancedDragToScroll,
-                builder: (context, enhancedDragToScroll) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.arrow_swap,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: enhancedDragToScroll ?? true,
-                  onChanged: (isTrue) => settings.enhancedDragToScroll.save(!isTrue),
-                  title: 'enhanced_drag_to_scroll'.toUpperCase(),
-                  subtitle: 'drag anywhere on the scroll track to scroll',
-                ),
-              ),
-              ObxO(
-                rx: settings.easyScrollbarGrab,
-                builder: (context, easyScrollbarGrab) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.flash,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: easyScrollbarGrab ?? false,
-                  onChanged: (isTrue) => settings.easyScrollbarGrab.save(!isTrue),
-                  title: 'easy_scrollbar_grab'.toUpperCase(),
-                  subtitle: 'drag the scrollbar thumb instantly and from a wider area',
-                ),
-              ),
-              ObxO(
-                rx: settings.tapToScroll,
-                builder: (context, tapToScroll) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.cd,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: tapToScroll ?? false,
-                  onChanged: (isTrue) => settings.tapToScroll.save(!isTrue),
-                  title: 'tap_to_scroll'.toUpperCase(),
-                  subtitle: 'tap anywhere on the scroll track to scroll',
+              NamidaPopupWrapper(
+                childrenDefault: _getScrollbarTrackChildren,
+                childBuilder: (openMenu) => Obx(
+                  (context) {
+                    final trackMode = settings.scrollbarTrackMode.valueR;
+                    final isInstantThumbGrab = settings.instantThumbGrab.valueR == true;
+                    final trackModeSubtitle = trackMode.toSubtitle();
+                    final subtitle = isInstantThumbGrab ? '$trackModeSubtitle\nthe thumb can be dragged with no delay and from a wider area.' : trackModeSubtitle;
+                    final instantIcon = isInstantThumbGrab
+                        ? const Padding(
+                            padding: EdgeInsets.only(left: 4.0),
+                            child: Icon(
+                              Broken.flash,
+                              size: 16.0,
+                            ),
+                          )
+                        : null;
+                    return CustomListTile(
+                      leading: const StackedIcon(
+                        baseIcon: Broken.row_vertical,
+                        secondaryIcon: Broken.arrow_swap,
+                        secondaryIconSize: 12.0,
+                      ),
+                      title: 'scrollbar_behaviour'.toUpperCase(),
+                      subtitle: subtitle,
+                      trailing: NamidaPopupWrapper(
+                        childrenDefault: _getScrollbarTrackChildren,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NamidaText(
+                              trackMode.toText(),
+                              style: NText.medium,
+                              textAlign: TextAlign.end,
+                            ),
+                            ?instantIcon,
+                          ],
+                        ),
+                      ),
+                      onTap: openMenu,
+                    );
+                  },
                 ),
               ),
               if (isDesktop) ...[
@@ -2527,4 +2560,24 @@ class _WebhookListTile extends StatelessWidget {
       ),
     );
   }
+}
+
+extension _ScrollbarTrackModeDisplay on ScrollbarTrackMode {
+  String toText() => switch (this) {
+    ScrollbarTrackMode.thumbOnly => 'thumb only',
+    ScrollbarTrackMode.dragAnywhere => 'drag anywhere',
+    ScrollbarTrackMode.jumpToTouch => 'jump to touch',
+  };
+
+  String toSubtitle() => switch (this) {
+    ScrollbarTrackMode.thumbOnly => 'only the thumb can be dragged.',
+    ScrollbarTrackMode.dragAnywhere => 'drag anywhere on the scroll track to scroll (with a small delay).',
+    ScrollbarTrackMode.jumpToTouch => 'tap or drag (with a small delay) anywhere on the scroll track to jump there.',
+  };
+
+  IconData toIcon() => switch (this) {
+    ScrollbarTrackMode.thumbOnly => Broken.lock_1,
+    ScrollbarTrackMode.dragAnywhere => Broken.arrow_swap,
+    ScrollbarTrackMode.jumpToTouch => Broken.finger_cricle,
+  };
 }

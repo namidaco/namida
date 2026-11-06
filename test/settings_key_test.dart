@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:nampack/nampack.dart';
 
@@ -387,6 +388,26 @@ void main() {
 
     await loadFile(settings, {'_v': 2, 'ytMostPlayedCustomDateRange': DateRange.dummy().toJson()});
     expect(settings.ytMostPlayedCustomDateRange.userValue, null);
+  });
+
+  test('old scrollbar track toggles merge into one mode, easy grab becomes instant grab', () async {
+    await loadFile(settings, {'_v': 2, 'tapToScroll': true, 'enhancedDragToScroll': false, 'easyScrollbarGrab': true});
+    expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.jumpToTouch);
+    expect(settings.instantThumbGrab.value, true);
+    final json = settings.buildJson();
+    expect(json.containsKey('tapToScroll'), false);
+    expect(json.containsKey('enhancedDragToScroll'), false);
+    expect(json.containsKey('easyScrollbarGrab'), false);
+
+    await loadFile(settings, {'_v': 2, 'enhancedDragToScroll': false});
+    expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.thumbOnly);
+
+    await loadFile(settings, {'_v': 2, 'tapToScroll': false, 'enhancedDragToScroll': true});
+    expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.dragAnywhere);
+    expect(settings.buildJson().containsKey('scrollbarTrackMode'), false);
+
+    await loadFile(settings, {'_v': 2, 'tapToScroll': true, 'scrollbarTrackMode': ScrollbarTrackMode.thumbOnly.name});
+    expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.thumbOnly);
   });
 
   group('keys', () {

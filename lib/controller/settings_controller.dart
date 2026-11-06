@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/core/http.dart';
 
@@ -386,9 +387,8 @@ class _SettingsController extends _SettingsKeysWriter {
   late final ytStyleButtonSwitcher = _key<bool?>('ytStyleButtonSwitcher', null);
   late final keepVideoFrameOnSwitch = _key<bool?>('keepVideoFrameOnSwitch', null, sync: false);
   late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null, sync: false);
-  late final tapToScroll = _key<bool?>('tapToScroll', null, sync: false);
-  late final enhancedDragToScroll = _key<bool?>('enhancedDragToScroll', null, sync: false);
-  late final easyScrollbarGrab = _key<bool?>('easyScrollbarGrab', null, sync: false);
+  late final scrollbarTrackMode = _keyEnum('scrollbarTrackMode', ScrollbarTrackMode.dragAnywhere, ScrollbarTrackMode.values, sync: false);
+  late final instantThumbGrab = _key<bool?>('instantThumbGrab', null, sync: false);
   late final smoothScrolling = _key<bool?>('smoothScrolling', null, sync: false);
   late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null, sync: false);
   late final backgroundImages = _key<bool?>('backgroundImages', null, sync: false);
@@ -648,6 +648,19 @@ class _SettingsController extends _SettingsKeysWriter {
     }
 
     _migrateLegacyFolderSearch(_raw['activeSearchMediaTypes']);
+
+    // -- scrollbar track toggles merged into one mode
+    final legacyTapToScroll = _dropKey('tapToScroll');
+    final legacyEnhancedDragToScroll = _dropKey('enhancedDragToScroll');
+    if (_raw['scrollbarTrackMode'] == null) {
+      final ScrollbarTrackMode? trackMode = legacyTapToScroll == true
+          ? ScrollbarTrackMode.jumpToTouch
+          : legacyEnhancedDragToScroll == false
+          ? ScrollbarTrackMode.thumbOnly
+          : null;
+      if (trackMode != null) _raw['scrollbarTrackMode'] = trackMode.name;
+    }
+    _migrateKey('easyScrollbarGrab', 'instantThumbGrab', (json) => _raw['instantThumbGrab'] == null ? json : null);
 
     // -- `true` was the old default, only an explicit `false` is kept
     _migrateKey('prioritizeEmbeddedLyrics', 'embeddedLyricsPriority', (json) => json == false && _raw['embeddedLyricsPriority'] == null ? EmbeddedLyricsPriority.off.name : null);

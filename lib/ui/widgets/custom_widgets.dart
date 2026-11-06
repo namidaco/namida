@@ -6455,17 +6455,16 @@ class NamidaScrollbar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (controller == null) return child;
     return ObxO(
-      rx: settings.easyScrollbarGrab,
-      builder: (context, easyScrollbarGrab) => CupertinoScrollbar(
+      rx: settings.instantThumbGrab,
+      builder: (context, instantThumbGrab) => CupertinoScrollbar(
         controller: controller,
         showOnStart: showOnStart,
         scrollStep: scrollStep,
         thicknessWhileDragging: 8.5,
-        minInteractiveSize: easyScrollbarGrab == true ? 96.0 : 60.0,
+        minInteractiveSize: instantThumbGrab == true ? 96.0 : 60.0,
         pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 120),
-        tapToScroll: () => settings.tapToScroll.value ?? false,
-        enhancedDragToScroll: () => settings.enhancedDragToScroll.value ?? true,
-        instantThumbGrab: () => settings.easyScrollbarGrab.value ?? false,
+        trackMode: () => settings.scrollbarTrackMode.value,
+        instantThumbGrab: () => settings.instantThumbGrab.value ?? false,
         onThumbLongPressStart: () => isScrollbarThumbDragging = true,
         onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
         thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,
