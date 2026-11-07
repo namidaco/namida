@@ -71,7 +71,8 @@ class ScrollSearchController {
     MiniPlayerController.inst.snapToMini();
     MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
     final shouldShow = this.toggleSearchMenu();
-    void openFn() => ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: shouldShow);
+    if (!shouldShow) return;
+    void openFn() => ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
     if (instant) {
       openFn();
     } else {
@@ -187,11 +188,20 @@ class ScrollSearchController {
   void hideSearchMenu() {
     unfocusKeyboard();
     showSearchMenu(false);
+    searchBarKey.currentState?.closeSearchBar();
   }
 
   void showSearchMenu([bool show = true]) {
-    if (!show && isGlobalSearchMenuShown.value) saveCurrentSearchAsRecent();
+    final wasShown = isGlobalSearchMenuShown.value;
+    if (!show && wasShown) saveCurrentSearchAsRecent();
+    if (show && !wasShown) _selectAllSearchText();
     isGlobalSearchMenuShown.value = show;
+  }
+
+  void _selectAllSearchText() {
+    final text = searchTextEditingController.text;
+    if (text.isEmpty) return;
+    searchTextEditingController.selection = TextSelection(baseOffset: 0, extentOffset: text.length);
   }
 
   void saveCurrentSearchAsRecent() {

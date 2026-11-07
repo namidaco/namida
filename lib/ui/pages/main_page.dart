@@ -799,12 +799,12 @@ class NamidaSearchBar extends StatelessWidget {
           },
           onPressButton: (isOpen) {
             ScrollSearchController.inst.showSearchMenu(isOpen);
-            ScrollSearchController.inst.resetSearch();
-            ClipboardController.inst.updateTextInControllerEmpty(true);
             if (isOpen) {
               SearchSortController.inst.prepareResources();
               ClipboardController.inst.setClipboardMonitoringStatus(settings.enableClipboardMonitoring.value);
             } else {
+              ScrollSearchController.inst.resetSearch();
+              ClipboardController.inst.updateTextInControllerEmpty(true);
               SearchSortController.inst.disposeResources();
               YTLocalSearchController.inst.cleanResources();
               ClipboardController.inst.setClipboardMonitoringStatus(false);

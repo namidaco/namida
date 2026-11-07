@@ -402,6 +402,11 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
     }
   }
 
+  void closeSearchBar() {
+    if (!_switcher || _alwaysExpanded) return;
+    openCloseSearchBar();
+  }
+
   /// This is the tap function for the animation style not for the original animation style.
   void _onTapFunction({bool forceOpen = false}) {
     setState(
