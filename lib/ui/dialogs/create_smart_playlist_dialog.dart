@@ -2430,9 +2430,20 @@ class _LimitDialog extends StatefulWidget {
 
 class _LimitDialogState extends State<_LimitDialog> {
   static const _maxAmount = 9999;
+  static const _maxScopeAmount = 99;
+  static final _fromScopes = SmartPlaylistNumberScope.values.where((e) => e != SmartPlaylistNumberScope.track).toFixedList();
 
   final _formKey = GlobalKey<FormState>();
   late SmartPlaylistLimit _limit = widget.initialLimit;
+  late SmartPlaylistNumberScope? _fromScope = widget.initialLimit.fromScope?.scope;
+  late final _scopeAmountController = TextEditingController(text: '${widget.initialLimit.fromScope?.amount ?? 1}');
+  late final _scopeSyncer = _TextSliderSyncController(
+    textController: _scopeAmountController,
+    textToSlider: (text) => int.tryParse(text)?.clamp(1, _maxScopeAmount) ?? 1,
+    sliderToDisplayText: (v) => '$v',
+    sliderToRawText: (v) => '$v',
+    onChanged: (_) {},
+  );
   late final _amountController = TextEditingController(text: widget.initialLimit.amount.toString());
   late final _syncer = _TextSliderSyncController(
     textController: _amountController,
@@ -2448,8 +2459,38 @@ class _LimitDialogState extends State<_LimitDialog> {
   void dispose() {
     _syncer.dispose();
     _amountController.dispose();
+    _scopeSyncer.dispose();
+    _scopeAmountController.dispose();
     super.dispose();
   }
+
+  List<NamidaPopupItem> _unitItems() => SmartPlaylistLimitUnit.values
+      .map(
+        (unit) => NamidaPopupItem(
+          icon: unit.toIcon(),
+          title: unit.toText(),
+          selected: unit == _limit.unit,
+          onTap: () => setState(() => _limit = _limit.copyWith(unit: unit)),
+        ),
+      )
+      .toFixedList();
+
+  List<NamidaPopupItem> _scopeItems() => [
+    NamidaPopupItem(
+      icon: Broken.close_circle,
+      title: lang.none,
+      selected: _fromScope == null,
+      onTap: () => setState(() => _fromScope = null),
+    ),
+    ..._fromScopes.map(
+      (scope) => NamidaPopupItem(
+        icon: scope.toIcon(),
+        title: scope.toPluralText(),
+        selected: scope == _fromScope,
+        onTap: () => setState(() => _fromScope = scope),
+      ),
+    ),
+  ];
 
   void _pickSorts() {
     NamidaOnTaps.inst.onTracksSortIconTap(
@@ -2463,7 +2504,19 @@ class _LimitDialogState extends State<_LimitDialog> {
   void _confirm() {
     if (_formKey.currentState?.validate() != true) return;
     final amount = int.parse(_amountController.text);
-    widget.onConfirm(_limit.copyWith(amount: amount));
+    final fromScope = _fromScope;
+    SmartPlaylistLimitScope? limitScope;
+    if (fromScope != null) {
+      final scopeAmount = int.parse(_scopeAmountController.text);
+      limitScope = SmartPlaylistLimitScope(scope: fromScope, amount: scopeAmount);
+    }
+    final limit = SmartPlaylistLimit(
+      amount: amount,
+      unit: _limit.unit,
+      sorting: _limit.sorting,
+      fromScope: limitScope,
+    );
+    widget.onConfirm(limit);
     NamidaNavigator.inst.closeDialog();
   }
 
@@ -2476,6 +2529,57 @@ class _LimitDialogState extends State<_LimitDialog> {
   @override
   Widget build(BuildContext context) {
     final sortText = _limit.sorting.firstType?.toText() ?? lang.auto;
+    final fromScope = _fromScope;
+    final Widget scopeWidget = fromScope == null
+        ? NamidaPopupWrapper(
+            childrenDefault: _scopeItems,
+            childBuilder: (openMenu) => CustomListTile(
+              icon: Broken.category,
+              title: lang.maximum,
+              onTap: openMenu,
+              trailing: Row(
+                mainAxisSize: .min,
+                children: [
+                  NamidaText(
+                    lang.none,
+                    style: NText.medium,
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Icon(
+                    Broken.arrow_down_2,
+                    size: 18.0,
+                  ),
+                ],
+              ),
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CustomTagTextField(
+                    controller: _scopeAmountController,
+                    hintText: '1, 2, 3...',
+                    labelText: lang.maximum,
+                    isNumeric: true,
+                    validator: _validateAmount,
+                    suffixIcon: _PopupSuffix(
+                      text: fromScope.toPluralText(),
+                      items: _scopeItems,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                _SyncedWheelSlider(
+                  syncer: _scopeSyncer,
+                  min: 1,
+                  max: _maxScopeAmount,
+                  stepper: 1,
+                ),
+              ],
+            ),
+          );
     return Form(
       key: _formKey,
       child: CustomBlurryDialog(
@@ -2501,9 +2605,13 @@ class _LimitDialogState extends State<_LimitDialog> {
                   child: CustomTagTextField(
                     controller: _amountController,
                     hintText: '25, 50, 100...',
-                    labelText: '${lang.value} (${_limit.unit.toText()})',
+                    labelText: lang.value,
                     isNumeric: true,
                     validator: _validateAmount,
+                    suffixIcon: _PopupSuffix(
+                      text: _limit.unit.toText(),
+                      items: _unitItems,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8.0),
@@ -2514,13 +2622,6 @@ class _LimitDialogState extends State<_LimitDialog> {
                   stepper: 1,
                 ),
               ],
-            ),
-            const SizedBox(height: 8.0),
-            _ChoiceChipsWrap(
-              values: SmartPlaylistLimitUnit.values,
-              isSelected: (unit) => unit == _limit.unit,
-              toText: (unit) => unit.toText(),
-              onSelect: (unit) => setState(() => _limit = _limit.copyWith(unit: unit)),
             ),
             const SizedBox(height: 8.0),
             CustomListTile(
@@ -2541,6 +2642,41 @@ class _LimitDialogState extends State<_LimitDialog> {
                   ),
                 ],
               ),
+            ),
+            scopeWidget,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PopupSuffix extends StatelessWidget {
+  final String text;
+  final List<NamidaPopupItem> Function() items;
+
+  const _PopupSuffix({
+    required this.text,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: items,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: Row(
+          mainAxisSize: .min,
+          children: [
+            NamidaText(
+              text,
+              style: NText.small,
+            ),
+            const SizedBox(width: 4.0),
+            const Icon(
+              Broken.arrow_down_2,
+              size: 14.0,
             ),
           ],
         ),

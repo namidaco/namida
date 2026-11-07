@@ -11,6 +11,7 @@ import 'package:namida/class/sort_chain.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
@@ -39,7 +40,7 @@ void main() {
     }
   }
 
-  Future<void> openDialog(WidgetTester tester, {List<SmartPlaylistRuleBase>? rules}) async {
+  Future<void> openDialog(WidgetTester tester, {List<SmartPlaylistRuleBase>? rules, SmartPlaylistLimit? limit}) async {
     tester.view.physicalSize = const Size(600, 1300);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -55,7 +56,7 @@ void main() {
         ),
       ),
     );
-    final wrapper = rules == null
+    final wrapper = rules == null && limit == null
         ? null
         : SmartPlaylistWrapper(
             SmartPlaylist(
@@ -65,7 +66,7 @@ void main() {
               sorting: const SortChain([]),
               moods: [],
               ruleGroups: [SmartPlaylistRuleGroup.create(rules: rules)],
-              limit: null,
+              limit: limit,
             ),
           );
     NamidaNavigator.inst.navigateDialog(
@@ -266,5 +267,58 @@ void main() {
     await tapText(tester, rule.sourceDisplayText());
     await changeSource(tester, SmartPlaylistRuleFilterNumberSource.totalListens);
     expect(find.text(SmartPlaylistRuleFilterNumber.isBetween.toText()), findsOneWidget);
+  });
+
+  group('limit from a scope', () {
+    Finder scopeAmountField() => find.byType(TextField).last;
+    testWidgets('picking a genre shows it on the limit tile', (tester) async {
+      await openDialog(tester);
+      await tapText(tester, lang.limit);
+      await tapText(tester, lang.maximum);
+      await tapText(tester, lang.genres);
+      await tester.enterText(scopeAmountField(), '2');
+      await frames(tester, 2);
+      await tapText(tester, lang.confirm);
+      expect(find.textContaining(lang.countGenres(count: 2)), findsOneWidget);
+    });
+
+    testWidgets('none removes the scope and keeps the rest', (tester) async {
+      const limit = SmartPlaylistLimit(
+        amount: 40,
+        unit: SmartPlaylistLimitUnit.tracks,
+        sorting: SortChain([SortEntry(SortType.title)]),
+        fromScope: SmartPlaylistLimitScope(scope: SmartPlaylistNumberScope.artist, amount: 3),
+      );
+      await openDialog(tester, limit: limit);
+      expect(find.textContaining(lang.countArtists(count: 3)), findsOneWidget);
+      await tapText(tester, lang.limit);
+      expect(tester.widget<TextField>(scopeAmountField()).controller!.text, '3');
+      await tapText(tester, lang.artists);
+      await tapText(tester, lang.none);
+      await tapText(tester, lang.confirm);
+      expect(find.textContaining(lang.countArtists(count: 3)), findsNothing);
+      expect(find.textContaining(lang.countTracks(count: 40)), findsOneWidget);
+    });
+
+    testWidgets('a scope amount of 0 is refused', (tester) async {
+      await openDialog(tester);
+      await tapText(tester, lang.limit);
+      await tapText(tester, lang.maximum);
+      await tapText(tester, lang.albums);
+      await tester.enterText(scopeAmountField(), '0');
+      await frames(tester, 2);
+      await tapText(tester, lang.confirm);
+      expect(find.text('1+'), findsOneWidget);
+      expect(find.textContaining(lang.countAlbums(count: 0)), findsNothing);
+    });
+
+    testWidgets('the unit is picked from its menu', (tester) async {
+      await openDialog(tester);
+      await tapText(tester, lang.limit);
+      await tapText(tester, lang.tracks);
+      await tapText(tester, lang.minutes);
+      await tapText(tester, lang.confirm);
+      expect(find.textContaining('25 ${lang.minutes}'), findsOneWidget);
+    });
   });
 }

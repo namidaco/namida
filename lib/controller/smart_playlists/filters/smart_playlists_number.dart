@@ -481,6 +481,43 @@ enum SmartPlaylistNumberScope {
     SmartPlaylistNumberScope.folder => lang.folder,
   };
 
+  String toPluralText() => switch (this) {
+    SmartPlaylistNumberScope.track => MediaType.track.toText(),
+    SmartPlaylistNumberScope.album => MediaType.album.toText(),
+    SmartPlaylistNumberScope.artist => MediaType.artist.toText(),
+    SmartPlaylistNumberScope.albumArtist => MediaType.albumArtist.toText(),
+    SmartPlaylistNumberScope.composer => MediaType.composer.toText(),
+    SmartPlaylistNumberScope.genre => MediaType.genre.toText(),
+    SmartPlaylistNumberScope.style => MediaType.style.toText(),
+    SmartPlaylistNumberScope.folder => MediaType.folder.toText(),
+  };
+
+  String toCountText(int count) => switch (this) {
+    SmartPlaylistNumberScope.track => lang.countTracks(count: count),
+    SmartPlaylistNumberScope.album => lang.countAlbums(count: count),
+    SmartPlaylistNumberScope.artist => lang.countArtists(count: count),
+    SmartPlaylistNumberScope.albumArtist => lang.countAlbumArtists(count: count),
+    SmartPlaylistNumberScope.composer => lang.countComposers(count: count),
+    SmartPlaylistNumberScope.genre => lang.countGenres(count: count),
+    SmartPlaylistNumberScope.style => lang.countStyles(count: count),
+    SmartPlaylistNumberScope.folder => lang.countFolders(count: count),
+  };
+
+  /// values of [tr] for this scope, unknown ones (untagged) left out.
+  List<Object> getKnownKeysOf(Track tr) {
+    final trExt = tr.toTrackExt();
+    return switch (this) {
+      SmartPlaylistNumberScope.track => [tr],
+      SmartPlaylistNumberScope.album => trExt.hasUnknownAlbum ? const [] : trExt.albumsIdentifiersModified,
+      SmartPlaylistNumberScope.artist => trExt.hasUnknownArtist ? const [] : trExt.artistsList,
+      SmartPlaylistNumberScope.albumArtist => trExt.hasUnknownAlbumArtist ? const [] : [trExt.albumArtist],
+      SmartPlaylistNumberScope.composer => trExt.hasUnknownComposer ? const [] : trExt.composersList,
+      SmartPlaylistNumberScope.genre => trExt.hasUnknownGenre ? const [] : trExt.genresList,
+      SmartPlaylistNumberScope.style => trExt.hasUnknownStyle ? const [] : trExt.stylesList,
+      SmartPlaylistNumberScope.folder => [tr.folder],
+    };
+  }
+
   IconData toIcon() => switch (this) {
     SmartPlaylistNumberScope.track => Broken.music,
     SmartPlaylistNumberScope.album => MediaType.album.toIcon(),
