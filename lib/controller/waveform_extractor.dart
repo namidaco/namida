@@ -20,6 +20,11 @@ class WaveformExtractor {
 
   static const _cacheExtension = '.wavef';
 
+  static String cacheFilePathFor(String source, {String? cacheKey}) {
+    final key = cacheKey ?? '${source.getFilename}_${source.toFastHashKey()}';
+    return FileParts.joinPath(AppDirs.WAVEFORMS_CACHE, '$key$_cacheExtension');
+  }
+
   final _isolate = _WaveformIsolateManager();
 
   void init() => _isolate.initialize();
@@ -35,11 +40,7 @@ class WaveformExtractor {
     bool useCache = true,
     String? cacheKey,
   }) {
-    String? cacheFilePath;
-    if (useCache) {
-      cacheKey ??= '${source.getFilename}_${source.toFastHashKey()}';
-      cacheFilePath = FileParts.joinPath(AppDirs.WAVEFORMS_CACHE, '$cacheKey$_cacheExtension');
-    }
+    final cacheFilePath = useCache ? cacheFilePathFor(source, cacheKey: cacheKey) : null;
     return _isolate.execute(
       source,
       samplesPerSecond: samplesPerSecond,

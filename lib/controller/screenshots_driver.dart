@@ -55,6 +55,7 @@ import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
+import 'package:namida/ui/dialogs/clear_cache_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -63,7 +64,6 @@ import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
-import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/dialogs/track_stats_dialog.dart';
@@ -697,7 +697,7 @@ class ScreenshotsDriver {
       case 'trackClear':
         final track = _resolveTrack(step);
         final colorScheme = CurrentColor.inst.color;
-        showTrackClearDialog([track], colorScheme);
+        showClearCacheDialog(tracks: [track], colorScheme: colorScheme);
       case 'addFolder':
         const IndexerSettings().promptAddFolderType();
       case 'fontScale':
@@ -825,7 +825,7 @@ class ScreenshotsDriver {
         NamidaMiniPlayerYoutubeID.openInfoMenu(rootContext, video);
       case 'ytClearVideo':
         final videoId = step['id'] as String;
-        const YTUtils().showVideoClearDialog(videoId);
+        showClearCacheDialog(videoIds: [videoId]);
       case 'ytDownload':
         final videoId = step['id'] as String;
         showDownloadVideoBottomSheet(videoId: videoId, playlistId: null, originalIndex: null, totalLength: null, streamInfoItem: null);

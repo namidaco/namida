@@ -40,13 +40,13 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/clear_cache_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/yt_utils.dart';
 
 part 'player_controller.queue_replace.dart';
 
@@ -303,7 +303,7 @@ class Player {
       VideoController.inst.dropVideoFrameHold();
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
-        final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => const YTUtils().showVideoClearDialog(itemId)) : null;
+        final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => showClearCacheDialog(videoIds: [itemId])) : null;
         final details = e.details.toString();
         final detailsTrimmed = details.length > 600 ? details.substring(0, 600) : details;
         snackyy(message: detailsTrimmed, title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);

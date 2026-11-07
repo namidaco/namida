@@ -87,14 +87,6 @@ class StorageCacheManager {
     await Directory(AppDirs.AUDIOS_CACHE).create(recursive: true);
   }
 
-  Future<Map<File, int>> getTempVideosForID(String videoId) async {
-    return _VideoTrimmer._getTempVideosForID.thready((id: videoId, tempDir: AppDirs.VIDEOS_CACHE_TEMP, normalDir: AppDirs.VIDEOS_CACHE));
-  }
-
-  Future<Map<File, int>> getTempAudiosForID(String videoId) async {
-    return _AudioTrimmer._getTempAudiosForID.thready((id: videoId, dirPath: AppDirs.AUDIOS_CACHE));
-  }
-
   String getDeleteSizeSubtitleText(int length, int totalSize) {
     return lang.deleteFileCacheSubtitle(count: length, totalSizeText: totalSize.fileSizeFormatted);
   }
@@ -816,34 +808,6 @@ class _VideoTrimmer {
     _Trimmer._sortFiles(videosFinal, priorityMap, stats);
     return _Trimmer._trimExcessCache(videosFinal, maxBytes, stats);
   }
-
-  static Map<File, int> _getTempVideosForID(({String id, String tempDir, String normalDir}) params) {
-    final id = params.id;
-    final tempDir = params.tempDir;
-    final normalDir = params.normalDir;
-
-    final sep = Platform.pathSeparator;
-
-    final filesMap = <File, int>{};
-    void checkFileAndAdd(FileSystemEntity e) {
-      if (e is File) {
-        final filename = e.path.splitLast(sep);
-        if (filename.startsWith(id)) {
-          filesMap[e] = e.fileSizeSync() ?? 0;
-        }
-      }
-    }
-
-    for (final e in Directory(tempDir).listSyncSafe()) {
-      checkFileAndAdd(e);
-    }
-    for (final e in Directory(normalDir).listSyncSafe()) {
-      if (e.path.endsWith('.part')) {
-        checkFileAndAdd(e);
-      }
-    }
-    return filesMap;
-  }
 }
 
 class _AudioTrimmer {
@@ -872,28 +836,6 @@ class _AudioTrimmer {
     final stats = _Trimmer._statAll(audios);
     _Trimmer._sortFiles(audios, priorityMap, stats);
     return _Trimmer._trimExcessCache(audios, maxBytes, stats);
-  }
-
-  static Map<File, int> _getTempAudiosForID(({String id, String dirPath}) params) {
-    final id = params.id;
-    final dirPath = params.dirPath;
-
-    final sep = Platform.pathSeparator;
-
-    final filesMap = <File, int>{};
-
-    final files = Directory(dirPath).listSyncSafe();
-    for (var e in files) {
-      if (e.path.endsWith('.part')) {
-        if (e is File) {
-          final filename = e.path.splitLast(sep);
-          if (filename.startsWith(id)) {
-            filesMap[e] = e.fileSizeSync() ?? 0;
-          }
-        }
-      }
-    }
-    return filesMap;
   }
 }
 

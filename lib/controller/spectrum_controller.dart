@@ -125,8 +125,7 @@ class SpectrumController {
 
     _isExtracting = true;
     final path = source.path;
-    final cacheFileName = '${path.getFilename}_${path.toFastHashKey()}$_cacheExtension';
-    final cacheFilePath = FileParts.joinPath(AppDirs.WAVEFORMS_CACHE, cacheFileName);
+    final cacheFilePath = cacheFilePathFor(path);
     Uint8List rows = _emptyRows;
     try {
       final cached = await _readCache(cacheFilePath);
@@ -145,6 +144,11 @@ class SpectrumController {
   }
 
   static const _cacheExtension = '.spec';
+
+  static String cacheFilePathFor(String path) {
+    final cacheFileName = '${path.getFilename}_${path.toFastHashKey()}$_cacheExtension';
+    return FileParts.joinPath(AppDirs.WAVEFORMS_CACHE, cacheFileName);
+  }
 
   // -- bumped along with the rows the native side produces
   static const _formatVersion = 1;

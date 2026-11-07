@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
@@ -19,10 +17,8 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -32,7 +28,6 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -46,6 +41,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
+import 'package:namida/ui/dialogs/clear_cache_dialog.dart';
 import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/history_listens_navigation.dart';
@@ -423,7 +419,7 @@ class YTUtils {
         onChanged: (_) {},
       ),
       onTap: () {
-        const YTUtils().showVideoClearDialog(videoId);
+        showClearCacheDialog(videoIds: [videoId]);
       },
     );
 
@@ -730,7 +726,7 @@ class YTUtils {
             onChanged: (_) {},
           ),
           onTap: () {
-            const YTUtils().showVideoClearDialog(videoId);
+            showClearCacheDialog(videoIds: [videoId]);
           },
         ),
       ...?moreMenuChildren,
@@ -938,215 +934,6 @@ class YTUtils {
         },
       );
     }
-  }
-
-  void showVideoClearDialog(
-    String videoId, {
-    void Function(Map<String, bool> pathsDeleted)? afterDeleting,
-    List<NamidaClearDialogExpansionTile<dynamic>> Function(RxMap<String, bool> pathsToDelete, Rx<int> totalSizeToDelete, Rx<bool> allSelected)? extraTiles,
-  }) async {
-    final pathsToDelete = <String, bool>{}.obs;
-    final allSelected = false.obs;
-    final totalSizeToDelete = 0.obs;
-
-    final deleteTempAudio = false.obs;
-    final deleteTempVideo = false.obs;
-    final tempFilesSizeAudio = <File, int>{}.obs;
-    final tempFilesSizeVideo = <File, int>{}.obs;
-
-    final extraTilesBuilt = extraTiles?.call(pathsToDelete, totalSizeToDelete, allSelected);
-    final videosCached = await VideoController.inst.getNVFromID(videoId);
-    final fileSizeLookup = <String, int>{};
-    final fileTypeLookup = <String, int>{};
-
-    int videosSize = 0;
-    int audiosSize = 0;
-
-    final audiosCached = <AudioCacheDetails>[];
-    final audioCachesAll = AudioCacheController.inst.audioCacheMap[videoId];
-    if (audioCachesAll != null) {
-      final sizes = await audioCachesAll.mapConcurrent((e) => e.file.fileSize());
-      for (int i = 0; i < audioCachesAll.length; i++) {
-        final s = sizes[i];
-        if (s == null) continue; // -- doesn't exist
-        final e = audioCachesAll[i];
-        audiosCached.add(e);
-        audiosSize += s;
-        fileSizeLookup[e.file.path] = s;
-        fileTypeLookup[e.file.path] = 0;
-      }
-    }
-
-    for (var e in videosCached) {
-      final s = e.sizeInBytes;
-      videosSize += s;
-      fileSizeLookup[e.path] = s;
-      fileTypeLookup[e.path] = 1;
-    }
-
-    if (extraTilesBuilt != null) {
-      for (var e in extraTilesBuilt) {
-        for (var item in e.items) {
-          final data = e.itemBuilder(item);
-          final s = e.itemSize(item);
-          fileSizeLookup[data.path] = s;
-          fileTypeLookup[data.path] = 2;
-        }
-      }
-    }
-
-    const cm = StorageCacheManager();
-    cm.getTempAudiosForID(videoId).then((value) => tempFilesSizeAudio.value = value);
-    cm.getTempVideosForID(videoId).then((value) => tempFilesSizeVideo.value = value);
-
-    void reEvaluateTotalSize() {
-      int newVal = 0;
-      for (final k in pathsToDelete.keys) {
-        if (pathsToDelete[k] == true) newVal += fileSizeLookup[k] ?? 0;
-      }
-      if (deleteTempAudio.value) {
-        for (final v in tempFilesSizeAudio.values) {
-          newVal += v;
-        }
-      }
-      if (deleteTempVideo.value) {
-        for (final v in tempFilesSizeVideo.values) {
-          newVal += v;
-        }
-      }
-      totalSizeToDelete.value = newVal;
-    }
-
-    Future<void> deleteItems(Iterable<String> paths) async {
-      await paths.loopConcurrent((path) async {
-        final type = fileTypeLookup[path];
-        await File(path).tryDeleting(); // always delete even if not in fileTypeLookup, for temp files
-        if (type == 1) {
-          VideoController.inst.removeNVFromCacheMap(videoId, path);
-        } else if (type == 0) {
-          AudioCacheController.inst.removeFromCacheMap(videoId, path);
-        }
-      });
-    }
-
-    NamidaNavigator.inst.navigateDialog(
-      onDisposing: () {
-        pathsToDelete.close();
-        allSelected.close();
-        totalSizeToDelete.close();
-        deleteTempAudio.close();
-        deleteTempVideo.close();
-        tempFilesSizeAudio.close();
-        tempFilesSizeVideo.close();
-      },
-      dialogBuilder: (theme) => CustomBlurryDialog(
-        theme: theme,
-        normalTitleStyle: true,
-        icon: Broken.broom,
-        title: lang.clear,
-        trailingWidgets: [
-          Obx(
-            (context) => NamidaIconButton(
-              icon: null,
-              onPressed: () {
-                final newVal = allSelected.toggle();
-                if (newVal == true) {
-                  for (var e in audiosCached) {
-                    pathsToDelete[e.file.path] = true;
-                  }
-                  for (var e in videosCached) {
-                    pathsToDelete[e.path] = true;
-                  }
-                  if (extraTilesBuilt != null) {
-                    for (var e in extraTilesBuilt) {
-                      for (var item in e.items) {
-                        pathsToDelete[e.itemBuilder(item).path] = true;
-                      }
-                    }
-                  }
-
-                  deleteTempAudio.value = true;
-                  deleteTempVideo.value = true;
-                } else {
-                  pathsToDelete.clear();
-                  deleteTempAudio.value = false;
-                  deleteTempVideo.value = false;
-                }
-                reEvaluateTotalSize();
-              },
-              child: NamidaCheckMark(
-                size: 18.0,
-                active: allSelected.valueR,
-              ),
-            ),
-          ),
-        ],
-        actions: [
-          const CancelButton(),
-          Obx(
-            (context) => NamidaButton(
-              enabled: deleteTempAudio.valueR || deleteTempVideo.valueR || pathsToDelete.values.any((element) => element),
-              text: "${lang.delete} (${totalSizeToDelete.valueR.fileSizeFormatted})",
-              onTap: () async {
-                await Future.wait([
-                  deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true)),
-                  if (deleteTempAudio.value) deleteItems(tempFilesSizeAudio.keys.map((e) => e.path)),
-                  if (deleteTempVideo.value) deleteItems(tempFilesSizeVideo.keys.map((e) => e.path)),
-                ]);
-                afterDeleting?.call(pathsToDelete.value);
-                Player.inst.recheckCachedVideos(videoId);
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
-          ),
-        ],
-        child: Column(
-          children: [
-            NamidaClearDialogExpansionTile(
-              title: lang.videoCache,
-              subtitle: videosSize.fileSizeFormatted,
-              icon: Broken.video,
-              items: videosCached,
-              itemSize: (item) => item.sizeInBytes,
-              tempFilesDelete: deleteTempVideo,
-              tempFilesSize: tempFilesSizeVideo,
-              itemBuilder: (v) {
-                return (
-                  title: "${v.resolution}p • ${v.framerate}fps ",
-                  subtitle: v.sizeInBytes.fileSizeFormatted,
-                  path: v.path,
-                );
-              },
-              pathsToDelete: pathsToDelete,
-              totalSizeToDelete: totalSizeToDelete,
-              allSelected: allSelected,
-            ),
-            NamidaClearDialogExpansionTile(
-              title: lang.audioCache,
-              subtitle: audiosSize.fileSizeFormatted,
-              icon: Broken.musicnote,
-              items: audiosCached,
-              itemSize: (item) => fileSizeLookup[item.file.path] ?? item.file.fileSizeSync() ?? 0,
-              tempFilesDelete: deleteTempAudio,
-              tempFilesSize: tempFilesSizeAudio,
-              itemBuilder: (a) {
-                final bitrateText = a.bitrate == null ? null : "${a.bitrate! ~/ 1000}kb/s";
-                final langText = a.langaugeName == null ? '' : " • ${a.langaugeName}";
-                return (
-                  title: "${bitrateText ?? lang.audio}$langText",
-                  subtitle: a.file.fileSizeFormatted() ?? '',
-                  path: a.file.path,
-                );
-              },
-              pathsToDelete: pathsToDelete,
-              totalSizeToDelete: totalSizeToDelete,
-              allSelected: allSelected,
-            ),
-            ...?extraTilesBuilt,
-          ],
-        ),
-      ),
-    );
   }
 
   static void showCreateLocalYTPlaylistSheet() async {

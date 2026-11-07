@@ -23,8 +23,9 @@ sealed class SubtitleTrack {
   String get languageCode;
 
   /// native language name (`English`), falls back to the raw code.
-  String get languageName {
-    final code = languageCode;
+  String get languageName => languageNameOf(languageCode);
+
+  static String languageNameOf(String code) {
     if (code.isEmpty) return '';
     final normalized = normalizeLanguageCode(code);
     final name = NamidaLanguage.fromCode(normalized.isEmpty ? code : normalized).name;

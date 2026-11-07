@@ -1423,6 +1423,7 @@ class SmallListTile extends StatelessWidget {
   final double borderRadius;
   final Widget? leading;
   final VisualDensity? visualDensity;
+  final bool dense;
 
   const SmallListTile({
     super.key,
@@ -1442,6 +1443,7 @@ class SmallListTile extends StatelessWidget {
     this.borderRadius = 0.0,
     this.leading,
     this.visualDensity,
+    this.dense = false,
   });
 
   @override
@@ -1454,7 +1456,7 @@ class SmallListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
       ),
-      dense: false,
+      dense: dense,
       leading:
           leading ??
           SizedBox(
@@ -7694,132 +7696,6 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final List<T> items;
-  final ({String title, String? subtitle, String path}) Function(T item) itemBuilder;
-  final int Function(T item) itemSize;
-  final RxMap<File, int>? tempFilesSize;
-  final Rx<bool>? tempFilesDelete;
-  final RxMap<String, bool> pathsToDelete;
-  final Rx<int> totalSizeToDelete;
-  final Rx<bool> allSelected;
-
-  const NamidaClearDialogExpansionTile({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.items,
-    required this.itemBuilder,
-    required this.itemSize,
-    required this.tempFilesSize,
-    required this.tempFilesDelete,
-    required this.pathsToDelete,
-    required this.totalSizeToDelete,
-    required this.allSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final nColors = NColorsData.of(context);
-    final tempFilesSize = this.tempFilesSize;
-    final tempFilesDelete = this.tempFilesDelete;
-    return NamidaExpansionTile(
-      initiallyExpanded: true,
-      titleText: title,
-      subtitleText: subtitle,
-      icon: icon,
-      trailingBuilder: (iconWidget) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          NDecoratedBox(
-            decoration: (colors) => BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-              child: Text("${items.length}"),
-            ),
-          ),
-          const SizedBox(width: 6.0),
-          iconWidget,
-        ],
-      ),
-      childrenPadding: const EdgeInsetsDirectional.only(end: 8.0, top: 6.0),
-      children: [
-        ...items.map(
-          (item) {
-            final data = itemBuilder(item);
-            return SmallListTile(
-              borderRadius: 12.0,
-              icon: Broken.arrow_right_3,
-              iconSize: 20.0,
-              color: nColors.card,
-              visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
-              title: data.title,
-              subtitle: data.subtitle,
-              active: false,
-              onTap: () {
-                final wasTrue = pathsToDelete[data.path] == true;
-                final willEnable = !wasTrue;
-                pathsToDelete[data.path] = willEnable;
-                if (willEnable) {
-                  totalSizeToDelete.value += itemSize(item);
-                } else {
-                  totalSizeToDelete.value -= itemSize(item);
-                }
-                allSelected.value = false;
-              },
-              trailing: Obx(
-                (context) => NamidaCheckMark(
-                  size: 16.0,
-                  active: pathsToDelete[data.path] == true,
-                ),
-              ),
-            );
-          },
-        ),
-        if (tempFilesSize != null && tempFilesDelete != null)
-          Obx(
-            (context) {
-              final size = tempFilesSize.values.fold(0, (p, e) => p + e);
-              if (size <= 0) return const SizedBox();
-              return SmallListTile(
-                borderRadius: 12.0,
-                icon: Broken.broom,
-                iconSize: 20.0,
-                color: nColors.card,
-                visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
-                title: lang.deleteTempFiles,
-                subtitle: size.fileSizeFormatted,
-                active: false,
-                onTap: () {
-                  tempFilesDelete.toggle();
-                  if (tempFilesDelete.value) {
-                    totalSizeToDelete.value += size;
-                  } else {
-                    totalSizeToDelete.value -= size;
-                  }
-                },
-                trailing: ObxO(
-                  rx: tempFilesDelete,
-                  builder: (context, deletetemp) => NamidaCheckMark(
-                    size: 16.0,
-                    active: deletetemp,
-                  ),
-                ),
-              );
-            },
-          ),
-      ],
     );
   }
 }

@@ -1,0 +1,222 @@
+// by claude
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:namida/class/audio_cache_detail.dart';
+import 'package:namida/class/lang.dart';
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/items_cache.dart';
+import 'package:namida/controller/spectrum_controller.dart';
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/waveform_extractor.dart';
+import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/translations/language.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late Directory dir;
+  final sep = Platform.pathSeparator;
+
+  setUpAll(() {
+    dir = Directory.systemTemp.createTempSync('namida_items_cache_test');
+    AppDirs.USER_DATA = '${dir.path}${sep}data$sep';
+    AppDirs.APP_CACHE = '${dir.path}${sep}cache$sep';
+    Language.inst.update(language: NamidaLanguage.fromCode('en'));
+  });
+  tearDownAll(() {
+    try {
+      dir.deleteSync(recursive: true);
+    } catch (_) {} // -- dbs can still hold the folder
+  });
+
+  Future<Track> addTrack(String relativePath) async {
+    final file = File('${dir.path}${sep}music$sep$relativePath')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(_silentWavBytes());
+    final tracks = await Indexer.inst.convertPathsToTracksAndAddToLists([file.path]);
+    return tracks.single;
+  }
+
+  File write(String path, int size) {
+    return File(path)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(Uint8List(size));
+  }
+
+  File addAudioCache(String videoId, int size) {
+    final file = write('${AppDirs.AUDIOS_CACHE}${videoId}_128000.m4a', size);
+    AudioCacheController.inst.addToCacheMap(videoId, AudioCacheDetails(youtubeId: videoId, bitrate: 128000, langaugeCode: null, langaugeName: null, file: file));
+    return file;
+  }
+
+  ItemCacheGroup? groupOf(ItemsCache cache, ItemCacheType type) => cache.groups.where((g) => g.type == type).firstOrNull;
+  List<String> titlesOf(ItemsCache cache, ItemCacheType type) => groupOf(cache, type)?.entries.map((e) => e.title).toList() ?? [];
+
+  test('nothing cached', () async {
+    final track = await addTrack('empty id=aaaaaaaaaaa.wav');
+    final cache = await ItemsCache.collect(tracks: [track], videoIds: []);
+    expect(cache.groups, isEmpty);
+    expect(await ItemsCache.hasAnything([track]), false);
+  });
+
+  test('a single track with a youtube id lists every file once, with real sizes', () async {
+    const id = 'bbbbbbbbbbb';
+    final track = await addTrack('single id=$id.wav');
+    final paletteKey = track.cacheKeyForImage(AppDirs.PALETTES);
+    write(track.pathToImage, 100);
+    write('${AppDirs.PALETTES}$paletteKey.palette', 1);
+    write('${AppDirs.LYRICS}${track.filename}.lrc', 10);
+    write(WaveformExtractor.cacheFilePathFor(track.path), 20);
+    write(SpectrumController.cacheFilePathFor(track.path), 30);
+
+    final audioFile = addAudioCache(id, 1000);
+    write('${audioFile.path}.metadata', 5);
+    write('${audioFile.path}.part', 7);
+    write(WaveformExtractor.cacheFilePathFor(audioFile.path), 40);
+    write('${AppDirs.VIDEOS_CACHE_TEMP}${id}_360.mp4', 9);
+
+    write('${AppDirs.YT_THUMBNAILS}$id.png', 200);
+    write('${AppDirs.YT_PALETTES}$id.palette', 2);
+    write('${AppDirs.YT_THUMBNAILS}EXT_$id.png', 300);
+    write('${AppDirs.YT_THUMBNAILS}temp$sep$id.png', 50);
+    write('${AppDirs.LYRICS}$id.txt', 11);
+    write('${AppDirs.SUBTITLES}${id}_.en.vtt', 3);
+    write('${AppDirs.SUBTITLES}${id}_a.en.vtt', 4);
+    write('${AppDirs.SUBTITLES}other_id_00_.en.vtt', 4);
+
+    expect(await ItemsCache.hasAnything([track]), true);
+    final cache = await ItemsCache.collect(tracks: [track], videoIds: [id]);
+
+    expect(cache.groups.map((e) => e.type), [
+      ItemCacheType.video,
+      ItemCacheType.audio,
+      ItemCacheType.artwork,
+      ItemCacheType.lyrics,
+      ItemCacheType.subtitles,
+      ItemCacheType.waveform,
+    ]);
+    expect(titlesOf(cache, ItemCacheType.video), [lang.deleteTempFiles]);
+    expect(titlesOf(cache, ItemCacheType.audio), ['128kb/s', lang.deleteTempFiles]);
+    expect(groupOf(cache, ItemCacheType.audio)!.entries.first.paths, [audioFile.path, '${audioFile.path}.metadata']);
+    expect(titlesOf(cache, ItemCacheType.artwork), [lang.artwork, lang.thumbnails, '${lang.thumbnails} (${lang.video})', lang.deleteTempFiles]);
+    expect(groupOf(cache, ItemCacheType.artwork)!.totalSize, 100 + 1 + 200 + 2 + 300 + 50);
+    expect(titlesOf(cache, ItemCacheType.lyrics), ['${lang.lyrics} (${lang.synced})', '${lang.lyrics} (${lang.plain}) • ${lang.youtube}']);
+    expect(titlesOf(cache, ItemCacheType.subtitles), ['English', 'English • ${lang.autoGenerated}']);
+    expect(groupOf(cache, ItemCacheType.waveform)!.entries.single.size, 20 + 30 + 40);
+
+    final allSize = cache.groups.fold(0, (p, g) => p + g.totalSize);
+    final allPaths = cache.groups.expand((g) => g.entries).expand((e) => e.paths).toList();
+    expect(allPaths.toSet().length, allPaths.length);
+    expect(allSize, allPaths.fold(0, (p, path) => p + File(path).lengthSync()));
+  });
+
+  test('a VIP video keeps its video and audio cache out, the rest stays', () async {
+    const id = 'ccccccccccc';
+    final track = await addTrack('vip id=$id.wav');
+    final audioFile = addAudioCache(id, 1000);
+    write(WaveformExtractor.cacheFilePathFor(audioFile.path), 40);
+    VideoController.inst.videosPriorityManager.setVideoPriority(id, CacheVideoPriority.VIP);
+
+    final cache = await ItemsCache.collect(tracks: [track], videoIds: []);
+    expect(groupOf(cache, ItemCacheType.audio), isNull);
+    expect(groupOf(cache, ItemCacheType.waveform)!.totalSize, 40);
+  });
+
+  test('a track with only an audio cache can open the dialog', () async {
+    const id = 'ddddddddddd';
+    final track = await addTrack('audio only id=$id.wav');
+    addAudioCache(id, 1000);
+    expect(await ItemsCache.hasAnything([track]), true);
+  });
+
+  test('the open check finds files past the first chunk and files that need a listing', () async {
+    final tracks = <Track>[];
+    for (int i = 0; i < 230; i++) {
+      final id = 'f${i.toString().padLeft(10, '0')}';
+      tracks.add(await addTrack('chunks${sep}track $i id=$id.wav'));
+    }
+    expect(await ItemsCache.hasAnything(tracks), false);
+
+    final lastId = tracks.last.youtubeID;
+    final subtitleFile = write('${AppDirs.SUBTITLES}${lastId}_.en.vtt', 3);
+    expect(await ItemsCache.hasAnything(tracks), true);
+    subtitleFile.deleteSync();
+
+    write('${AppDirs.LYRICS}${tracks.last.filename}.txt', 3);
+    expect(await ItemsCache.hasAnything(tracks), true);
+  });
+
+  test('several tracks merge files of the same kind, shared files counted once', () async {
+    final first = await addTrack('multi${sep}first.wav');
+    final second = await addTrack('multi${sep}second.wav');
+    write(first.pathToImage, 100);
+    write(second.pathToImage, 200);
+    write('${AppDirs.LYRICS}${first.filename}.lrc', 10);
+    write('${AppDirs.LYRICS}${second.filename}.lrc', 20);
+    write('${AppDirs.LYRICS}${second.filename}.txt', 30);
+
+    final cache = await ItemsCache.collect(tracks: [first, second, first], videoIds: []);
+    final artwork = groupOf(cache, ItemCacheType.artwork)!;
+    expect(artwork.entries.single.mergedCount, 2);
+    expect(artwork.totalSize, 300);
+    final lyrics = groupOf(cache, ItemCacheType.lyrics)!;
+    expect(lyrics.entries.map((e) => (e.title, e.mergedCount, e.size)), [
+      ('${lang.lyrics} (${lang.synced})', 2, 30),
+      ('${lang.lyrics} (${lang.plain})', 1, 30),
+    ]);
+  });
+
+  test('deleting removes the files and what refers to them', () async {
+    const id = 'eeeeeeeeeee';
+    final track = await addTrack('delete id=$id.wav');
+    final artworkFile = write(track.pathToImage, 100);
+    final audioFile = addAudioCache(id, 1000);
+    final subtitleFile = write('${AppDirs.SUBTITLES}${id}_.en.vtt', 3);
+    Indexer.inst.artworksInStorage.value = 10;
+    Indexer.inst.artworksSizeInStorage.value = 1000;
+
+    final cache = await ItemsCache.collect(tracks: [track], videoIds: []);
+    final entries = cache.groups.expand((g) => g.entries).toList();
+    await cache.deleteEntries(entries);
+
+    expect(artworkFile.existsSync(), false);
+    expect(audioFile.existsSync(), false);
+    expect(subtitleFile.existsSync(), false);
+    expect(AudioCacheController.inst.audioCacheMap[id], isEmpty);
+    expect(Indexer.inst.artworksInStorage.value, 9);
+    expect(Indexer.inst.artworksSizeInStorage.value, 900);
+    expect(await ItemsCache.hasAnything([track]), false);
+  });
+}
+
+Uint8List _silentWavBytes() {
+  const sampleRate = 8000;
+  const dataLength = sampleRate * 2;
+  final bytes = ByteData(44 + dataLength);
+  void ascii(int offset, String text) {
+    for (int i = 0; i < text.length; i++) {
+      bytes.setUint8(offset + i, text.codeUnitAt(i));
+    }
+  }
+
+  ascii(0, 'RIFF');
+  bytes.setUint32(4, 36 + dataLength, Endian.little);
+  ascii(8, 'WAVE');
+  ascii(12, 'fmt ');
+  bytes.setUint32(16, 16, Endian.little);
+  bytes.setUint16(20, 1, Endian.little);
+  bytes.setUint16(22, 1, Endian.little);
+  bytes.setUint32(24, sampleRate, Endian.little);
+  bytes.setUint32(28, sampleRate * 2, Endian.little);
+  bytes.setUint16(32, 2, Endian.little);
+  bytes.setUint16(34, 16, Endian.little);
+  ascii(36, 'data');
+  bytes.setUint32(40, dataLength, Endian.little);
+  return bytes.buffer.asUint8List();
+}

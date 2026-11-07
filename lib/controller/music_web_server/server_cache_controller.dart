@@ -150,7 +150,7 @@ class ServerCacheController {
       if (!track.isNetwork) continue;
       final file = cacheFileForPath(track.path);
       await file.tryDeleting();
-      await File('${file.path}$_kMetadataExtension').tryDeleting();
+      await metadataFileOf(file).tryDeleting();
       if (kept.remove(track.path)) {
         changed = true;
         _priorityDb.delete(track.path);
@@ -229,6 +229,7 @@ class ServerCacheController {
   }
 
   static File _partFileOf(File file) => File('${file.path}$_kPartExtension');
+  static File metadataFileOf(File file) => File('${file.path}$_kMetadataExtension');
 
   static String _stripExtraExtension(String path) {
     if (path.endsWith(_kPartExtension)) return path.substring(0, path.length - _kPartExtension.length);
