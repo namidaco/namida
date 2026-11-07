@@ -11,7 +11,7 @@ class _LyricsDocument {
   static final _spacesRegex = RegExp(r'\s+');
 
   var lines = <_EditorLine>[];
-  var tags = const _LyricsTags();
+  var tags = const <String, String>{};
 
   /// the `[length:]` the lines are timed against while the item duration is unknown, see [stretchToDuration].
   String? _unstretchedLength;
@@ -19,6 +19,7 @@ class _LyricsDocument {
   var _lineResolver = LrcLineResolver.empty;
   var flags = Uint8List(0);
   int untimedCount = 0;
+  int timedCount = 0;
 
   bool isUntimed(int index) => flags[index] & _kFlagUntimed != 0;
   bool hasWarning(int index) => flags[index] & (_kFlagOutOfOrder | _kFlagPastEnd) != 0;
@@ -35,7 +36,7 @@ class _LyricsDocument {
   void loadSource(String source, {required int durationMS}) {
     final lrc = source.isValidLRC() ? source.parseLRC() : null;
     if (lrc == null) {
-      tags = const _LyricsTags();
+      tags = const {};
       _unstretchedLength = null;
       lines = _linesFromPlainText(source);
       return;
@@ -44,11 +45,14 @@ class _LyricsDocument {
   }
 
   void loadLrc(Lrc lrc, {required int durationMS}) {
-    tags = _LyricsTags.fromLrc(lrc);
+    tags = Map.fromEntries(lrc.tags.entries.where(_isTagKeptOnLoad));
     _unstretchedLength = durationMS > 0 ? null : lrc.length;
     final stretchMultiplier = _stretchMultiplierOf(lrc.length, durationMS);
     lines = _linesFromLrc(lrc, stretchMultiplier: stretchMultiplier);
   }
+
+  /// the offset is baked into the times on load and the length is written on save.
+  static bool _isTagKeptOnLoad(MapEntry<String, String> tag) => tag.key != Lrc.kOffsetTag && tag.key != Lrc.kLengthTag;
 
   /// lines loaded while the item duration was unknown get the stretch [loadLrc] gives them with it, returns the multiplier applied.
   double? stretchToDuration(int durationMS) {
@@ -72,10 +76,34 @@ class _LyricsDocument {
     final lines = <_EditorLine>[];
     for (final rawLine in cleanSource.split('\n')) {
       final text = normalizeText(rawLine);
-      if (text.isEmpty) continue;
+      if (text.isEmpty) {
+        _addGap(lines);
+        continue;
+      }
       lines.add(_EditorLine(text: text));
     }
+    _removeTrailingGaps(lines);
     return lines;
+  }
+
+  /// an empty line between verses, a run of them is one and there is none at the top.
+  static void _addGap(List<_EditorLine> lines) {
+    final previous = lines.lastOrNull;
+    if (previous == null || previous.isGap) return;
+    lines.add(_EditorLine(text: '', isNote: true));
+  }
+
+  static void _removeTrailingGaps(List<_EditorLine> lines) {
+    while (lines.isNotEmpty && lines.last.isGap) {
+      lines.removeLast();
+    }
+  }
+
+  static void _addNotes(List<_EditorLine> lines, List<String> noteTexts) {
+    for (final noteText in noteTexts) {
+      final text = normalizeText(noteText);
+      lines.add(_EditorLine(text: text, isNote: true));
+    }
   }
 
   /// [Lrc.offset] and the [stretchMultiplier] are applied, so the editor works with what is heard.
@@ -95,7 +123,10 @@ class _LyricsDocument {
     final keepSingers = singers.length > 1;
 
     final lines = <_EditorLine>[];
+    final noteTextsByIndex = lrc.groupUntimedTexts();
     for (final l in lrc.lyrics) {
+      final noteTexts = noteTextsByIndex.remove(l.originalIndex);
+      if (noteTexts != null) _addNotes(lines, noteTexts);
       final isBackground = l.isBGLyrics;
       final personPre = l.person;
       final person = isBackground ? 0 : (keepSingers ? personPre : null);
@@ -144,6 +175,9 @@ class _LyricsDocument {
         ),
       );
     }
+    for (final noteTexts in noteTextsByIndex.values) {
+      _addNotes(lines, noteTexts);
+    }
     return lines;
   }
 
@@ -158,8 +192,10 @@ class _LyricsDocument {
     var previousStartMS = -1;
     var untimed = 0;
     for (int i = 0; i < count; i++) {
-      final startMS = lines[i].startMS;
+      final line = lines[i];
+      final startMS = line.startMS;
       if (startMS == null) {
+        if (line.isNote) continue;
         newFlags[i] |= _kFlagUntimed;
         untimed++;
         continue;
@@ -181,6 +217,7 @@ class _LyricsDocument {
     _lineResolver = LrcLineResolver(startsMS, indices);
     flags = newFlags;
     untimedCount = untimed;
+    timedCount = timed.length;
   }
 
   static int _compareTimed(({int startMS, int index}) a, ({int startMS, int index}) b) {
@@ -216,8 +253,18 @@ class _LyricsDocument {
 
   List<_EditorLine> snapshot() => [for (final l in lines) l.copy()];
 
+  /// the first line from [index] on that stamping goes to, -1 when there is none.
+  int stampableIndexFrom(int index) {
+    for (int i = index; i < lines.length; i++) {
+      if (!lines[i].isNote) return i;
+    }
+    return -1;
+  }
+
+  /// a note given a time becomes a normal line.
   void stampLine(int index, int positionMS) {
     final line = lines[index];
+    line.isNote = false;
     final oldStartMS = line.startMS;
     if (oldStartMS != null && line.words != null) {
       line.shiftBy(positionMS - oldStartMS);
@@ -326,6 +373,7 @@ class _LyricsDocument {
   String toPlainText() => lines.map((e) => e.text).join('\n');
 
   /// lines that stayed or were edited in place keep their timings, see [_pairByDiff].
+  /// new empty lines are gaps, and text typed into a gap makes it a normal line.
   void applyPlainText(String text) {
     final newTexts = text.split('\n').map(normalizeText).toFixedList();
     final oldTexts = lines.map((e) => e.text).toFixedList();
@@ -335,20 +383,25 @@ class _LyricsDocument {
       final newText = newTexts[j];
       final oldIndex = pairs[j];
       if (oldIndex < 0) {
-        if (newText.isEmpty) continue;
-        newLines.add(_EditorLine(text: newText));
+        if (newText.isEmpty) {
+          _addGap(newLines);
+        } else {
+          newLines.add(_EditorLine(text: newText));
+        }
         continue;
       }
       final line = lines[oldIndex];
+      if (line.isGap && newText.isNotEmpty) line.isNote = false;
       if (line.text != newText) line.setText(newText);
       newLines.add(line);
     }
+    _removeTrailingGaps(newLines);
     lines = newLines;
   }
 
   // ==================== saving ====================
 
-  /// untimed lines are left out, lines are written in time order.
+  /// untimed lines are left out, lines are written in time order, notes above the line they were above.
   String toLrcText({required int durationMS}) {
     final timed = <({int startMS, int index})>[];
     for (int i = 0; i < lines.length; i++) {
@@ -359,10 +412,12 @@ class _LyricsDocument {
 
     final canWriteBackground = hasTimedWords();
     final lrcLines = <LrcLine>[];
+    final lrcIndexByLineIndex = Int32List(lines.length)..fillRange(0, lines.length, -1);
     var hasEnhanced = false;
     for (int k = 0; k < timed.length; k++) {
       final entry = timed[k];
       final line = lines[entry.index];
+      lrcIndexByLineIndex[entry.index] = lrcLines.length;
       final nextLineStartMS = k + 1 < timed.length ? timed[k + 1].startMS : null;
       var parts = line.buildParts(entry.startMS, nextLineStartMS);
       final isBackground = line.isBackground && canWriteBackground;
@@ -399,29 +454,44 @@ class _LyricsDocument {
       }
     }
 
-    final tags = this.tags;
     var length = _unstretchedLength;
     if (length == null && durationMS > 0) length = Lyrics.formatLengthTag(durationMS);
+    final lrcTags = {...tags, Lrc.kLengthTag: ?length};
     final lrc = Lrc(
       type: hasEnhanced ? LrcTypes.enhanced : LrcTypes.simple,
       lyrics: lrcLines,
-      artist: tags.artist,
-      album: tags.album,
-      title: tags.title,
-      author: tags.author,
-      creator: tags.creator,
-      program: tags.program,
-      version: tags.version,
-      language: tags.language,
-      length: length,
+      tags: lrcTags,
+      untimedLines: _notesToUntimedLines(lrcIndexByLineIndex),
     );
     return lrc.format();
+  }
+
+  /// notes above a line left out go above the next saved line.
+  List<LrcUntimedLine> _notesToUntimedLines(Int32List lrcIndexByLineIndex) {
+    final untimedLines = <LrcUntimedLine>[];
+    var pendingStart = 0;
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (line.isNote) continue;
+      final lrcIndex = lrcIndexByLineIndex[i];
+      if (lrcIndex < 0) continue;
+      for (int n = pendingStart; n < i; n++) {
+        final note = lines[n];
+        if (note.isNote) untimedLines.add(LrcUntimedLine(text: note.text, beforeIndex: lrcIndex));
+      }
+      pendingStart = i + 1;
+    }
+    for (int n = pendingStart; n < lines.length; n++) {
+      final note = lines[n];
+      if (note.isNote) untimedLines.add(LrcUntimedLine(text: note.text, beforeIndex: null));
+    }
+    return untimedLines;
   }
 
   // ==================== drafts ====================
 
   Map<String, dynamic> toJson() => {
-    'tags': tags.toJson(),
+    'tags': tags,
     'lines': [for (final l in lines) l.toJson()],
     'length': ?_unstretchedLength,
   };
@@ -429,7 +499,7 @@ class _LyricsDocument {
   void loadJson(Map<String, dynamic> json, {required int durationMS}) {
     final tagsJson = json['tags'];
     final linesJson = json['lines'] as List? ?? const [];
-    final newTags = tagsJson is Map ? _LyricsTags.fromJson(tagsJson.cast<String, dynamic>()) : const _LyricsTags();
+    final newTags = tagsJson is Map ? tagsJson.cast<String, String>() : const <String, String>{};
     tags = newTags;
     lines = [for (final l in linesJson) _EditorLine.fromJson((l as Map).cast<String, dynamic>())];
     _unstretchedLength = json['length'] as String?;
@@ -448,15 +518,21 @@ class _EditorLine {
   /// null while the line is only line synced.
   List<_EditorWord>? words;
 
+  /// a line kept without a time (section header, empty line between verses), stamping skips it.
+  bool isNote;
+
   _EditorLine({
     this.startMS,
     required this.text,
     this.translation = '',
     this.person,
     this.words,
+    this.isNote = false,
   });
 
   bool get isBackground => person == 0;
+
+  bool get isGap => isNote && text.isEmpty;
 
   _EditorLine copy() {
     final words = this.words;
@@ -467,6 +543,7 @@ class _EditorLine {
       translation: translation,
       person: person,
       words: wordsCopy,
+      isNote: isNote,
     );
   }
 
@@ -596,6 +673,7 @@ class _EditorLine {
       if (translation.isNotEmpty) 'tr': translation,
       'p': ?person,
       if (words != null) 'w': [for (final w in words) w.toJson()],
+      if (isNote) 'n': true,
     };
   }
 
@@ -608,6 +686,7 @@ class _EditorLine {
       translation: json['tr'] as String? ?? '',
       person: json['p'] as int?,
       words: words,
+      isNote: json['n'] == true,
     );
   }
 }
@@ -692,65 +771,6 @@ class _EditorWord {
         (c >= 0x4E00 && c <= 0x9FFF) || // han
         (c >= 0xF900 && c <= 0xFAFF); // han compatibility
   }
-}
-
-class _LyricsTags {
-  final String? artist;
-  final String? album;
-  final String? title;
-  final String? author;
-  final String? creator;
-  final String? program;
-  final String? version;
-  final String? language;
-
-  const _LyricsTags({
-    this.artist,
-    this.album,
-    this.title,
-    this.author,
-    this.creator,
-    this.program,
-    this.version,
-    this.language,
-  });
-
-  factory _LyricsTags.fromLrc(Lrc lrc) {
-    return _LyricsTags(
-      artist: lrc.artist,
-      album: lrc.album,
-      title: lrc.title,
-      author: lrc.author,
-      creator: lrc.creator,
-      program: lrc.program,
-      version: lrc.version,
-      language: lrc.language,
-    );
-  }
-
-  factory _LyricsTags.fromJson(Map<String, dynamic> json) {
-    return _LyricsTags(
-      artist: json['ar'] as String?,
-      album: json['al'] as String?,
-      title: json['ti'] as String?,
-      author: json['au'] as String?,
-      creator: json['by'] as String?,
-      program: json['re'] as String?,
-      version: json['ve'] as String?,
-      language: json['la'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'ar': ?artist,
-    'al': ?album,
-    'ti': ?title,
-    'au': ?author,
-    'by': ?creator,
-    're': ?program,
-    've': ?version,
-    'la': ?language,
-  };
 }
 
 /// for each item of [b], the index of the item of [a] it continues, or -1 when it's new.

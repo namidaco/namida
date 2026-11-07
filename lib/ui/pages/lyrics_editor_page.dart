@@ -464,8 +464,10 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
   void _onStampDown() {
     if (!_isCurrentItem.value) return;
     final lines = _doc.lines;
-    final index = _selectedIndex.value;
-    if (index >= lines.length) return;
+    final selectedIndex = _selectedIndex.value;
+    final index = _doc.stampableIndexFrom(selectedIndex);
+    if (index < 0) return;
+    if (index != selectedIndex) _select(index);
     final positionMS = _stampPositionMS();
     VibratorController.verylight();
 
@@ -473,7 +475,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     final isLineStamp = !_isWordMode.value || line.text.isEmpty;
     if (isLineStamp) {
       _edit(() => _doc.stampLine(index, positionMS));
-      _select(index + 1);
+      _selectNextStampable(index + 1);
       return;
     }
 
@@ -501,8 +503,14 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     if (nextWordIndex < wordsCount) {
       _wordIndex.value = nextWordIndex;
     } else {
-      _select(pressed.line + 1);
+      _selectNextStampable(pressed.line + 1);
     }
+  }
+
+  void _selectNextStampable(int index) {
+    final stampableIndex = _doc.stampableIndexFrom(index);
+    final finalIndex = stampableIndex < 0 ? index : stampableIndex;
+    _select(finalIndex);
   }
 
   void _nudgeSelected(int deltaMS, {bool saveUndo = true}) {
@@ -601,7 +609,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     final lines = _doc.lines;
     if (lines.isEmpty) return;
     final untimedCount = _doc.untimedCount;
-    final isSynced = untimedCount < lines.length;
+    final isSynced = _doc.timedCount > 0;
     if (isSynced && untimedCount > 0) {
       final confirmed = await _confirmUntimedLines();
       if (!confirmed) return;

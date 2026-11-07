@@ -295,21 +295,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               final tfoffset = ct == '' ? null : int.tryParse(offsetController.text);
               if (tfoffset != null) newOffset.value = tfoffset;
               if (lrc != null) {
-                final newLRC = Lrc(
-                  type: lrc.type,
-                  lyrics: lrc.lyrics,
-                  artist: lrc.artist,
-                  album: lrc.album,
-                  title: lrc.title,
-                  creator: lrc.creator,
-                  author: lrc.author,
-                  program: lrc.program,
-                  version: lrc.version,
-                  length: lrc.length,
-                  offset: newOffset.value,
-                  language: lrc.language,
-                );
-                final lyricsString = newLRC.format();
+                // -- only the tag changes, other formats have no tags and are saved as lrc
+                final offsetText = newOffset.value.toString();
+                var lyricsString = LyricsParser.setLrcTag(l.lyrics, Lrc.kOffsetTag, offsetText);
+                if (lyricsString == null) {
+                  final newTags = {...lrc.tags, Lrc.kOffsetTag: offsetText};
+                  lyricsString = lrc.withTags(newTags).format();
+                }
                 final file = await saveLyricsByUser(lyricsString, true);
                 final newLModel = LyricsModel(
                   lyrics: lyricsString,

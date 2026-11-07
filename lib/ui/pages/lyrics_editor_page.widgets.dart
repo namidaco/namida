@@ -280,18 +280,34 @@ class _LineRow extends StatelessWidget {
     final hasTranslation = translation.isNotEmpty;
     final person = line.person;
 
-    final textWidget = line.text.isEmpty
-        ? const NIcon(
-            Broken.music,
-            size: 18.0,
-            color: NColors(.onSurface, opacity: 0.5),
-          )
-        : NamidaText(
-            line.text,
-            style: NText.medium,
-            maxLines: hasTranslation ? 1 : 2,
-            overflow: TextOverflow.ellipsis,
-          );
+    final isNote = line.isNote;
+    final Widget textWidget;
+    if (line.isGap) {
+      textWidget = const NamidaContainerDivider(
+        width: 42.0,
+      );
+    } else if (isNote) {
+      textWidget = NamidaText(
+        line.text,
+        style: NText.medium,
+        color: const NColors(.onSurface, opacity: 0.5),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    } else if (line.text.isEmpty) {
+      textWidget = const NIcon(
+        Broken.music,
+        size: 18.0,
+        color: NColors(.onSurface, opacity: 0.5),
+      );
+    } else {
+      textWidget = NamidaText(
+        line.text,
+        style: NText.medium,
+        maxLines: hasTranslation ? 1 : 2,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
 
     final lineContentWidget = Row(
       children: [
@@ -302,7 +318,7 @@ class _LineRow extends StatelessWidget {
                 : hasWarning
                 ? Colors.orange
                 : colors.onSurface;
-            return Text(
+            final timestampWidget = Text(
               timestampText,
               style: NText.small
                   .of(context)
@@ -312,6 +328,14 @@ class _LineRow extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
             );
+            // -- keeps the text aligned with the other lines
+            if (isNote) {
+              return Visibility.maintain(
+                visible: false,
+                child: timestampWidget,
+              );
+            }
+            return timestampWidget;
           },
         ),
         const SizedBox(

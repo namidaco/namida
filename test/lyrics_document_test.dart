@@ -11,6 +11,49 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/pages/lyrics_editor_page.dart';
 
 void main() {
+  group('untimed lines and tags', () {
+    test('headers, empty lines and unknown tags are saved where they were', () {
+      const source = '[ar:A]\n[id:x]\n[offset:100]\n[Chorus]\n[00:01.00]a\n\n[Verse]\n[00:02.00]b\nend';
+      final doc = debugCreateLyricsDocument()..loadSource(source, durationMS: 0);
+      expect(doc.lines.map((e) => (e.text, e.isNote)), [('[Chorus]', true), ('a', false), ('', true), ('[Verse]', true), ('b', false), ('end', true)]);
+      expect(doc.toLrcText(durationMS: 0), '[ar:A]\n[id:x]\n[Chorus]\n[00:00.90]a\n\n[Verse]\n[00:01.90]b\nend\n');
+    });
+
+    test('notes are neither timed nor untimed, stamping skips them and a stamped note is a normal line', () {
+      final doc = debugCreateLyricsDocument()..loadSource('[Chorus]\n[00:01.00]a\n\n[00:02.00]b', durationMS: 0);
+      doc.refreshDerived(durationMS: 0);
+      expect((doc.timedCount, doc.untimedCount), (2, 0));
+      expect([doc.stampableIndexFrom(0), doc.stampableIndexFrom(2), doc.stampableIndexFrom(4)], [1, 3, -1]);
+      doc.stampLine(0, 500);
+      expect((doc.lines[0].isNote, doc.lines[0].startMS), (false, 500));
+    });
+
+    test('empty lines of plain text are gaps, one per run and none at the edges', () {
+      final doc = debugCreateLyricsDocument()..loadSource('\none\n\n\ntwo\n\n', durationMS: 0);
+      expect(doc.lines.map((e) => (e.text, e.isNote)), [('one', false), ('', true), ('two', false)]);
+      expect(doc.toPlainText(), 'one\n\ntwo');
+    });
+
+    test('text typed into a gap makes a normal line, new empty lines are gaps', () {
+      final doc = debugCreateLyricsDocument()..loadSource('one\n\ntwo', durationMS: 0);
+      doc.applyPlainText('one\nnew\ntwo\n\nthree\n');
+      expect(doc.lines.map((e) => (e.text, e.isNote)), [('one', false), ('new', false), ('two', false), ('', true), ('three', false)]);
+    });
+
+    test('notes above a line that is left out go above the next saved line', () {
+      final doc = debugCreateLyricsDocument()..loadSource('[00:01.00]a\n[Verse]\n[00:02.00]b\nend', durationMS: 0);
+      doc.applyPlainText('a\n[Verse]\nnot synced yet\nb\nend');
+      expect(doc.toLrcText(durationMS: 0), '[00:01.00]a\n[Verse]\n[00:02.00]b\nend\n');
+    });
+
+    test('drafts keep notes and tags', () {
+      final doc = debugCreateLyricsDocument()..loadSource('[ar:A]\n[id:x]\n[Chorus]\n[00:01.00]a', durationMS: 0);
+      final restored = debugCreateLyricsDocument()..loadJson(doc.toJson(), durationMS: 0);
+      expect(restored.tags, {'ar': 'A', 'id': 'x'});
+      expect(restored.lines.map((e) => (e.text, e.isNote)), [('[Chorus]', true), ('a', false)]);
+    });
+  });
+
   group('round trip', () {
     test('saving keeps every line, word and timing of the dart_lrc fixtures', () {
       for (final (:name, :lrc) in _lrcFixtures()) {
