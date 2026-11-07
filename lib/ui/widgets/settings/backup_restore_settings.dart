@@ -90,6 +90,7 @@ class BackupAndRestore extends SettingSubpageProvider {
         title: () => lang.importData,
         aliases: () => [
           ..._importSources.map(JsonToHistoryParser.getImportTitle),
+          ..._moreImportSources.map(JsonToHistoryParser.getImportTitle),
           ...DataImportType.values.map((e) => e.toText()),
         ],
         tile: (args) => _ImportDataTile(
@@ -99,11 +100,12 @@ class BackupAndRestore extends SettingSubpageProvider {
     ],
   ];
 
-  static const _importSources = [TrackSource.youtube, TrackSource.lastfm, TrackSource.spotify, TrackSource.listenbrainz];
+  static const _importSources = [TrackSource.youtube, TrackSource.lastfm, TrackSource.spotify];
+  static const _moreImportSources = [TrackSource.listenbrainz, TrackSource.appleMusic];
 
   static List<DataImportType> _importTypesOf(TrackSource source) => switch (source) {
     TrackSource.youtube || TrackSource.youtubeMusic => const [DataImportType.history, DataImportType.favourites, DataImportType.playlists, DataImportType.subscriptions],
-    TrackSource.spotify || TrackSource.listenbrainz => const [DataImportType.history, DataImportType.favourites],
+    TrackSource.spotify || TrackSource.listenbrainz || TrackSource.appleMusic => const [DataImportType.history, DataImportType.favourites],
     TrackSource.lastfm => const [DataImportType.history],
     TrackSource.local => const [],
   };
@@ -457,6 +459,12 @@ class BackupAndRestore extends SettingSubpageProvider {
           source: source,
           guideWithLink: lang.importListenBrainzHistoryGuide(link: 'https://listenbrainz.org/settings/export'),
           allowedExtensions: NamidaFileExtensionsWrapper.jsonlAndZip,
+        );
+      case TrackSource.appleMusic:
+        _importGeneralNonYTSource(
+          source: source,
+          guideWithLink: lang.importAppleMusicHistoryGuide(link: 'https://privacy.apple.com'),
+          allowedExtensions: NamidaFileExtensionsWrapper.csvJsonAndZip,
         );
       case TrackSource.local:
         break;
@@ -901,6 +909,14 @@ class _ImportDataTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final typesText = DataImportType.values.map((e) => e.toText()).join(', ');
+    final cards = <Widget>[
+      ...BackupAndRestore._importSources.map(
+        (e) => _ImportSourceCard(
+          source: e,
+        ),
+      ),
+      const _ImportMoreSourcesCard(),
+    ];
     return DecoratedBox(
       decoration: BoxDecoration(
         color: bgColor,
@@ -917,16 +933,14 @@ class _ImportDataTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 8.0),
             child: Row(
-              children: BackupAndRestore._importSources
+              children: cards
                   .map(
                     (e) => Flexible(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: _ImportSourceCard._kMaxWidth),
+                        constraints: const BoxConstraints(maxWidth: _ImportCard._kMaxWidth),
                         child: SizedBox(
                           width: double.infinity,
-                          child: _ImportSourceCard(
-                            source: e,
-                          ),
+                          child: e,
                         ),
                       ),
                     ),
@@ -946,8 +960,6 @@ class _ImportDataTile extends StatelessWidget {
 }
 
 class _ImportSourceCard extends StatelessWidget {
-  static const _kMaxWidth = 148.0;
-
   final TrackSource source;
 
   const _ImportSourceCard({
@@ -957,6 +969,59 @@ class _ImportSourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sourceText = source.toText();
+    return _ImportCard(
+      logo: _ImportSourceLogo(
+        source: source,
+        size: _ImportCard._kLogoSize,
+      ),
+      title: sourceText,
+      parsingSources: [source],
+      onTap: () => BackupAndRestore._importFrom(source),
+    );
+  }
+}
+
+class _ImportMoreSourcesCard extends StatelessWidget {
+  const _ImportMoreSourcesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      children: () => BackupAndRestore._moreImportSources.map(
+        (e) => _ImportSourceMenuItem(
+          source: e,
+        ),
+      ),
+      childBuilder: (openMenu) => _ImportCard(
+        logo: const _ImportSourcesLogosStack(
+          sources: BackupAndRestore._moreImportSources,
+        ),
+        title: lang.more,
+        parsingSources: BackupAndRestore._moreImportSources,
+        onTap: openMenu,
+      ),
+    );
+  }
+}
+
+class _ImportCard extends StatelessWidget {
+  static const _kMaxWidth = 148.0;
+  static const _kLogoSize = 24.0;
+
+  final Widget logo;
+  final String title;
+  final List<TrackSource> parsingSources;
+  final VoidCallback onTap;
+
+  const _ImportCard({
+    required this.logo,
+    required this.title,
+    required this.parsingSources,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.passthrough,
       children: [
@@ -964,25 +1029,16 @@ class _ImportSourceCard extends StatelessWidget {
           borderRadius: 10.0,
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
           bgColor: NColors.cardTheme,
-          onTap: () => BackupAndRestore._importFrom(source),
+          onTap: onTap,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              BorderRadiusClip(
-                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                child: Image.asset(
-                  'assets/icons/${source.name}.png',
-                  width: 24.0,
-                  height: 24.0,
-                ),
-              ),
-              const SizedBox(
-                height: 6.0,
-              ),
+              logo,
+              const SizedBox(height: 5.0),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: NamidaText(
-                  sourceText,
+                  title,
                   style: const NText(.small, size: .s12),
                   maxLines: 1,
                 ),
@@ -990,16 +1046,140 @@ class _ImportSourceCard extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(
-          top: 2.0,
-          right: 2.0,
-          child: ParsingJsonPercentage(
-            size: 26.0,
-            source: source,
-            forceDisplay: false,
+        ...parsingSources.map(
+          (e) => Positioned(
+            top: 2.0,
+            right: 2.0,
+            child: ParsingJsonPercentage(
+              size: 26.0,
+              source: e,
+              forceDisplay: false,
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ImportSourceLogo extends StatelessWidget {
+  final TrackSource source;
+  final double size;
+
+  const _ImportSourceLogo({
+    required this.source,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = (size * 0.25).multipliedRadius;
+    return BorderRadiusClip(
+      borderRadius: BorderRadius.circular(radius),
+      child: Image.asset(
+        'assets/icons/${source.name}.png',
+        width: size,
+        height: size,
+      ),
+    );
+  }
+}
+
+class _ImportSourcesLogosStack extends StatelessWidget {
+  static const _kLogoStep = 17.0;
+  static const _kRingWidth = 1.5;
+
+  final List<TrackSource> sources;
+
+  const _ImportSourcesLogosStack({
+    required this.sources,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const logoSize = _ImportCard._kLogoSize * 0.8;
+    final width = logoSize + _kLogoStep * (sources.length - 1);
+    final ringRadius = (logoSize * 0.25).multipliedRadius + _kRingWidth;
+    return SizedBox(
+      height: logoSize,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: SizedBox(
+          width: width,
+          height: logoSize,
+          child: Stack(
+            // -- rings overflow into the card padding
+            clipBehavior: Clip.none,
+            children: sources.indexed.map(
+              (e) {
+                final (index, source) = e;
+                final left = index * _kLogoStep - _kRingWidth;
+                return Positioned(
+                  left: left,
+                  top: -_kRingWidth,
+                  child: NContainer(
+                    padding: const EdgeInsets.all(_kRingWidth),
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.cardTheme,
+                      borderRadius: BorderRadius.circular(ringRadius),
+                    ),
+                    child: _ImportSourceLogo(
+                      source: source,
+                      size: logoSize,
+                    ),
+                  ),
+                );
+              },
+            ).toFixedList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImportSourceMenuItem extends StatelessWidget {
+  final TrackSource source;
+
+  const _ImportSourceMenuItem({
+    required this.source,
+  });
+
+  void _onTap() {
+    NamidaNavigator.inst.popMenu();
+    BackupAndRestore._importFrom(source);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sourceText = source.toText();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
+      child: NamidaInkWell(
+        borderRadius: 8.0,
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
+        onTap: _onTap,
+        child: Row(
+          children: [
+            _ImportSourceLogo(
+              source: source,
+              size: 20.0,
+            ),
+            const SizedBox(
+              width: 8.0,
+            ),
+            Expanded(
+              child: NamidaText(
+                sourceText,
+                style: NText.medium,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

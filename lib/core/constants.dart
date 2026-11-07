@@ -1536,6 +1536,7 @@ class NamidaFileExtensionsWrapper {
   static const jsonAndZip = NamidaFileExtensionsWrapper._({'json', ..._zipExtensions});
   static const jsonHtmlAndZip = NamidaFileExtensionsWrapper._({'json', 'html', ..._zipExtensions});
   static const jsonlAndZip = NamidaFileExtensionsWrapper._({'jsonl', ..._zipExtensions});
+  static const csvJsonAndZip = NamidaFileExtensionsWrapper._({'csv', 'json', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({..._lrcExtensions, 'txt'});
   static const lrc = NamidaFileExtensionsWrapper._({..._lrcExtensions});

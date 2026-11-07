@@ -1975,6 +1975,7 @@ extension TrackSourceL10n on TrackSource {
     TrackSource.lastfm => 'Last.fm',
     TrackSource.spotify => 'Spotify',
     TrackSource.listenbrainz => 'ListenBrainz',
+    TrackSource.appleMusic => 'Apple Music',
   };
 }
 

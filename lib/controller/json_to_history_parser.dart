@@ -26,6 +26,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -42,6 +43,8 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+
+part 'json_to_history_parser.apple_music.dart';
 
 class JsonToHistoryParser {
   static JsonToHistoryParser get inst => _instance;
@@ -558,6 +561,7 @@ class JsonToHistoryParser {
         final res = await _addGeneralSource(
           files: historyFiles,
           favouriteFiles: favouriteFiles,
+          lookupFiles: sourceFiles.lookups,
           addHistory: importHistory,
           matchAll: matchAll,
           oldestDate: oldestDate,
@@ -615,6 +619,9 @@ class JsonToHistoryParser {
 
         case TrackSource.listenbrainz:
           await addGeneralSource(_addListenBrainzSourceIsolate);
+
+        case TrackSource.appleMusic:
+          await addGeneralSource(_addAppleMusicSourceIsolate);
 
         case TrackSource.local:
           break;
@@ -714,23 +721,26 @@ class JsonToHistoryParser {
   ) async {
     final files = <File>[];
     final favouriteFiles = <File>[];
+    final lookupFiles = <File>[];
     final playlistsDirectories = <String>{};
     final subscriptionsFiles = <File>[];
-    final sourceFiles = (history: files, favourites: favouriteFiles, playlistsDirectories: playlistsDirectories, subscriptions: subscriptionsFiles);
+    final sourceFiles = (history: files, favourites: favouriteFiles, lookups: lookupFiles, playlistsDirectories: playlistsDirectories, subscriptions: subscriptionsFiles);
 
     late final zipManager = ZipManager.platform();
 
     Stream<FileSystemEntity> listDir(Directory dir) => dir.list(recursive: true, followLinks: false);
     FutureOr<void> executeFileEnsureZipExtracted(File file, void Function(File file) onMatch) async {
       if (NamidaFileExtensionsWrapper.zip.isPathValid(file.path)) {
-        final tempDir = (await tempZipMainDestination()).path;
-        final destinationDir = Directory(FileParts.joinPath(tempDir, file.path.getFilenameWOExt));
+        final tempDir = await tempZipMainDestination();
         try {
+          // -- unique dir cuz zips inside zips can share names
+          final zipName = file.path.getFilenameWOExt;
+          final destinationDir = await tempDir.createTemp(zipName);
           await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
           final zipContents = listDir(destinationDir);
           await for (final file in zipContents) {
             if (file is File) {
-              onMatch(file);
+              await executeFileEnsureZipExtracted(file, onMatch);
             }
           }
         } catch (_) {
@@ -833,6 +843,29 @@ class JsonToHistoryParser {
                   } else if (name != 'pinned_recording.jsonl') {
                     files.add(file);
                   }
+                }
+              },
+            );
+          }
+        }
+      case TrackSource.appleMusic:
+        for (final file in contents) {
+          progress++;
+          onProgress(progress, total);
+          if (file is File) {
+            await executeFileEnsureZipExtracted(
+              file,
+              (file) {
+                final nameLC = file.path.getFilename.toLowerCase();
+                if (NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+                  if (nameLC.contains('play activity')) {
+                    files.add(file);
+                  } else if (nameLC.contains('daily tracks')) {
+                    lookupFiles.add(file);
+                  }
+                } else if (NamidaFileExtensionsWrapper.json.isPathValid(file.path) && nameLC.contains('library tracks')) {
+                  favouriteFiles.add(file);
+                  lookupFiles.add(file);
                 }
               },
             );
@@ -1470,6 +1503,7 @@ class JsonToHistoryParser {
   Future<({List<int> historyDays, int addedHistoryCount, Map<_MissingListenEntry, List<int>> missingEntriesSorted, List<TrackWithDate> favourites})?> _addGeneralSource({
     required List<File> files,
     required List<File> favouriteFiles,
+    required List<File> lookupFiles,
     required bool addHistory,
     required bool matchAll,
     required DateTime? oldestDate,
@@ -1500,9 +1534,17 @@ class JsonToHistoryParser {
       newestDay: newestDate?.toDaysSince1970(),
       files: files,
       favouriteFiles: favouriteFiles,
+      lookupFiles: lookupFiles,
       addHistory: addHistory,
       matchAll: matchAll,
       artistsSplitConfig: ArtistsSplitConfig.settings(),
+      listenCountRule: (
+        minListenSeconds: settings.isTrackPlayedSecondsCount.value,
+        minListenPercentage: settings.isTrackPlayedPercentageCount.value,
+        seekSeconds: settings.player.seekDurationInSeconds.value,
+        seekPercentage: settings.player.seekDurationInPercentage.value,
+        isSeekPercentage: settings.player.isSeekDurationPercentage.value,
+      ),
       portProgressParsed: portProgressParsed.sendPort,
       portProgressMatched: portProgressMatched.sendPort,
       portLoadingProgress: portLoadingProgress.sendPort,
@@ -1766,6 +1808,37 @@ class JsonToHistoryParser {
           if (mbid != null) listenedRecordings[mbid] = info;
         }
         return info;
+      },
+    );
+  }
+
+  @visibleForTesting
+  // ignore: library_private_types_in_public_api
+  static Future<_GeneralSourceResult?> debugAddAppleMusicSource(_GeneralSourceParserParams params) => _addAppleMusicSourceIsolate(params);
+
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  static Future<_GeneralSourceResult?> _addAppleMusicSourceIsolate(_GeneralSourceParserParams params) async {
+    final importTimeMS = currentTimeMS;
+    final lookup = _AppleMusicLookup.fromFiles(params.lookupFiles, importTimeMS: importTimeMS);
+    // -- counting needs the merged listens, kept for the parsing after it
+    final listensByPath = <String, List<_AppleMusicListen>>{};
+    List<_AppleMusicListen> listensOf(File file) => listensByPath[file.path] ??= _AppleMusicPlayActivityParser.parse(file, params.listenCountRule);
+    return _addGeneralSourceIsolate<_AppleMusicListen, _GeneralSourceItemInfo>(
+      params,
+      trackSource: TrackSource.appleMusic,
+      favouritesParser: (
+        fileToItems: lookup.favouritesOf,
+        itemToInfo: (info) => info,
+      ),
+      loadingProgressCounterFn: (file) async => listensOf(file).length,
+      fileToItemsFn: listensOf,
+      itemToInfoFn: (listen) {
+        final artist = lookup.artistOf(listen);
+        return _GeneralSourceItemInfo(
+          itemArtist: artist,
+          itemTitle: listen.title,
+          dateMSSE: listen.dateMS,
+        );
       },
     );
   }
@@ -2474,7 +2547,8 @@ class _GeneralSourceResult {
   });
 }
 
-typedef _SourceFiles = ({List<File> history, List<File> favourites, Set<String> playlistsDirectories, List<File> subscriptions});
+/// [lookups] only help matching the history/favourites files (ex: apple music library for the artists).
+typedef _SourceFiles = ({List<File> history, List<File> favourites, List<File> lookups, Set<String> playlistsDirectories, List<File> subscriptions});
 
 typedef _TakeoutLikedVideo = ({String id, int dateMS});
 
@@ -2540,9 +2614,11 @@ typedef _GeneralSourceParserParams = ({
   int? newestDay,
   List<File> files,
   List<File> favouriteFiles,
+  List<File> lookupFiles,
   bool addHistory,
   bool matchAll,
   ArtistsSplitConfig artistsSplitConfig,
+  _ListenCountRule listenCountRule,
   SendPort portProgressParsed,
   SendPort portProgressMatched,
   SendPort portLoadingProgress,
