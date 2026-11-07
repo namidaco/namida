@@ -61,7 +61,8 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
 
   /// a list of distinct enum values, a customized one still gains values added to the enum afterwards, when the default has them.
   _SettingsEnumListKey<E> _keyEnumList<E extends Enum>(String name, List<E> fallback, List<E> values, {_SettingsCodec<E>? item, bool sync = true}) {
-    final key = _SettingsEnumListKey<E>._(this, name, _ProtectedList(fallback), _ListCodec(item ?? _EnumCodec(values), isUnique: true), sync, values);
+    final itemCodec = item ?? _EnumCodec(values);
+    final key = _SettingsEnumListKey<E>._(this, name, _ProtectedList(fallback), _ListCodec(itemCodec, isUnique: true), sync, values, itemCodec);
     key._load(_raw[name]);
     return _keys[name] = key;
   }
@@ -461,7 +462,10 @@ class _SettingsListKey<T> extends SettingsKey<_ProtectedList<T>> {
 class _SettingsEnumListKey<E extends Enum> extends _SettingsListKey<E> {
   final List<E> _values;
 
-  _SettingsEnumListKey._(super.owner, super.name, super.fallback, super.codec, super.sync, this._values) : super._();
+  /// reads the recorded names, which can be old names of renamed values.
+  final _SettingsCodec<E> _itemCodec;
+
+  _SettingsEnumListKey._(super.owner, super.name, super.fallback, super.codec, super.sync, this._values, this._itemCodec) : super._();
 
   @override
   void _load(dynamic json) {
@@ -473,9 +477,10 @@ class _SettingsEnumListKey<E extends Enum> extends _SettingsListKey<E> {
     if (excludedNames is List) {
       final list = override._source;
       final defaults = fallback._source;
+      final excludedValues = excludedNames.map(_itemCodec.decode).nonNulls.toSet();
       bool didFindAdded = false;
       for (final enumValue in _values) {
-        if (list.contains(enumValue) || excludedNames.contains(enumValue.name)) continue;
+        if (list.contains(enumValue) || excludedValues.contains(enumValue)) continue;
         didFindAdded = true;
         final defaultIndex = defaults.indexOf(enumValue);
         if (defaultIndex != -1) list.insertSafe(defaultIndex, enumValue);
@@ -583,10 +588,18 @@ abstract class _SettingsCodec<T> {
 
 class _EnumCodec<E extends Enum> extends _SettingsCodec<E> {
   final List<E> values;
-  const _EnumCodec(this.values);
+
+  /// for enums that also read old names.
+  final E? Function(String name)? fromName;
+
+  const _EnumCodec(this.values, {this.fromName});
 
   @override
-  E? decode(dynamic json) => json is String ? values.getEnum(json) : null;
+  E? decode(dynamic json) {
+    if (json is! String) return null;
+    final fromName = this.fromName;
+    return fromName == null ? values.getEnum(json) : fromName(json);
+  }
 
   @override
   Object? encode(E value) => value.name;

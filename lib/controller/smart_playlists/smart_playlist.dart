@@ -18,8 +18,11 @@ class SmartPlaylist {
   final List<String> moods;
   final List<SmartPlaylistRuleGroup> ruleGroups;
   final SmartPlaylistLimit? limit;
+  final int? pinnedDate;
 
   final int modifiedDate;
+
+  bool get isPinned => pinnedDate != null;
 
   const SmartPlaylist({
     required this.name,
@@ -29,6 +32,7 @@ class SmartPlaylist {
     required this.moods,
     required this.ruleGroups,
     required this.limit,
+    this.pinnedDate,
     this.modifiedDate = 0,
   });
 
@@ -134,6 +138,7 @@ class SmartPlaylist {
       moods: (map['moods'] as List).cast<String>(),
       ruleGroups: (map['ruleGroups'] as List).map(SmartPlaylistRuleGroup.fromMap).toList(),
       limit: SmartPlaylistLimit.fromMapNullable(map['limit']),
+      pinnedDate: map['pinnedDate'] as int?,
       modifiedDate: map['_mt'] as int? ?? 0,
     );
   }
@@ -156,6 +161,7 @@ class SmartPlaylist {
       'moods': moods,
       'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
       'limit': ?limit?.toMap(),
+      'pinnedDate': ?pinnedDate,
       if (modifiedDate > 0) '_mt': modifiedDate,
     };
   }
@@ -167,6 +173,9 @@ class SmartPlaylist {
     SortChain<SortType>? sorting,
     List<String>? moods,
     List<SmartPlaylistRuleGroup>? ruleGroups,
+
+    /// pinning keeps an older pin date.
+    bool? isPinned,
     int? modifiedDate,
   }) => SmartPlaylist(
     name: name ?? this.name,
@@ -176,6 +185,11 @@ class SmartPlaylist {
     moods: moods ?? this.moods,
     ruleGroups: ruleGroups ?? this.ruleGroups,
     limit: this.limit,
+    pinnedDate: switch (isPinned) {
+      null => this.pinnedDate,
+      true => this.pinnedDate ?? currentTimeMS,
+      false => null,
+    },
     modifiedDate: modifiedDate ?? this.modifiedDate,
   );
 }

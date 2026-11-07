@@ -453,9 +453,11 @@ class _SettingsController extends _SettingsKeysWriter {
     'homePageItems',
     const [
       HomePageItems.mixes, HomePageItems.recentListens, HomePageItems.topRecentListens, HomePageItems.lostMemories, //
-      HomePageItems.recentQueues, HomePageItems.recentlyAdded, HomePageItems.recentAlbums, HomePageItems.recentArtists, //
+      HomePageItems.recentQueues, HomePageItems.recentlyAdded, HomePageItems.recentAlbums, HomePageItems.recentArtists,
+      HomePageItems.pinned,
     ],
     HomePageItems.values,
+    item: const _EnumCodec(HomePageItems.values, fromName: HomePageItems.fromName),
   );
 
   late final activeArtistType = _keyEnum('activeArtistType', MediaType.artist, MediaType.values);

@@ -193,6 +193,41 @@ void main() {
     expect(settings.tutorial.buildJson(), {'_v': 2});
   });
 
+  test('home items saved under an old name still load', () async {
+    File(AppPaths.SETTINGS).writeAsStringSync(jsonEncode({'_v': 2, 'homePageItems': ['mixes', 'pinnedPlaylists', 'nope']}));
+    await settings.prepareSettingsFile();
+    expect(settings.homePageItems.value, containsAllInOrder([HomePageItems.mixes, HomePageItems.pinned]));
+    expect(settings.homePageItems.value.map((e) => e.name), isNot(contains('nope')));
+
+    File(AppPaths.SETTINGS_YOUTUBE).writeAsStringSync(jsonEncode({'_v': 2, 'ytHomePageItems': ['pinnedPlaylists']}));
+    await settings.youtube.prepareSettingsFile();
+    expect(settings.youtube.ytHomePageItems.value, contains(HomePageItems.pinned));
+  });
+
+  test('a home item hidden under an old name stays hidden', () async {
+    final hiddenNames = HomePageItems.values.where((e) => e != HomePageItems.mixes).map((e) => e == HomePageItems.pinned ? 'pinnedPlaylists' : e.name).toList();
+    File(AppPaths.SETTINGS).writeAsStringSync(
+      jsonEncode({
+        '_v': 2,
+        'homePageItems': ['mixes'],
+        '_x': {'homePageItems': hiddenNames},
+      }),
+    );
+    await settings.prepareSettingsFile();
+    expect(settings.homePageItems.value, [HomePageItems.mixes]);
+
+    final hiddenNamesWithoutPinned = hiddenNames.where((e) => e != 'pinnedPlaylists').toList();
+    File(AppPaths.SETTINGS).writeAsStringSync(
+      jsonEncode({
+        '_v': 2,
+        'homePageItems': ['mixes'],
+        '_x': {'homePageItems': hiddenNamesWithoutPinned},
+      }),
+    );
+    await settings.prepareSettingsFile();
+    expect(settings.homePageItems.value, [HomePageItems.mixes, HomePageItems.pinned]);
+  });
+
   test('syncable file: delta carries changed keys, newest wins, reset propagates', () async {
     File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2}));
     await settings.player.prepareSettingsFile();

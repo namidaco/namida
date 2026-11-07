@@ -2090,6 +2090,42 @@ class StackedIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final secondaryText = this.secondaryText;
+    final secondaryIcon = this.secondaryIcon;
+    final secondaryChild =
+        smallChild ??
+        (secondaryText != null
+            ? NamidaText(
+                secondaryText,
+                style: NText.small,
+                color: _iconColorOf(secondaryIconColor),
+              )
+            : secondaryIcon != null
+            ? NIcon(
+                secondaryIcon,
+                size: secondaryIconSize,
+                color: _iconColorOf(secondaryIconColor),
+              )
+            : null);
+    final Widget? secondaryWidget = secondaryChild == null
+        ? null
+        : Positioned(
+            bottom: margin,
+            right: margin,
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor ?? colors.scaffold,
+                    spreadRadius: 0,
+                    blurRadius: blurRadius,
+                  ),
+                ],
+              ),
+              child: secondaryChild,
+            ),
+          );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -2098,35 +2134,7 @@ class StackedIcon extends StatelessWidget {
           color: _iconColorOf(baseIconColor),
           size: iconSize,
         ),
-        Positioned(
-          bottom: margin,
-          right: margin,
-          child: NDecoratedBox(
-            decoration: (colors) => BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor ?? colors.scaffold,
-                  spreadRadius: 0,
-                  blurRadius: blurRadius,
-                ),
-              ],
-            ),
-            child:
-                smallChild ??
-                (secondaryText != null
-                    ? NamidaText(
-                        secondaryText!,
-                        style: NText.small,
-                        color: _iconColorOf(secondaryIconColor),
-                      )
-                    : NIcon(
-                        secondaryIcon,
-                        size: secondaryIconSize,
-                        color: _iconColorOf(secondaryIconColor),
-                      )),
-          ),
-        ),
+        ?secondaryWidget,
       ],
     );
   }

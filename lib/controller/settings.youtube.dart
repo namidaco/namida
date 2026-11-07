@@ -25,8 +25,9 @@ class _YoutubeSettings extends _SettingsKeysWriter {
 
   late final ytHomePageItems = _keyEnumList(
     'ytHomePageItems',
-    const [HomePageItems.mixes, HomePageItems.recentListens, HomePageItems.topRecentListens, HomePageItems.lostMemories],
+    const [HomePageItems.mixes, HomePageItems.recentListens, HomePageItems.topRecentListens, HomePageItems.lostMemories, HomePageItems.pinned],
     HomePageItems.values,
+    item: const _EnumCodec(HomePageItems.values, fromName: HomePageItems.fromName),
   );
   late final showChannelWatermarkFullscreen = _key('showChannelWatermarkFullscreen', true);
   late final showVideoEndcards = _key('showVideoEndcards', true);

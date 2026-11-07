@@ -2728,7 +2728,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentArtists => lang.recentArtists,
     HomePageItems.topRecentAlbums => lang.topRecentAlbums,
     HomePageItems.topRecentArtists => lang.topRecentArtists,
-    HomePageItems.pinnedPlaylists => lang.pinnedPlaylists,
+    HomePageItems.pinned => lang.pinned,
   };
 
   IconData toMainIcon() => switch (this) {
@@ -2742,7 +2742,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentArtists => Broken.undo,
     HomePageItems.topRecentAlbums => Broken.crown_1,
     HomePageItems.topRecentArtists => Broken.crown_1,
-    HomePageItems.pinnedPlaylists => Broken.paperclip,
+    HomePageItems.pinned => Broken.paperclip,
   };
 
   IconData? toIcon() => switch (this) {
@@ -2756,7 +2756,14 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.topRecentAlbums => Broken.music_dashboard,
     HomePageItems.recentArtists => Broken.user,
     HomePageItems.topRecentArtists => Broken.user,
-    HomePageItems.pinnedPlaylists => Broken.music_playlist,
+    HomePageItems.pinned => null,
+  };
+}
+
+extension PinnedItemTypeL10n on PinnedItemType {
+  String toText() => switch (this) {
+    PinnedItemType.playlist => lang.playlists,
+    PinnedItemType.smartPlaylist => lang.smartPlaylists,
   };
 }
 

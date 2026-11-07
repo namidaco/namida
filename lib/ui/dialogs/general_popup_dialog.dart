@@ -326,6 +326,13 @@ Future<void> showGeneralPopupDialog(
     PlaylistController.inst.updatePlaylistMetadata(playlistName, isPinned: !pl.isPinned);
   }
 
+  void toggleSmartPlaylistPin() {
+    final smartPlaylist = smartPlaylistWrapper?.value;
+    if (smartPlaylist == null) return;
+    NamidaNavigator.inst.closeDialog();
+    SmartPlaylistsController.inst.setPinned(smartPlaylist.key, isPinned: !smartPlaylist.isPinned);
+  }
+
   Future<void> deletePlaylist({bool deleteM3uFileOnly = false}) async {
     NamidaNavigator.inst.closeDialog();
 
@@ -719,6 +726,7 @@ Future<void> showGeneralPopupDialog(
   final playlistIsM3u = playlist?.m3uPath != null;
   final playlistIsReadOnly = playlist?.isReadOnly == true;
   final playlistIsPinned = playlist?.isPinned == true;
+  final smartPlaylistIsPinned = smartPlaylistWrapper?.value.isPinned == true;
 
   final Widget? playlistUtilsRow = shoulShowPlaylistUtils()
       ? SizedBox(
@@ -798,6 +806,14 @@ Future<void> showGeneralPopupDialog(
               ),
               const SizedBox(width: 8.0),
               Expanded(
+                child: bigIcon(
+                  smartPlaylistIsPinned ? Broken.paperclip_2 : Broken.paperclip,
+                  () => smartPlaylistIsPinned ? lang.unpin : lang.pin,
+                  toggleSmartPlaylistPin,
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
                 child: bigIcon(Broken.edit_2, () => lang.edit, () {
                   NamidaNavigator.inst.closeDialog();
                   NamidaNavigator.inst.navigateDialog(
@@ -815,12 +831,23 @@ Future<void> showGeneralPopupDialog(
                   () => CreateSmartPlaylistDialog.promptDeletePlaylist(smartPlaylistWrapper.value),
                 ),
               ),
-              Expanded(
-                child: bigIcon(Broken.driver_2, () => lang.convertToNormalPlaylist, () => exportSmartPlaylist(asM3u: false)),
-              ),
               const SizedBox(width: 8.0),
               Expanded(
-                child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, () => exportSmartPlaylist(asM3u: true)),
+                child: NamidaPopupWrapper(
+                  childBuilder: (openMenu) => bigIcon(Broken.directbox_send, () => lang.export, openMenu),
+                  childrenDefault: () => [
+                    NamidaPopupItem(
+                      icon: Broken.driver_2,
+                      title: lang.convertToNormalPlaylist,
+                      onTap: () => exportSmartPlaylist(asM3u: false),
+                    ),
+                    NamidaPopupItem(
+                      icon: Broken.directbox_send,
+                      title: lang.convertToM3UPlaylist,
+                      onTap: () => exportSmartPlaylist(asM3u: true),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8.0),
 

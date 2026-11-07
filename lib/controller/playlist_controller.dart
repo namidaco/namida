@@ -815,7 +815,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
         moods: existing?.moods ?? [],
         tags: existing?.tags ?? [],
         isFav: false,
-        isPinned: existing?.isPinned ?? false,
+        pinnedDate: existing?.pinnedDate,
         m3uPath: null,
         sortsType: existing?.sortsType,
         sortReverse: existing?.sortReverse ?? false,

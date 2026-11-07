@@ -130,6 +130,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   }
 
   SmartPlaylist _buildSmartPlaylistFromCurrentParams() {
+    final initialSmartPlaylist = widget.initialSmartPlaylistWrapper?.value;
     return SmartPlaylist(
       name: _nameController.text,
       creationDate: DateTime.now(),
@@ -138,6 +139,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
       moods: _moods,
       ruleGroups: _ruleGroups,
       limit: _limit,
+      pinnedDate: initialSmartPlaylist?.pinnedDate,
     );
   }
 

@@ -35,9 +35,10 @@ class Queue {
   }
 
   factory Queue.fromMeta(Map<String, dynamic> json, List<Track> tracks) {
+    final homePageItemName = json['homePageItem'] ?? '';
     return Queue(
       source: QueueSource.fromJson(json['source']) ?? QueueSourceYoutubeID.fromJson(json['source']) ?? QueueSource.others(null),
-      homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
+      homePageItem: HomePageItems.fromName(homePageItemName),
       date: json['date'] ?? DateTime(1970),
       isFav: json['isFav'] ?? false,
       tracks: tracks,

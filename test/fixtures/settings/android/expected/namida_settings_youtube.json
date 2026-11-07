@@ -27,7 +27,8 @@
     "mixes",
     "recentListens",
     "topRecentListens",
-    "lostMemories"
+    "lostMemories",
+    "pinned"
   ],
   "ytVisibleShorts": {
     "relatedVideos": false,

@@ -47,6 +47,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/pages/queues_page.dart';
+import 'package:namida/ui/pages/subpages/smart_playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/your_year_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -669,7 +670,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                                   case HomePageItems.recentArtists:
                                   case HomePageItems.topRecentAlbums:
                                   case HomePageItems.topRecentArtists:
-                                  case HomePageItems.pinnedPlaylists:
+                                  case HomePageItems.pinned:
                                     return buildOtherSectionSliver(context, element);
                                 }
                               },
@@ -1059,14 +1060,9 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
           listens: (artist) => _topRecentArtists[artist] ?? 0,
         );
 
-      case HomePageItems.pinnedPlaylists:
-        return _PinnedPlaylistsList(
+      case HomePageItems.pinned:
+        return _PinnedItemsList(
           homepageItem: element,
-          playlistsMap: PlaylistController.inst.playlistsMap,
-          cardBuilder: (playlist, homepageItem) => _LocalPlaylistCard(
-            playlist: playlist,
-            homepageItem: homepageItem,
-          ),
         );
 
       case HomePageItems.mixes:
@@ -1096,7 +1092,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
     HomePageItems.recentListens,
     HomePageItems.topRecentListens,
     HomePageItems.lostMemories,
-    HomePageItems.pinnedPlaylists,
+    HomePageItems.pinned,
   ];
 
   @override
@@ -1275,7 +1271,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
 
   @override
   Widget buildOtherSectionSliver(BuildContext context, HomePageItems element) {
-    if (element == HomePageItems.pinnedPlaylists) {
+    if (element == HomePageItems.pinned) {
       return _PinnedPlaylistsList(
         homepageItem: element,
         playlistsMap: YoutubePlaylistController.inst.playlistsMap,
@@ -1525,10 +1521,8 @@ class _PinnedPlaylistsList<T extends PlaylistItemWithDate, S> extends StatelessW
       child: ObxO(
         rx: playlistsMap,
         builder: (context, playlistsMap) {
-          final pinned = <GeneralPlaylist<T, S>>[];
-          for (final playlist in playlistsMap.values) {
-            if (playlist.isPinned) pinned.add(playlist);
-          }
+          final pinnedPlaylists = playlistsMap.values.where((e) => e.isPinned);
+          final pinned = PinnedController.sortedByPinDate(pinnedPlaylists, (e) => e.pinnedDate!);
           return _HorizontalList(
             isLoading: false,
             homepageItem: homepageItem,
@@ -1544,6 +1538,164 @@ class _PinnedPlaylistsList<T extends PlaylistItemWithDate, S> extends StatelessW
           );
         },
       ),
+    );
+  }
+}
+
+class _PinnedItemsList extends StatefulWidget {
+  final HomePageItems homepageItem;
+
+  const _PinnedItemsList({
+    required this.homepageItem,
+  });
+
+  @override
+  State<_PinnedItemsList> createState() => _PinnedItemsListState();
+}
+
+class _PinnedItemsListState extends State<_PinnedItemsList> {
+  PinnedItemType? _selectedType;
+
+  void _onTypeTap(PinnedItemType? type) {
+    setState(() => _selectedType = type);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final homepageItem = widget.homepageItem;
+    return SliverToBoxAdapter(
+      child: Obx(
+        (context) {
+          final allItems = PinnedController.inst.getPinnedItemsR();
+          final presentTypes = <PinnedItemType>{for (final item in allItems) item.type};
+          final selectedType = presentTypes.contains(_selectedType) ? _selectedType : null;
+          final items = selectedType == null ? allItems : allItems.where((e) => e.type == selectedType).toFixedList();
+          final typesChips = presentTypes.length < 2
+              ? null
+              : _PinnedTypesChips(
+                  types: PinnedItemType.values.where(presentTypes.contains).toFixedList(),
+                  selectedType: selectedType,
+                  onTap: _onTypeTap,
+                );
+          return _HorizontalList(
+            isLoading: false,
+            homepageItem: homepageItem,
+            title: homepageItem.toText(),
+            leading: StackedIcon(
+              baseIcon: homepageItem.toMainIcon(),
+              secondaryIcon: homepageItem.toIcon(),
+            ),
+            thirdWidget: typesChips,
+            height: 150.0 + 12.0,
+            itemCount: items.length,
+            itemExtent: 98.0 + 8.0,
+            itemBuilder: (context, index) => switch (items[index]) {
+              PinnedItemPlaylist(:final playlist) => _LocalPlaylistCard(
+                playlist: playlist,
+                homepageItem: homepageItem,
+              ),
+              PinnedItemSmartPlaylist(:final smartPlaylistWrapper) => _SmartPlaylistCard(
+                smartPlaylistWrapper: smartPlaylistWrapper,
+                homepageItem: homepageItem,
+              ),
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PinnedTypesChips extends StatelessWidget {
+  final List<PinnedItemType> types;
+  final PinnedItemType? selectedType;
+  final void Function(PinnedItemType? type) onTap;
+
+  const _PinnedTypesChips({
+    required this.types,
+    required this.selectedType,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32.0,
+      width: context.width,
+      child: SmoothSingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                child: TapDetector(
+                  onTap: () => onTap(null),
+                  child: _HomePageChip(
+                    text: lang.all,
+                    isSelected: selectedType == null,
+                  ),
+                ),
+              ),
+              ...types.map(
+                (type) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: TapDetector(
+                    onTap: () => onTap(type),
+                    child: _HomePageChip(
+                      text: type.toText(),
+                      isSelected: selectedType == type,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SmartPlaylistCard extends StatelessWidget {
+  final SmartPlaylistWrapper smartPlaylistWrapper;
+  final HomePageItems homepageItem;
+
+  const _SmartPlaylistCard({
+    required this.smartPlaylistWrapper,
+    required this.homepageItem,
+  });
+
+  void _play() {
+    final tracks = smartPlaylistWrapper.resolve();
+    if (tracks.isEmpty) return;
+    final name = smartPlaylistWrapper.value.name;
+    final queueSource = QueueSource.smartPlaylist(name);
+    Player.inst.playOrPause(0, tracks, queueSource, homePageItem: homepageItem);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final smartPlaylist = smartPlaylistWrapper.value;
+    final artworkFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylist);
+    return _PlaylistCard(
+      title: smartPlaylist.name,
+      subtitle: lang.smartPlaylist,
+      imageBuilder: (imageSize) => ArtworkWidget(
+        key: ValueKey(artworkFile),
+        track: null,
+        thumbnailSize: imageSize,
+        path: artworkFile.path,
+        forceSquared: true,
+        icon: Broken.magicpen,
+      ),
+      onTap: () => SmartPlaylistTracksPage(smartPlaylistWrapper: smartPlaylistWrapper).navigate(),
+      onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smartPlaylistWrapper),
+      onPlayTap: _play,
+      width: 106.0,
+      height: 138.0,
     );
   }
 }
@@ -1875,7 +2027,7 @@ class _HorizontalList extends StatelessWidget {
                           HomePageItems.recentlyAdded || HomePageItems.recentQueues => lang.noTracksFound,
                           HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                           HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.none}: ${lang.noTracksInHistory}",
-                          HomePageItems.pinnedPlaylists => lang.none,
+                          HomePageItems.pinned => lang.none,
                         },
                         style: NText.medium,
                         softWrap: false,

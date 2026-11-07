@@ -127,6 +127,19 @@ void main() {
       expect(queue.tracks[1], isA<Video>());
     });
 
+    test('a home item saved under an old name still loads', () async {
+      final legacyQueue = {
+        'source': 'allTracks',
+        'homePageItem': 'pinnedPlaylists',
+        'date': 2001,
+        'isFav': false,
+        'tracks': ['/music/a.mp3'],
+      };
+      File(queuePath(2001)).writeAsStringSync(jsonEncode(legacyQueue));
+      await QueueController.inst.prepareAllQueuesFile();
+      expect(queues()[2001]!.homePageItem, HomePageItems.pinned);
+    });
+
     test('the latest queue file keeps the shuffled order with the original indices', () async {
       final items = <Playable>[track('a'), track('b'), Video.explicit('/music/c.mp4')];
       await QueueController.inst.updateLatestQueue(items, originalIndices: [2, 0, 1], source: QueueSource.playerQueue);

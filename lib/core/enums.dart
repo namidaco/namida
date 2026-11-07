@@ -1017,7 +1017,19 @@ enum HomePageItems {
   recentArtists,
   topRecentAlbums,
   topRecentArtists,
-  pinnedPlaylists,
+  pinned,
+  ;
+
+  static const _legacyNames = {'pinnedPlaylists': pinned};
+
+  /// names saved before a value was renamed are read too.
+  static HomePageItems? fromName(String name) => values.getEnum(name) ?? _legacyNames[name];
+}
+
+enum PinnedItemType {
+  playlist,
+  smartPlaylist,
+  ;
 }
 
 enum MixesItems {

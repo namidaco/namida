@@ -167,6 +167,16 @@ class SmartPlaylistsController {
     await _saveOrder();
   }
 
+  /// pinning alone keeps the modified date, like playlists.
+  Future<void> setPinned(SmartPlaylistKey key, {required bool isPinned}) async {
+    final wrapper = smartPlaylistsMap.value[key];
+    if (wrapper == null) return;
+    final smartPlaylist = wrapper.value;
+    if (smartPlaylist.isPinned == isPinned) return;
+    wrapper.value = smartPlaylist.copyWith(isPinned: isPinned);
+    await saveToStorage(key);
+  }
+
   Future<void> delete(SmartPlaylistKey key) async {
     final removed = smartPlaylistsMap.value.remove(key);
     if (removed != null) smartPlaylistsList.value.remove(removed);
