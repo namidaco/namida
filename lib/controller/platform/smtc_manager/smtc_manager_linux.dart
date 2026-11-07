@@ -55,9 +55,33 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
     await mprisLocal?.dispose();
   }
 
+  MediaItem? _mediaItem;
+
+  /// can arrive before the item they belong to is published.
+  String? _lyricsMediaId;
+  String? _lyrics;
+  String? _publishedLyrics;
+
   @override
   void updateMetadata(MediaItem mediaItem) async {
-    final metadata = Metadata(
+    _mediaItem = mediaItem;
+    _publishMetadata(mediaItem);
+  }
+
+  @override
+  void updateLyrics(String? mediaId, String? lyrics) {
+    _lyricsMediaId = mediaId;
+    _lyrics = lyrics;
+    final mediaItem = _mediaItem;
+    if (mediaItem == null || mediaItem.id != mediaId) return;
+    if (lyrics == _publishedLyrics) return;
+    _publishMetadata(mediaItem);
+  }
+
+  void _publishMetadata(MediaItem mediaItem) {
+    final lyrics = mediaItem.id == _lyricsMediaId ? _lyrics : null;
+    _publishedLyrics = lyrics;
+    final metadata = _NamidaMPRISMetadata(
       // -- id must be in this format
       trackId: '/com/msob7y/namida/track/${mediaItem.id.hashCode.abs()}',
       trackTitle: mediaItem.title,
@@ -66,8 +90,24 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
       albumArtist: [?mediaItem.albumArtist],
       trackLength: mediaItem.duration,
       artUrl: mediaItem.artUri?.toString(),
+      lyrics: lyrics,
+      url: _getMediaUrl(mediaItem),
     );
     mpris?.metadata = metadata;
+  }
+
+  static String? _getMediaUrl(MediaItem mediaItem) {
+    final extras = mediaItem.extras;
+    if (extras == null) return null;
+    final path = extras[NowPlayingExtras.path];
+    if (path is String) {
+      final isNetwork = Track.explicit(path).isNetwork;
+      if (isNetwork) return null;
+      return Uri.file(path).toString();
+    }
+    final videoId = extras[NowPlayingExtras.videoId];
+    if (videoId is String) return YTUrlUtils.buildVideoUrl(videoId);
+    return null;
   }
 
   @override
@@ -388,4 +428,30 @@ class _CustomMPRISService extends MPRISService {
     'audio/x-xm',
     'application/mxf',
   ];
+}
+
+class _NamidaMPRISMetadata extends Metadata {
+  final String? url;
+
+  _NamidaMPRISMetadata({
+    required super.trackId,
+    required super.trackTitle,
+    super.trackLength,
+    super.trackArtist,
+    super.lyrics,
+    super.artUrl,
+    super.albumName,
+    super.albumArtist,
+    required this.url,
+  });
+
+  @override
+  DBusValue toValue() {
+    final value = super.toValue();
+    final url = this.url;
+    if (url == null) return value;
+    final entries = value.asStringVariantDict();
+    entries['xesam:url'] = DBusString(url);
+    return DBusDict.stringVariant(entries);
+  }
 }

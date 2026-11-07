@@ -12,12 +12,14 @@ import 'package:namida/controller/platform/home_widgets/home_widgets.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 /// pushes the playing lyrics to the system surfaces the user enabled. `lyricInfo` rides the media metadata once per track,
 /// SuperLyric & the flyme ticker get one call per line. an instance only exists while at least one is on.
+/// mpris gets the whole lyrics once per track.
 class LyricsIntegrations {
   static LyricsIntegrations? _instance;
 
@@ -76,9 +78,11 @@ class LyricsIntegrations {
     _lineResolver = LrcLineResolver.empty;
     _refreshPositionListening();
     _refreshLyricInfo(null);
+    _setMprisEnabled(false);
   }
 
   bool _lyricInfoEnabled = false;
+  bool _mprisEnabled = false;
   final _lineSinks = <_LyricsLineSink>[];
   bool _listeningPosition = false;
 
@@ -109,8 +113,58 @@ class LyricsIntegrations {
 
   void _apply(Set<LyricsIntegration> enabled) {
     _lyricInfoEnabled = enabled.contains(LyricsIntegration.lyricInfo);
+    _setMprisEnabled(enabled.contains(LyricsIntegration.mpris));
     _syncLineSinks(enabled);
     _onLyricsChanged();
+  }
+
+  void _setMprisEnabled(bool enabled) {
+    if (enabled == _mprisEnabled) return;
+    _mprisEnabled = enabled;
+    if (enabled) {
+      Lyrics.inst.currentLyricsText.addListener(_onPlainLyricsChanged);
+    } else {
+      Lyrics.inst.currentLyricsText.removeListener(_onPlainLyricsChanged);
+      _refreshMprisLyrics();
+    }
+  }
+
+  /// plain lyrics are cleared before the lrc on a reload, the lrc listener covers that.
+  void _onPlainLyricsChanged() {
+    if (Lyrics.inst.currentLyricsLRC.value != null) return;
+    _refreshMprisLyrics();
+  }
+
+  void _refreshMprisLyrics() {
+    final smtc = SMTCController.instance;
+    if (smtc == null) return;
+    final lyrics = _mprisEnabled ? _buildMprisLyrics() : null;
+    smtc.updateLyrics(_getCurrentMediaId(), lyrics);
+  }
+
+  /// line timestamps as the lyrics views show them, so other apps sync to the mpris position.
+  String? _buildMprisLyrics() {
+    final lines = _lines;
+    if (lines.isEmpty) {
+      final plainText = Lyrics.inst.currentLyricsText.value.text;
+      return plainText.nullifyEmpty();
+    }
+    final lrc = StringBuffer();
+    for (final line in lines) {
+      final timestampText = LrcLine.formatTimestamp(line.timestamp);
+      lrc
+        ..write('[$timestampText]')
+        ..writeln(line.readableText);
+    }
+    return lrc.toString();
+  }
+
+  static String? _getCurrentMediaId() {
+    final item = Player.inst.currentItem.value;
+    return item?.execute(
+      selectable: (finalItem) => finalItem.toMediaItemId(),
+      youtubeID: (finalItem) => finalItem.toMediaItemId(),
+    );
   }
 
   void _syncLineSinks(Set<LyricsIntegration> enabled) {
@@ -127,7 +181,7 @@ class LyricsIntegrations {
   }
 
   static _LyricsLineSink? _createLineSink(LyricsIntegration type) => switch (type) {
-    LyricsIntegration.lyricInfo => null,
+    LyricsIntegration.lyricInfo || LyricsIntegration.mpris => null,
     LyricsIntegration.superLyric => const _SuperLyricSink(),
     LyricsIntegration.flymeTicker => const _FlymeTickerSink(),
     LyricsIntegration.menuBar => const _MenuBarSink(),
@@ -166,6 +220,7 @@ class LyricsIntegrations {
 
     final lyricInfoLanes = _lyricInfoEnabled && _lines.isNotEmpty ? _LyricInfoLanes.fromLines(_lines) : null;
     _refreshLyricInfo(lyricInfoLanes);
+    if (_mprisEnabled) _refreshMprisLyrics();
 
     _refreshPositionListening();
     if (_listeningPosition) {
@@ -176,11 +231,7 @@ class LyricsIntegrations {
   }
 
   void _refreshLyricInfo(_LyricInfoLanes? lanes) {
-    final item = Player.inst.currentItem.value;
-    _lyricInfoMediaId = item?.execute(
-      selectable: (finalItem) => finalItem.toMediaItemId(),
-      youtubeID: (finalItem) => finalItem.toMediaItemId(),
-    );
+    _lyricInfoMediaId = _getCurrentMediaId();
     _lyricInfoLanes = lanes;
 
     final media = Player.inst.currentMediaItem;

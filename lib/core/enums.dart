@@ -1579,6 +1579,7 @@ enum LyricsIntegration {
   flymeTicker(availability: NamidaFeaturesAvailablity.android, sendsPerLine: true),
   menuBar(availability: NamidaFeaturesAvailablity.macos, sendsPerLine: true),
   liveActivity(availability: NamidaFeaturesAvailablity.ios16_2and_plus, sendsPerLine: true),
+  mpris(availability: NamidaFeaturesAvailablity.linux),
   ;
 
   final NamidaFeaturesAvailablity availability;

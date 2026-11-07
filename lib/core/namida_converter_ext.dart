@@ -3453,6 +3453,7 @@ extension LyricsIntegrationL10n on LyricsIntegration {
     LyricsIntegration.flymeTicker => 'Flyme & Lyricon',
     LyricsIntegration.menuBar => 'macOS menu bar',
     LyricsIntegration.liveActivity => 'Live Activity',
+    LyricsIntegration.mpris => 'MPRIS',
   };
 }
 
@@ -3463,6 +3464,7 @@ extension LyricsIntegrationUtils on LyricsIntegration {
     LyricsIntegration.flymeTicker => Broken.notification_status,
     LyricsIntegration.menuBar => Broken.monitor,
     LyricsIntegration.liveActivity => Broken.lock,
+    LyricsIntegration.mpris => Broken.music_dashboard,
   };
 }
 

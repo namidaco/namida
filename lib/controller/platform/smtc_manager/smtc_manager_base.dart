@@ -22,6 +22,10 @@ abstract class NamidaSMTCManager {
   Future<void> dispose();
 
   void updateMetadata(MediaItem mediaItem);
+
+  /// [lyrics] is lrc text or plain text, null clears.
+  void updateLyrics(String? mediaId, String? lyrics) {}
+
   void updateTimeline(int positionMS, int? durationMS);
   void updateShuffle(bool shuffle);
   void updateRepeatMode(PlayerRepeatMode repeatMode);
