@@ -206,6 +206,19 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
 
   void _fillLists() async {
     final generation = ++_fillGeneration;
+    try {
+      await _fillListsOrThrow(generation);
+    } catch (e, st) {
+      logger.error('Error filling home lists', e: e, st: st);
+      if (generation != _fillGeneration) return;
+      // -- all or nothing, a half filled home looks broken
+      _emptyAll();
+      _isLoading = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _fillListsOrThrow(int generation) async {
     final historyManager = this.historyManager;
     if (historyManager.isHistoryLoaded) {
       _isLoading = false;
@@ -362,6 +375,11 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
           supremacyEntry = MapEntry(currentItemTitle == null || currentItemTitle.isEmpty ? lang.supremacy : '"$currentItemTitle" ${lang.supremacy}', supremacy);
         }
       }
+
+      await _yieldFrame();
+      if (generation != _fillGeneration) return;
+      final nowAgo = NamidaGeneratorBase.getItemsAroundTimeOfDay(topTracksMapListens.entriesSortedByValue, timeNow, count: 100, random: newRandom());
+
       final favsSample = getFavouritesSample(25);
       final topRecentListenedKeys = _topRecentListened.map((e) => e.key).toList();
 
