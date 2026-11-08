@@ -10,7 +10,7 @@ class _VideoInfoController {
   ///
   /// even tho web clients are more prone to errors,
   /// they're the only clients that contain reliable info like date, comments & endcards.
-  static const _defaultClient = InnertubeClients.tv;
+  static const _defaultClient = InnertubeClients.tv_samsung;
   static const _defaultRequiresJSPlayer = true;
 
   InnertubeClients get _usedClient => settings.youtube.innertubeClient.value ?? _defaultClient;
@@ -44,6 +44,7 @@ class _VideoInfoController {
   Future<YoutiPieVideoPageResult?> fetchVideoPage(String videoId, {ExecuteDetails? details}) async {
     final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
     final res = await YoutiPie.video.fetchVideoPage(videoId: videoId, relatedVideosParams: relatedVideosParams, details: details);
+    YoutubeInfoController.memoryCache.channelThumbnails.add(res?.channelInfo);
     if (res != null && res.videoInfo == null && res.channelInfo == null) {
       VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
     }
@@ -114,6 +115,8 @@ class _VideoInfoController {
     if (res != null && res.playability.status != VideoPlayabiltyStatus.ok) {
       VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
     }
+    final failureReport = res?.failureReport;
+    if (failureReport != null) logger.error('No working streams for $videoId\n${failureReport.toText()}');
     return res;
   }
 

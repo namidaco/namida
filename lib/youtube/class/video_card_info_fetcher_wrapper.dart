@@ -49,6 +49,16 @@ class VideoCardInfoFetcherWrapper {
 
   bool _isStale(String videoId) => this.videoId != videoId;
 
+  /// memory only.
+  String? getChannelThumbnailUrlSync() {
+    final utils = YoutubeInfoController.utils;
+    final videoChannelThumbnailUrl = utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url;
+    if (videoChannelThumbnailUrl != null) return videoChannelThumbnailUrl;
+    final channelId = this.channelId?.nullifyEmpty();
+    if (channelId == null) return null;
+    return utils.getChannelThumbnailsSync(channelId)?.pick()?.url;
+  }
+
   void reset(String videoId) {
     this.videoId = videoId;
     infoFinal = null;
@@ -100,7 +110,7 @@ class VideoCardInfoFetcherWrapper {
     if (fetchExtraDetails) {
       publishedDate ??= utils.getVideoReleaseDateSyncTemp(videoId);
       viewsCount ??= utils.tempVideoInfosFromStreams[videoId]?.viewsCount;
-      channelThumbnailUrl ??= utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url;
+      channelThumbnailUrl ??= getChannelThumbnailUrlSync();
     }
 
     final newInfo = await utils.getStreamInfo(videoId);
@@ -167,6 +177,10 @@ class VideoCardInfoFetcherWrapper {
         }(),
         () async {
           newChannelThumbnailUrl ??= (await utils.getVideoChannelThumbnails(videoId))?.pick()?.url;
+          if (newChannelThumbnailUrl != null) return;
+          final channelId = this.channelId?.nullifyEmpty() ?? await utils.getVideoChannelID(videoId);
+          if (channelId == null) return;
+          newChannelThumbnailUrl = (await utils.getChannelThumbnails(channelId))?.pick()?.url;
         }(),
       ],
     ].wait;

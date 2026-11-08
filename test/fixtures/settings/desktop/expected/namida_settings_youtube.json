@@ -4,7 +4,7 @@
   "autoStartRadio": false,
   "personalizedRelatedVideos": null,
   "searchCleanup": true,
-  "useNewNotificationExtractor": true,
+  "useNewNotificationExtractor_v2": true,
   "ytDownloadLocation": "C:\\Namida\\Downloads\\",
   "ytMiniplayerDimAfterSeconds": 15,
   "ytMiniplayerDimOpacity": 0.5,

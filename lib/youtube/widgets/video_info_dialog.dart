@@ -61,6 +61,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   Color? _themeColor;
   late final Color? _openedWithColor;
   bool _videoIsMissingOriginalInfo = false;
+  bool _didLiveInfoFail = false;
   VideoPlayabilty? _playablity;
 
   late final videoId = widget.videoId.replaceFirst(' ', '');
@@ -189,8 +190,13 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     _refreshPageInfoViewsLikesForce();
 
     final didRefreshWithLiveInfo = await _fillLiveInfo(videoId);
-    if (didRefreshWithLiveInfo) {
+    _didLiveInfoFail = didRefreshWithLiveInfo == null;
+    if (didRefreshWithLiveInfo == true) {
       _videoIsMissingOriginalInfo = false;
+      refreshState();
+      return;
+    } else if (didRefreshWithLiveInfo == null) {
+      // -- request failed, not a sign of a deleted video
       refreshState();
       return;
     } else {
@@ -207,24 +213,20 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     }
   }
 
-  Future<bool> _fillLiveInfo(String videoId) async {
+  Future<bool?> _fillLiveInfo(String videoId) async {
     final originalInfo = await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: true);
-    final originalVideoInfo = originalInfo?.info;
-    if (originalInfo != null && originalVideoInfo != null && originalInfo.playability.status == VideoPlayabiltyStatus.ok) {
-      videoTitle = originalVideoInfo.title;
-      channelTitle = originalVideoInfo.channelName;
-      channelId = originalVideoInfo.channelId;
-      dateMS = (originalVideoInfo.publishedAt.accurateDate ?? originalVideoInfo.publishedAt.date)?.millisecondsSinceEpoch;
-      durationSeconds = originalVideoInfo.durSeconds;
-      description = originalVideoInfo.description;
+    if (originalInfo == null) return null;
+    _playablity = originalInfo.playability;
+    final originalVideoInfo = originalInfo.info;
+    if (originalVideoInfo == null || originalInfo.playability.status != VideoPlayabiltyStatus.ok) return false;
 
-      _playablity = originalInfo.playability;
-
-      return true;
-    } else if (originalInfo?.playability != null) {
-      _playablity = originalInfo?.playability;
-    }
-    return false;
+    videoTitle = originalVideoInfo.title;
+    channelTitle = originalVideoInfo.channelName;
+    channelId = originalVideoInfo.channelId;
+    dateMS = (originalVideoInfo.publishedAt.accurateDate ?? originalVideoInfo.publishedAt.date)?.millisecondsSinceEpoch;
+    durationSeconds = originalVideoInfo.durSeconds;
+    description = originalVideoInfo.description;
+    return true;
   }
 
   void _refreshMissingInfo(MissingVideoInfo newInfo) {
@@ -295,7 +297,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                         ),
                       ),
                     ],
-                    if (_videoIsMissingOriginalInfo && !loading) ...[
+                    if ((_videoIsMissingOriginalInfo || _didLiveInfoFail) && !loading) ...[
                       const SizedBox(width: 6.0),
                       NamidaIconButton(
                         horizontalPadding: 6.0,

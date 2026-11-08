@@ -475,8 +475,10 @@ class NamidaFFMPEG {
           );
           if (!didUpdate) {
             currentFailed++;
-          } else if (tr.hasNoEmbeddedArtwork) {
-            tracksWithNewArtwork[tr.asTrack()] = tr.copyWith(hasNoEmbeddedArtwork: false, generatePathHash: false);
+          } else {
+            final newTrExt = tr.hasNoEmbeddedArtwork ? tr.copyWith(hasNoEmbeddedArtwork: false, generatePathHash: false) : tr;
+            await thumbnailFile.copy(newTrExt.pathToImage);
+            tracksWithNewArtwork[tr.asTrack()] = newTrExt;
           }
 
           if (isTempThumbnail) {

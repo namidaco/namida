@@ -174,6 +174,9 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     }
 
     if (dismiss) {
+      // -- gets disposed mid-animation, onDismiss snaps the shared animation back to rest
+      controller.removeListener(_listenerHeightChange);
+      // widget.onHeightChange?.call(0.0); // -- jumps instantly, the onDismiss snap animates instead
       _updateHeight(0, duration: dur ?? widget.duration);
       WakelockController.inst.updateMiniplayerStatus(false);
       return;

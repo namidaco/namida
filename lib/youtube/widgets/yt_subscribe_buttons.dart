@@ -313,6 +313,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
         : const SizedBox();
 
     return LongPressDetector(
+      behavior: HitTestBehavior.opaque, // -- AnimatedEnabled ignores pointers when disabled
       enableSecondaryTap: true,
       onLongPress: widget.channelID == null ? null : () => _showChannelGroupsSheet(widget.channelID!),
       child: ObxO(

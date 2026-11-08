@@ -84,8 +84,8 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
       cacheReader: YoutiPie.cacheBuilder.forUserPlaylists(),
       cacheReadFn: (reader) async {
         final res = await reader.read();
-        await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(res);
-        return res;
+        if (res == null) return null;
+        return await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(res);
       },
       networkFetcher: (details) => YoutubeInfoController.userplaylist.getUserPlaylists(details: details),
       itemExtent: thumbnailItemExtent,

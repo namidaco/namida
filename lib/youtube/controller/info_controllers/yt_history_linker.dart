@@ -86,10 +86,10 @@ class _YoutubeHistoryLinker {
     final result = await db?.loadEverythingKeyedResult();
     if (db != null && result != null) {
       for (final e in result.entries) {
-        if (hadError) return;
+        if (hadError) break;
         if (!_hasConnection) {
           hadError = true;
-          return;
+          break;
         }
 
         itemsAddedToQueue++;
@@ -155,6 +155,7 @@ class _YoutubeHistoryLinker {
     }
 
     bool added = false;
+    bool didRequest = false;
 
     if (_hasConnection && !_hasPendingRequests) {
       String? statsPlaybackUrl = streamResult?.statsPlaybackUrl;
@@ -165,6 +166,7 @@ class _YoutubeHistoryLinker {
         statsWatchtimeUrl ??= streamsRes?.statsWatchtimeUrl;
       }
       if (statsPlaybackUrl != null || errorOnMissingParam) {
+        didRequest = true;
         final res = await YoutiPie.history.addVideoToHistory(
           statsPlaybackUrl: statsPlaybackUrl,
           statsWatchtimeUrl: statsWatchtimeUrl,
@@ -179,7 +181,7 @@ class _YoutubeHistoryLinker {
       // -- even if `added` is false due to missing params/etc, it will
       // -- properly get removed while executing pending.
       _addPendingRequest(videoId: videoId, streamResult: streamResult);
-      return YTMarkVideoWatchedResult.addedAsPending;
+      return didRequest ? YTMarkVideoWatchedResult.failedAddedAsPending : YTMarkVideoWatchedResult.addedAsPending;
     }
   }
 
@@ -193,4 +195,5 @@ enum YTMarkVideoWatchedResult {
   userDenied,
   marked,
   addedAsPending,
+  failedAddedAsPending,
 }

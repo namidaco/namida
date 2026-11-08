@@ -336,6 +336,18 @@ class _YoutubeInfoUtils {
     return (await _getVideoPageResult(videoId))?.channelInfo?.thumbnails;
   }
 
+  final _channelThumbnailsStorageReads = <String, Future<List<YoutiPieThumbnail>?>>{};
+
+  List<YoutiPieThumbnail>? getChannelThumbnailsSync(String channelId) {
+    return YoutubeInfoController.memoryCache.channelThumbnails.get(channelId);
+  }
+
+  Future<List<YoutiPieThumbnail>?> getChannelThumbnails(String channelId) async {
+    final thumbnails = getChannelThumbnailsSync(channelId);
+    if (thumbnails != null) return thumbnails;
+    return _channelThumbnailsStorageReads[channelId] ??= YoutubeInfoController.channel.fetchChannelInfoCache(channelId).then((page) => page?.thumbnails);
+  }
+
   FutureOr<bool?> isShortContent(String videoId) {
     final cached = tempVideoInfosFromStreams[videoId]?.isActuallyShortContent;
     if (cached != null) return cached;

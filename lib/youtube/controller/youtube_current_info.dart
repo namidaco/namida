@@ -118,7 +118,7 @@ class _YoutubeCurrentInfoController {
     _currentStreamInfo.value = streamInfoCached?.info ?? await YoutubeInfoController.utils.buildVideoStreamInfoFromCache(videoId);
 
     final chId = vidPageCached?.channelInfo?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
-    final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).read();
+    final chPage = chId == null ? null : await YoutubeInfoController.channel.fetchChannelInfoCache(chId);
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentChannelPage.value = chPage;
 

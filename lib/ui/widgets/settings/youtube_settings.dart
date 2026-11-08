@@ -440,19 +440,19 @@ class YoutubeSettings extends SettingSubpageProvider {
     );
   }
 
-  static Widget getNotificationsExtractorFlagWidget({void Function()? afterChanged}) => ObxO(
-    rx: settings.youtube.useNewNotificationExtractor,
-    builder: (context, value) => CustomSwitchListTile(
-      icon: Broken.notification_1,
-      value: value,
-      onChanged: (isTrue) {
-        settings.youtube.useNewNotificationExtractor.save(!isTrue);
-        afterChanged?.call();
-      },
-      title: 'use_new_notifications_extractor'.toUpperCase(),
-      subtitle: 'use if you don\'t see new notifications. order might not be accurate if enabled',
-    ),
-  );
+  // static Widget getNotificationsExtractorFlagWidget({void Function()? afterChanged}) => ObxO(
+  //   rx: settings.youtube.useNewNotificationExtractor,
+  //   builder: (context, value) => CustomSwitchListTile(
+  //     icon: Broken.notification_1,
+  //     value: value,
+  //     onChanged: (isTrue) {
+  //       settings.youtube.useNewNotificationExtractor.save(!isTrue);
+  //       afterChanged?.call();
+  //     },
+  //     title: 'use_new_notifications_extractor'.toUpperCase(),
+  //     subtitle: 'old extractor misses most new uploads, new extractor works but order might not be accurate',
+  //   ),
+  // );
 
   @override
   Widget build(BuildContext context) {
@@ -1048,7 +1048,7 @@ class _YTFlagsOptions extends StatelessWidget {
                   subtitle: 'liking adds to local favourites, unliking/disliking removes',
                 ),
               ),
-              YoutubeSettings.getNotificationsExtractorFlagWidget(),
+              // YoutubeSettings.getNotificationsExtractorFlagWidget(),
               ObxO(
                 rx: settings.youtube.maxPageCacheDurationMin,
                 builder: (context, maxPageCacheDurationMin) => CustomListTile(

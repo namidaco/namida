@@ -212,7 +212,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       );
     }
 
-    if (res == null && widget.fetchMissingIfRequired == true && videoId != null) {
+    if (res == null && widget.fetchMissingIfRequired == true && videoId != null && ThumbnailManager.inst.isThumbnailNotFound(videoId)) {
       res = await YoutubeInfoController.missingInfo.fetchMissingThumbnail(videoId);
     }
 

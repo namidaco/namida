@@ -5,11 +5,14 @@ class _ChannelInfoController {
 
   Future<YoutiPieChannelPageResult?> fetchChannelInfo({required String? channelId, String? handle, ExecuteDetails? details}) async {
     final res = await YoutiPie.channel.fetchChannelPage(channelId: channelId, handle: handle, details: details);
+    YoutubeInfoController.memoryCache.channelThumbnails.add(res);
     return res;
   }
 
-  Future<YoutiPieChannelPageResult?> fetchChannelInfoCache(String channelId) {
-    return YoutiPie.cacheBuilder.forChannel(channelId: channelId).read();
+  Future<YoutiPieChannelPageResult?> fetchChannelInfoCache(String channelId) async {
+    final res = await YoutiPie.cacheBuilder.forChannel(channelId: channelId).read();
+    YoutubeInfoController.memoryCache.channelThumbnails.add(res);
+    return res;
   }
 
   Future<ChannelPageAbout?> fetchChannelAbout({required YoutiPieChannelPageResult channel, ExecuteDetails? details}) async {

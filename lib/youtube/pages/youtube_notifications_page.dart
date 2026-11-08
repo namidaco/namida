@@ -5,14 +5,11 @@ import 'package:youtipie/class/stream_info_item/stream_info_item_notification.da
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_notification_card.dart';
@@ -32,24 +29,24 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
 
   void _onPlayAllUnread() => _pageActions?.currentList?.playNotifications(unreadOnly: true);
 
-  void _showFlagsDialog() {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        icon: Broken.flag,
-        title: lang.configure,
-        normalTitleStyle: true,
-        horizontalInset: 32.0,
-        actions: const [
-          DoneButton(),
-        ],
-        child: YoutubeSettings.getNotificationsExtractorFlagWidget(
-          afterChanged: () {
-            _pageActions?.forceFetchFeed();
-          },
-        ),
-      ),
-    );
-  }
+  // void _showFlagsDialog() {
+  //   NamidaNavigator.inst.navigateDialog(
+  //     dialog: CustomBlurryDialog(
+  //       icon: Broken.flag,
+  //       title: lang.configure,
+  //       normalTitleStyle: true,
+  //       horizontalInset: 32.0,
+  //       actions: const [
+  //         DoneButton(),
+  //       ],
+  //       child: YoutubeSettings.getNotificationsExtractorFlagWidget(
+  //         afterChanged: () {
+  //           _pageActions?.forceFetchFeed();
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +73,11 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
               tooltip: () => lang.playAll,
               onPressed: _onPlayAllUnread,
             ),
-            YoutubeMainPageHeaderIconButton(
-              icon: Broken.setting_4,
-              tooltip: () => lang.configure,
-              onPressed: _showFlagsDialog,
-            ),
+            // YoutubeMainPageHeaderIconButton(
+            //   icon: Broken.setting_4,
+            //   tooltip: () => lang.configure,
+            //   onPressed: _showFlagsDialog,
+            // ),
           ],
         ),
         cacheReader: YoutiPie.cacheBuilder.forNotificationItems(),

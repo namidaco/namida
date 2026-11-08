@@ -96,6 +96,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _canScrollQueue.value = can;
   }
 
+  void _onDismiss() {
+    MiniPlayerController.inst.snapToMini(haptic: false);
+    Player.inst.clearQueue();
+  }
+
   final _scrollController = NamidaScrollController.create();
 
   void resetGlowUnderVideo() => _shouldShowGlowUnderVideo.value = false;
@@ -479,11 +484,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                   maxHeight: context.height,
                   bgColor: miniplayerBGColor,
                   displayBottomBGLayer: !enableBottomNavBar,
-                  onDismiss: dismissibleMiniplayer ? Player.inst.clearQueue : null,
+                  onDismiss: dismissibleMiniplayer ? _onDismiss : null,
                   onDismissing: (dismissPercentage) {
                     if (Player.inst.isPlaying.value) {
                       final maxVolume = Player.inst.userPlayerVolumeForItem;
-                      Player.inst.setVolume((dismissPercentage * maxVolume).clampDouble(0.0, maxVolume));
+                      Player.inst.setTemporaryVolume((dismissPercentage * maxVolume).clampDouble(0.0, maxVolume));
                     }
                   },
                   onHeightChange: (percentage) {
