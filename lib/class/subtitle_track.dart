@@ -7,6 +7,7 @@ import 'package:youtipie/class/streams/caption.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lang.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -175,7 +176,7 @@ class SubtitleTrackYoutube extends SubtitleTrack {
 
     HttpClientWrapper? client;
     try {
-      client = HttpClientWrapper.createSync();
+      client = HttpClientWrapper.createSync(NetworkProxyController.inst.rhttpSettings);
       final res = await client.getUrl(_requestUrl, cancelToken: null);
       final body = res.body;
       if (body.isEmpty) return null;

@@ -18,6 +18,23 @@ class _NamidaChannelWindows extends NamidaChannel {
     );
   }
 
+  static const _kInternetSettingsPath = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings';
+
+  @override
+  Future<NetworkProxy?> getSystemProxy() async {
+    final key = win32_registry.CURRENT_USER;
+    return NetworkProxy.fromWindowsSettings(
+      proxyEnable: key.getInt('ProxyEnable', path: _kInternetSettingsPath),
+      proxyServer: key.getString('ProxyServer', path: _kInternetSettingsPath),
+      proxyOverride: key.getString('ProxyOverride', path: _kInternetSettingsPath),
+    );
+  }
+
+  @override
+  void listenSystemProxyChanges(Future<void> Function() onChanged) {
+    WindowsRegistryWatcher.watchCurrentUserKey(_kInternetSettingsPath, onChanged);
+  }
+
   @override
   bool get supportsAppIcons => true;
 

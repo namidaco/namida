@@ -39,6 +39,7 @@ import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/party/party_controller.dart';
@@ -248,6 +249,7 @@ Future<bool> _mainAppInitialization() async {
     }
 
     await settings.prepareAllSettings();
+    NetworkProxyController.inst.init();
     NamidaStorage.inst.initPickedDirectories().ignoreError();
     Language.initialize(); // should be done as early as possible
     TrackTileManager.initialize();
@@ -304,8 +306,10 @@ Future<bool> _mainAppInitialization() async {
       NamidaNavigator.setSystemUIImmersiveMode(false),
       Rhttp.init().then(
         (_) async {
-          final client = await RhttpCompatibleClient.create();
+          final proxySettings = NetworkProxyController.inst.rhttpSettings;
+          final client = await RhttpCompatibleClient.create(settings: proxySettings);
           final config = _HttpCacheCustomCacheConfig._(client);
+          NetworkProxyController.inst.addOnChanged(config._onProxyChanged);
           await HttpCacheManager.init(config: config).ignoreError();
         },
       ),
@@ -908,12 +912,24 @@ class _ScaledTextMediaQuery extends StatelessWidget {
 
 class _HttpCacheCustomCacheConfig extends GlobalCacheConfig {
   _HttpCacheCustomCacheConfig._(RhttpCompatibleClient client)
-    : super(
+    : _client = client,
+      super(
         cacheDirectory: Directory(''),
         maxBufferSize: 25 * 1024 * 1024, // 25MB
         rangeRequestSplitThreshold: 512 * 1024, // 512KB
         customHttpClient: client,
       );
+
+  RhttpCompatibleClient _client;
+
+  /// read for every download, so a proxy change applies to the next one.
+  @override
+  RhttpCompatibleClient get httpClient => _client;
+
+  void _onProxyChanged(NetworkProxy? _) {
+    final proxySettings = NetworkProxyController.inst.rhttpSettings;
+    _client = RhttpCompatibleClient.createSync(settings: proxySettings);
+  }
 }
 
 /// [AnimationController]s cut their durations while [disableAnimations] is on, same as with the platform setting.

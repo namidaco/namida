@@ -12,6 +12,7 @@ import 'package:youtipie/class/thumbnail.dart';
 
 import 'package:namida/class/http_manager.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -308,7 +309,7 @@ class _ActiveDownload {
   _ActiveDownload(this.token);
 }
 
-class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
+class _YTThumbnailDownloadManager with PortsProvider<(SendPort, ClientSettings?)>, NetworkProxyPortsProvider<(SendPort, ClientSettings?)> {
   final _activeDownloads = <_VideoIdAndTemp, _ActiveDownload>{};
   final _notFoundThumbnails = <String, int>{}; // {item id: not found time ms}
   final _tokens = IsolateMessageTokenWrapper.create();
@@ -373,9 +374,10 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     sendPort({'id': id, 'isTemp': isTemp, 'token': active.token, 'stop': true});
   }
 
-  static Future<void> _prepareDownloadResources(SendPort sendPort) async {
+  static Future<void> _prepareDownloadResources((SendPort, ClientSettings?) params) async {
+    final (sendPort, rhttpSettings) = params;
     await Rhttp.init();
-    final httpManager = HttpMultiRequestManager.createSync();
+    final httpManager = HttpMultiRequestManager.createSync(rhttpSettings);
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
@@ -481,8 +483,10 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         recievePort.close();
         streamSub?.cancel();
         return;
-      } else {
+      } else if (p is Map) {
         onThumbRequest(p);
+      } else if (p is NetworkProxyIsolateMessage) {
+        httpManager.replaceClients(p.rhttpSettings);
       }
     });
 
@@ -498,8 +502,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   }
 
   @override
-  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
-    return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
+  IsolateFunctionReturnBuild<(SendPort, ClientSettings?)> isolateFunction(SendPort port) {
+    return IsolateFunctionReturnBuild(_prepareDownloadResources, (port, rhttpSettingsForSpawn()));
   }
 
   void _onFileFinish(_VideoIdAndTemp mapKey, int token, File? downloadedFile, bool notfound) {

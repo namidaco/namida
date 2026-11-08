@@ -1,13 +1,18 @@
 // by claude
 import AVFoundation
+import CFNetwork
 import Flutter
+import Network
 import UIKit
 
-/// the `namida` channel: files & links the app was opened with, app icons, background work and the audio session rate.
+/// the `namida` channel: files & links the app was opened with, app icons, background work, the audio session rate and the system proxy.
 final class NamidaPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate {
+  private let channel: FlutterMethodChannel
   private let openedUrls: NamidaOpenedUrls
+  private var pathMonitor: NWPathMonitor?
 
   private init(channel: FlutterMethodChannel) {
+    self.channel = channel
     openedUrls = NamidaOpenedUrls(channel: channel)
   }
 
@@ -57,9 +62,49 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate
       openInFiles(path: path, isDirectory: isDirectory)
       result(nil)
 
+    case "getSystemProxy":
+      result(Self.systemProxy())
+
+    case "listenSystemProxy":
+      listenSystemProxy()
+      result(nil)
+
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  // MARK: - system proxy
+
+  /// the http proxy of the system settings as `{host, port, bypass}`, pac setups aren't read.
+  private static func systemProxy() -> [String: Any]? {
+    guard let settings = CFNetworkCopySystemProxySettings()?.takeRetainedValue() as? [String: Any] else { return nil }
+    let host: String
+    let port: Int
+    if settings["HTTPSEnable"] as? Int == 1, let httpsHost = settings["HTTPSProxy"] as? String, let httpsPort = settings["HTTPSPort"] as? Int {
+      host = httpsHost
+      port = httpsPort
+    } else if settings["HTTPEnable"] as? Int == 1, let httpHost = settings["HTTPProxy"] as? String, let httpPort = settings["HTTPPort"] as? Int {
+      host = httpHost
+      port = httpPort
+    } else {
+      return nil
+    }
+    var bypass = settings["ExceptionsList"] as? [String] ?? []
+    if settings["ExcludeSimpleHostnames"] as? Int == 1 { bypass.append("<local>") }
+    return ["host": host, "port": port, "bypass": bypass]
+  }
+
+  /// network path changes (a network switch) are the only proxy hint ios gives, dart skips updates that change nothing.
+  private func listenSystemProxy() {
+    if pathMonitor != nil { return }
+    let channel = self.channel
+    let monitor = NWPathMonitor()
+    monitor.pathUpdateHandler = { _ in
+      channel.invokeMethod("onSystemProxyChanged", arguments: nil)
+    }
+    monitor.start(queue: .main)
+    pathMonitor = monitor
   }
 
   // MARK: - opened urls

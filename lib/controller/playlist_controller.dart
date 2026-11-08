@@ -22,6 +22,7 @@ import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -696,7 +697,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     HttpMultiRequestManager? httpManager;
     try {
       if (artUrl.startsWith('http')) {
-        httpManager ??= await HttpMultiRequestManager.create();
+        httpManager ??= await HttpMultiRequestManager.create(NetworkProxyController.inst.rhttpSettings);
         await httpManager.execute(
           (requester) async {
             try {

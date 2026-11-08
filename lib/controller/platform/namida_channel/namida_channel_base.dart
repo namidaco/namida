@@ -92,6 +92,15 @@ abstract class NamidaChannel {
   /// lets android offer namida as a plugged usb dac's default app.
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
 
+  /// the proxy set in the system settings. env proxies are read for every platform by [NetworkProxyController].
+  Future<NetworkProxy?> getSystemProxy() async => null;
+
+  /// [onChanged] re-reads [getSystemProxy], called only by native change events.
+  void listenSystemProxyChanges(Future<void> Function() onChanged) {}
+
+  /// the proxy for networking outside dart & rhttp (android player streams, notification artwork). null restores the system behavior.
+  Future<void> setAppProxy(NetworkProxy? proxy) async {}
+
   Future<bool> shareFiles(List<String> paths) async => false;
 
   Future<void> scanMediaFilesTry(List<String> paths) async {}

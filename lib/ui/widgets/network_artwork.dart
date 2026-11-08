@@ -11,10 +11,12 @@ import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
@@ -263,9 +265,15 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
     final url = info.toLastfmUrl();
     if (url == null) return null;
 
+    final proxySettings = NetworkProxyController.inst.rhttpSettings;
     HttpTextResponse response;
     try {
-      response = await Rhttp.get(url, headers: _defaultHeaders, cancelToken: cancelToken).timeout(_pageTimeout);
+      response = await NamidaHttp.get(
+        url,
+        settings: proxySettings,
+        headers: _defaultHeaders,
+        cancelToken: cancelToken,
+      ).timeout(_pageTimeout);
     } catch (_) {
       return null;
     }
@@ -303,7 +311,13 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       newBytes = Uint8List.fromList([]); // write empty bytes
     } else {
       try {
-        final body = await Rhttp.getBytes(url, headers: _defaultHeaders, cancelToken: request.cancelToken).timeout(_imageTimeout);
+        final proxySettings = NetworkProxyController.inst.rhttpSettings;
+        final body = await NamidaHttp.getBytes(
+          url,
+          settings: proxySettings,
+          headers: _defaultHeaders,
+          cancelToken: request.cancelToken,
+        ).timeout(_imageTimeout);
         newBytes = body.body;
       } catch (_) {
         return null;
@@ -552,9 +566,15 @@ sealed class NetworkArtworkInfo {
         if (url == null) return null;
 
         const defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
+        final proxySettings = NetworkProxyController.inst.rhttpSettings;
         HttpTextResponse response;
         try {
-          response = await Rhttp.get(url, headers: defaultHeaders, cancelToken: cancelToken);
+          response = await NamidaHttp.get(
+            url,
+            settings: proxySettings,
+            headers: defaultHeaders,
+            cancelToken: cancelToken,
+          );
         } on RhttpCancelException catch (_) {
           return null;
         }

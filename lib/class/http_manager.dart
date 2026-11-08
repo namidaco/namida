@@ -13,20 +13,28 @@ class HttpMultiRequestManager {
       ), // queue not only handle performance, but also help preventing RST packets
       _runningRequestsCount = Int32List(_mainClients.length);
 
-  static Future<HttpMultiRequestManager> create([int clientsCount = 1]) async {
-    final clients = await Future.wait(List.generate(clientsCount, (_) => RhttpClient.create()));
+  /// [settings] is [NetworkProxyController.rhttpSettings], or what a worker isolate got.
+  static Future<HttpMultiRequestManager> create(ClientSettings? settings, [int clientsCount = 1]) async {
+    final clients = await Future.wait(List.generate(clientsCount, (_) => RhttpClient.create(settings: settings)));
     return HttpMultiRequestManager._(clients);
   }
 
-  factory HttpMultiRequestManager.createSync({int listsMaxItems = 2}) {
+  factory HttpMultiRequestManager.createSync(ClientSettings? settings, {int listsMaxItems = 2}) {
     return HttpMultiRequestManager._(
-      List<RhttpClient>.generate(listsMaxItems, (_) => RhttpClient.createSync(), growable: false),
+      List<RhttpClient>.generate(listsMaxItems, (_) => RhttpClient.createSync(settings: settings), growable: false),
     );
   }
 
   final List<RhttpClient> _mainClients;
   final List<Queue> _thumbQueues;
   final Int32List _runningRequestsCount;
+
+  /// for a proxy change. the old clients aren't disposed, queued requests still hold them, gc frees them after.
+  void replaceClients(ClientSettings? settings) {
+    for (int i = 0; i < _mainClients.length; i++) {
+      _mainClients[i] = RhttpClient.createSync(settings: settings);
+    }
+  }
 
   int _getLeastBusyIndex() {
     final counts = _runningRequestsCount;

@@ -444,6 +444,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     webhookUrl,
     webhookEvents,
     lyricsIntegrations,
+    proxyUrl,
     eggs,
   ];
 }

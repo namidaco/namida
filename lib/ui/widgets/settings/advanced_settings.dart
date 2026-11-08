@@ -18,6 +18,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lossless_check_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
@@ -149,15 +150,12 @@ class AdvancedSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
-    final hasAdvancedFlags = RhythmController.inst.isSupported || LosslessCheckController.inst.isSupported;
-    final flagsButton = hasAdvancedFlags
-        ? NamidaIconButton(
-            icon: Broken.flag,
-            tooltip: () => lang.configure,
-            iconColor: NColors.defaultIcon(),
-            onPressed: _showAdvancedFlagsDialog,
-          )
-        : null;
+    final flagsButton = NamidaIconButton(
+      icon: Broken.flag,
+      tooltip: () => lang.configure,
+      iconColor: NColors.defaultIcon(),
+      onPressed: _showAdvancedFlagsDialog,
+    );
     return SettingsCard(
       title: lang.advancedSettings,
       subtitle: lang.advancedSettingsSubtitle,
@@ -1431,10 +1429,88 @@ class _AdvancedFlagsOptions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const _ProxyUrlListTile(),
           if (RhythmController.inst.isSupported) const _RhythmScanListTile(),
           if (LosslessCheckController.inst.isSupported) const _LosslessCheckListTile(),
         ],
       ),
+    );
+  }
+}
+
+class _ProxyUrlListTile extends StatelessWidget {
+  const _ProxyUrlListTile();
+
+  void _openDialog() {
+    final urlController = TextEditingController(text: settings.proxyUrl.value);
+    final formKey = GlobalKey<FormState>();
+
+    void onSave() {
+      final isValid = formKey.currentState?.validate() ?? false;
+      if (!isValid) return;
+      final url = urlController.text.trim();
+      settings.proxyUrl.save(url);
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    String? validateUrl(String? value) {
+      value ??= '';
+      if (value.trim().isEmpty) return null;
+      final proxy = NetworkProxy.tryParseUrl(value);
+      return proxy == null ? 'Invalid URL' : null;
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: urlController.dispose,
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: 'proxy_url'.toUpperCase(),
+          normalTitleStyle: true,
+          icon: Broken.routing,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.save,
+              onTap: onSave,
+            ),
+          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: urlController,
+                hintText: 'http://127.0.0.1:8080',
+                labelText: 'URL',
+                keyboardType: TextInputType.url,
+                validator: validateUrl,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.proxyUrl,
+      builder: (context, url) {
+        final flagProxy = NetworkProxy.tryParseUrl(url);
+        String? subtitle = flagProxy?.toDisplayUrl();
+        if (subtitle == null) {
+          final systemProxy = NetworkProxyController.inst.current;
+          if (systemProxy != null) subtitle = '${lang.defaultLabel}: ${systemProxy.toDisplayUrl()}';
+        }
+        return CustomListTile(
+          icon: Broken.routing,
+          title: 'proxy_url'.toUpperCase(),
+          subtitle: subtitle,
+          onTap: _openDialog,
+        );
+      },
     );
   }
 }

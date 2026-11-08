@@ -9,12 +9,13 @@ import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/download_wrapper.dart';
 import 'package:namida/class/http_response_wrapper.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/core/extensions.dart';
 
 export 'package:namida/class/download_wrapper.dart' show DownloadCanceledException;
 
 /// Resumable downloads running in a shared isolate.
-class FilesDownloadManager with PortsProvider<SendPort> {
+class FilesDownloadManager with PortsProvider<(SendPort, ClientSettings?)>, NetworkProxyPortsProvider<(SendPort, ClientSettings?)> {
   static final inst = FilesDownloadManager._();
   FilesDownloadManager._();
 
@@ -129,9 +130,10 @@ class FilesDownloadManager with PortsProvider<SendPort> {
     await sendPort(p);
   }
 
-  static void _prepareDownloadResources(SendPort sendPort) async {
+  static void _prepareDownloadResources((SendPort, ClientSettings?) params) async {
+    final (sendPort, rhttpSettings) = params;
     await Rhttp.init();
-    final requester = HttpClientWrapper.createSync();
+    var requester = HttpClientWrapper.createSync(rhttpSettings);
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
@@ -150,7 +152,12 @@ class FilesDownloadManager with PortsProvider<SendPort> {
         return;
       }
 
-      p as Map;
+      if (p is! Map) {
+        // -- running downloads keep the client they started with
+        if (p is NetworkProxyIsolateMessage) requester = HttpClientWrapper.createSync(p.rhttpSettings);
+        return;
+      }
+
       final stop = p['stop'] as bool?;
       if (stop == true) {
         final files = p['files'] as List<File>?;
@@ -286,8 +293,8 @@ class FilesDownloadManager with PortsProvider<SendPort> {
   }
 
   @override
-  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
-    return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
+  IsolateFunctionReturnBuild<(SendPort, ClientSettings?)> isolateFunction(SendPort port) {
+    return IsolateFunctionReturnBuild(_prepareDownloadResources, (port, rhttpSettingsForSpawn()));
   }
 
   void _onFileFinish(String path, Object? exception) {

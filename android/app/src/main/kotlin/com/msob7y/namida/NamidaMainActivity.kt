@@ -199,6 +199,16 @@ class NamidaMainActivity : FlutterActivity() {
             result.error("MULTICAST_LOCK", e.message, null)
           }
         }
+        "getSystemProxy" -> result.success(NetworkProxyManager.getSystemProxy(context))
+        "listenSystemProxy" -> {
+          val engineChannel = channel
+          NetworkProxyManager.listenSystemProxy(context) { engineChannel.invokeMethod("onSystemProxyChanged", null) }
+          result.success(null)
+        }
+        "setAppProxy" -> {
+          NetworkProxyManager.setAppProxy(call.arguments as Map<*, *>?)
+          result.success(null)
+        }
         "setUsbDacHandlerEnabled" -> {
           val enabled = call.argument<Boolean>("enabled") ?: false
           val state = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED

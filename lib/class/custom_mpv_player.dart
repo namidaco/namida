@@ -12,6 +12,7 @@ import 'package:media_kit/media_kit.dart' as mk;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import 'package:namida/controller/audio_output_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -38,6 +39,9 @@ class CustomMPVPlayer implements AVPlayer {
     _setMpvProperty('audio-fallback-to-null', 'yes');
     final nativePlayer = _player.platform as mk.NativePlayer;
     nativePlayer.observeProperty('current-ao', _onAudioDriverChanged).ignoreError();
+    final networkProxyController = NetworkProxyController.inst;
+    networkProxyController.addOnChanged(_onProxyChanged);
+    if (networkProxyController.current != null) nativePlayer.onLoadHooks.add(_applyProxyForLoadingFile);
     _playerHeightStreamSub = _player.stream.height.listen((event) {
       final resolved = _dimensionResolver(event, null);
       if (resolved != null) _videoControllerListener(height: resolved);
@@ -424,6 +428,42 @@ class CustomMPVPlayer implements AVPlayer {
       completeDuration(dur > Duration.zero ? dur : null);
     });
     return await durationCompleter.future;
+  }
+
+  String _appliedHttpProxy = '';
+
+  /// the load hook is only there while a proxy is active.
+  void _onProxyChanged(NetworkProxy? proxy) {
+    final onLoadHooks = (_player.platform as mk.NativePlayer).onLoadHooks;
+    onLoadHooks.remove(_applyProxyForLoadingFile);
+    if (proxy != null) {
+      onLoadHooks.add(_applyProxyForLoadingFile);
+    } else if (_appliedHttpProxy.isNotEmpty) {
+      _appliedHttpProxy = '';
+      _setMpvProperty('http-proxy', '');
+    }
+  }
+
+  /// runs inside mpv's on_load hook, before each file opens. files from the local cache server or the lan stay direct, mpv has no bypass list.
+  Future<void> _applyProxyForLoadingFile() async {
+    final proxy = NetworkProxyController.inst.current;
+    if (proxy == null) return;
+    final nativePlayer = _player.platform as mk.NativePlayer;
+    try {
+      // -- no initialization wait, the hook holds the file until it returns
+      final path = await nativePlayer.getProperty('path', waitForInitialization: false);
+      final httpProxy = _isProxiedUrl(path, proxy) ? proxy.toUrl() : '';
+      if (httpProxy == _appliedHttpProxy) return;
+      await nativePlayer.setProperty('http-proxy', httpProxy, waitForInitialization: false);
+      _appliedHttpProxy = httpProxy;
+    } catch (_) {}
+  }
+
+  static bool _isProxiedUrl(String path, NetworkProxy proxy) {
+    final uri = Uri.tryParse(path);
+    if (uri == null) return false;
+    if (!uri.isScheme('http') && !uri.isScheme('https')) return false;
+    return !proxy.shouldBypass(uri.host);
   }
 
   mk.Playable? _playableOpening;
@@ -847,6 +887,7 @@ class CustomMPVPlayer implements AVPlayer {
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
     _videoControllerRaw?.rect.removeListener(_videoControllerListener);
     _audioFilters.dispose();
+    NetworkProxyController.inst.removeOnChanged(_onProxyChanged);
 
     return _player.dispose();
   }

@@ -13,10 +13,12 @@ import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -303,7 +305,11 @@ class _AboutPageState extends State<AboutPage> {
                       _loadingChangelog.value = true;
                       final NamidaMarkdownDocument document;
                       try {
-                        final response = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
+                        final proxySettings = NetworkProxyController.inst.rhttpSettings;
+                        final response = await NamidaHttp.get(
+                          'https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md',
+                          settings: proxySettings,
+                        );
                         document = await NamidaMarkdownDocument.parseAsync(response.body);
                       } finally {
                         _loadingChangelog.value = false;
@@ -1086,7 +1092,13 @@ class _AboutAsset {
   Future<File?> _download(File file) async {
     try {
       // -- myinstants sits behind cloudflare, which refuses requests without a user agent
-      final bytes = (await Rhttp.getBytes(url, headers: const HttpHeaders.rawMap({'User-Agent': 'Namida'}))).body;
+      final proxySettings = NetworkProxyController.inst.rhttpSettings;
+      final response = await NamidaHttp.getBytes(
+        url,
+        settings: proxySettings,
+        headers: const HttpHeaders.rawMap({'User-Agent': 'Namida'}),
+      );
+      final bytes = response.body;
       if (bytes.isEmpty) return null;
       // -- atomic, a half written file would be served forever otherwise
       return await file.writeAsBytesAtomic(bytes);

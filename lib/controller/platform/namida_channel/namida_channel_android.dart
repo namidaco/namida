@@ -50,6 +50,26 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<NetworkProxy?> getSystemProxy() async {
+    final map = await _channel.invokeMapMethod<Object?, Object?>('getSystemProxy');
+    return NetworkProxy.fromPlatformMap(map);
+  }
+
+  Future<void> Function()? _onSystemProxyChanged;
+
+  @override
+  void listenSystemProxyChanges(Future<void> Function() onChanged) {
+    _onSystemProxyChanged = onChanged;
+    _channel.invokeMethod('listenSystemProxy');
+  }
+
+  @override
+  Future<void> setAppProxy(NetworkProxy? proxy) async {
+    final args = proxy?.toPlatformMap();
+    await _channel.invokeMethod('setAppProxy', args);
+  }
+
+  @override
   Future<void> _setMulticastLockNative(bool enabled) async {
     await _channel.invokeMethod('setMulticastLock', {'enabled': enabled});
   }
@@ -177,6 +197,9 @@ class _NamidaChannelAndroid extends NamidaChannel {
       switch (call.method) {
         case 'onPipModeChanged':
           isInPip.value = call.arguments as bool;
+
+        case 'onSystemProxyChanged':
+          _onSystemProxyChanged?.call();
 
         case 'onResume':
           for (final fn in _onResume) {

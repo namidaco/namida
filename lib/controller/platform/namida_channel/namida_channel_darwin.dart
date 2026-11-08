@@ -23,7 +23,24 @@ abstract class _NamidaChannelDarwin extends NamidaChannel {
       case 'onOpenedUrls':
         final items = (call.arguments as List).cast<String>();
         _onOpenedUrls?.call(items);
+      case 'onSystemProxyChanged':
+        _onSystemProxyChanged?.call();
     }
+  }
+
+  Future<void> Function()? _onSystemProxyChanged;
+
+  /// macos: the dynamic store reports proxy changes, ios: network path changes (an edit on the same network isn't reported).
+  @override
+  void listenSystemProxyChanges(Future<void> Function() onChanged) {
+    _onSystemProxyChanged = onChanged;
+    _kDarwinChannel.invokeMethod('listenSystemProxy');
+  }
+
+  @override
+  Future<NetworkProxy?> getSystemProxy() async {
+    final map = await _kDarwinChannel.invokeMapMethod<Object?, Object?>('getSystemProxy');
+    return NetworkProxy.fromPlatformMap(map);
   }
 
   @override

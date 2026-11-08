@@ -23,7 +23,7 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/pip_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -490,10 +490,12 @@ class Lyrics {
   /// null when nothing was found and a request has failed.
   Future<String?> _fetchLyricsGoogle(List<String> possibleQueries) async {
     if (possibleQueries.isEmpty) return '';
-    return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
+    final settings = NetworkProxyController.inst.rhttpSettings;
+    return await _fetchLyricsGoogleIsolate.thready((possibleQueries, settings));
   }
 
-  static Future<String?> _fetchLyricsGoogleIsolate(List<String> searches) async {
+  static Future<String?> _fetchLyricsGoogleIsolate((List<String>, ClientSettings?) params) async {
+    final (searches, settings) = params;
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
     const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
@@ -503,7 +505,11 @@ class Lyrics {
     Future<String> requestQuery(String searchText) async {
       String body;
       try {
-        final res = await Rhttp.get(Uri.encodeFull("$url$searchText")).timeout(const Duration(seconds: 10));
+        final requestUrl = Uri.encodeFull("$url$searchText");
+        final res = await NamidaHttp.get(
+          requestUrl,
+          settings: settings,
+        ).timeout(const Duration(seconds: 10));
         body = res.body;
       } catch (_) {
         hadFailure = true;
@@ -581,7 +587,7 @@ class _LRCSearchResult {
   static const interrupted = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: true, failedProviders: [], isInstrumental: false);
 }
 
-class _LRCSearchManager with PortsProvider<SendPort> {
+class _LRCSearchManager with PortsProvider<(SendPort, ClientSettings?)>, NetworkProxyPortsProvider<(SendPort, ClientSettings?)> {
   _LRCSearchManager();
 
   int _latestToken = 0;
@@ -630,13 +636,14 @@ class _LRCSearchManager with PortsProvider<SendPort> {
   }
 
   @override
-  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
-    return IsolateFunctionReturnBuild(_prepareResourcesAndSearch, port);
+  IsolateFunctionReturnBuild<(SendPort, ClientSettings?)> isolateFunction(SendPort port) {
+    return IsolateFunctionReturnBuild(_prepareResourcesAndSearch, (port, rhttpSettingsForSpawn()));
   }
 
-  static void _prepareResourcesAndSearch(SendPort sendPort) async {
+  static void _prepareResourcesAndSearch((SendPort, ClientSettings?) params) async {
+    final (sendPort, rhttpSettings) = params;
     await Rhttp.init();
-    final mainRequester = HttpClientWrapper.createSync();
+    final mainRequester = HttpClientWrapper.createSync(rhttpSettings);
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
@@ -651,7 +658,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       'User-Agent': 'namida $appVersion (${AppSocial.GITHUB})',
     };
 
-    final searcher = _LRCProvidersSearcher(mainRequester, defaultHeaders);
+    var searcher = _LRCProvidersSearcher(mainRequester, defaultHeaders);
     _LRCSearchSession? activeSession;
 
     // -- start listening
@@ -685,6 +692,9 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         final lyrics = await searcher.search(session, onPartial: (lyrics) => send(lyrics, false));
         send(lyrics, true);
         if (identical(activeSession, session)) activeSession = null;
+      } else if (p is NetworkProxyIsolateMessage) {
+        final requester = HttpClientWrapper.createSync(p.rhttpSettings);
+        searcher = _LRCProvidersSearcher(requester, defaultHeaders);
       }
     });
 

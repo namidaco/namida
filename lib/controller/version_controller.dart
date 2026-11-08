@@ -3,8 +3,10 @@ import 'dart:convert';
 
 import 'package:rhttp/rhttp.dart';
 
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
@@ -63,11 +65,13 @@ class VersionController {
   }
 
   Future<VersionWrapper?> __fetchLatestVersionOnly(bool isBeta) async {
-    return _IsolateExecuter.__fetchLatestVersionOnlyIsolate.thready(isBeta);
+    final settings = NetworkProxyController.inst.rhttpSettings;
+    return _IsolateExecuter.__fetchLatestVersionOnlyIsolate.thready((isBeta, settings));
   }
 
   Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnly({required VersionWrapper currentVersion}) async {
-    return _IsolateExecuter._fetchReleasesAfterOnlyIsolate.thready(currentVersion);
+    final settings = NetworkProxyController.inst.rhttpSettings;
+    return _IsolateExecuter._fetchReleasesAfterOnlyIsolate.thready((currentVersion, settings));
   }
 }
 
@@ -85,12 +89,13 @@ class VersionReleaseInfo {
 }
 
 class _IsolateExecuter {
-  static Future<dynamic> _requestReleasesApi(bool isBeta, {String endpoint = '', Map<String, dynamic>? queryParameters}) async {
+  static Future<dynamic> _requestReleasesApi(bool isBeta, ClientSettings? settings, {String endpoint = '', Map<String, dynamic>? queryParameters}) async {
     final repoName = isBeta ? 'namida-snapshots' : 'namida';
     final uri = Uri.https('api.github.com', '/repos/namidaco/$repoName/releases$endpoint', queryParameters);
     const String? token = null;
-    final response = await Rhttp.get(
+    final response = await NamidaHttp.get(
       uri.toString(),
+      settings: settings,
       headers: const HttpHeaders.rawMap({
         'User-Agent': 'namida',
         if (token != null) 'Authorization': 'Bearer $token',
@@ -99,10 +104,11 @@ class _IsolateExecuter {
     return jsonDecode(response.body);
   }
 
-  static Future<VersionWrapper?> __fetchLatestVersionOnlyIsolate(bool isBeta) async {
+  static Future<VersionWrapper?> __fetchLatestVersionOnlyIsolate((bool, ClientSettings?) params) async {
+    final (isBeta, settings) = params;
     await Rhttp.init().ignoreError();
     try {
-      final resMap = await _requestReleasesApi(isBeta, endpoint: '/latest') as Map;
+      final resMap = await _requestReleasesApi(isBeta, settings, endpoint: '/latest') as Map;
       final latestRelease = resMap['name'] as String?;
       if (latestRelease != null) {
         return VersionWrapper(latestRelease);
@@ -111,7 +117,8 @@ class _IsolateExecuter {
     return null;
   }
 
-  static Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnlyIsolate(VersionWrapper currentVersion) async {
+  static Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnlyIsolate((VersionWrapper, ClientSettings?) params) async {
+    final (currentVersion, settings) = params;
     await Rhttp.init().ignoreError();
 
     final allReleasesAfterCurrent = <VersionReleaseInfo>[];
@@ -124,6 +131,7 @@ class _IsolateExecuter {
         final releases =
             await _requestReleasesApi(
                   currentVersion.isBeta,
+                  settings,
                   queryParameters: {
                     'per_page': '$perPage',
                     'page': '$page',

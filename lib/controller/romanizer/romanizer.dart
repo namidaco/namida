@@ -7,6 +7,7 @@ import 'package:rhttp/rhttp.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer_engine.dart';
@@ -175,7 +176,7 @@ class Romanizer {
     final dir = Directory(AppDirs.ROMANIZATION);
     final zipFile = File('${AppDirs.ROMANIZATION}bundle.zip.temp');
     final cancelToken = _downloadCancelToken = CancelToken();
-    final client = HttpClientWrapper.createSync();
+    final client = HttpClientWrapper.createSync(NetworkProxyController.inst.rhttpSettings);
     IOSink? sink;
     try {
       await dir.create(recursive: true);
