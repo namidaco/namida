@@ -3,7 +3,8 @@
 
 GitHub keeps a <picture> inside <summary> clickable (a bare <img> gets wrapped in a link that opens the image), and
 swaps the light and dark image with the GitHub theme. Text is drawn as shapes with the app's Lexend Deca font, so it
-looks the same everywhere. Icons are either glyphs of the app's icon font (Broken.<icon> in
+looks the same everywhere. Section cards of one level share one width, fitted to the longest title, and every run
+updates the card widths in README.md. Icons are either glyphs of the app's icon font (Broken.<icon> in
 lib/core/icon_fonts/broken_icons.dart) or brand logos written as si:<name>, read from some stuff/summaries/brands/
 (simple-icons svgs, https://simpleicons.org).
 
@@ -36,6 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / 'some stuff' / 'summaries'
 MANIFEST = OUT_DIR / 'cards.json'
 README_DIR = './some%20stuff/summaries'
+README_FILE = ROOT / 'README.md'
 LEXEND_DIR = ROOT / 'assets' / 'fonts' / 'LexendDeca'
 
 SECTION_ARROW_ICON = 'arrow_down_2'
@@ -43,8 +45,8 @@ LINK_ARROW_ICON = 'export_1'
 LINK_ANCHOR_ARROW_ICON = 'arrow_square_down'
 
 LEVELS = {
-    1: dict(width=640, height=58, gap=10, radius=12, pad=11, tile=36, tile_radius=9, icon=22, title=21, subtitle=16, line_gap=7),
-    2: dict(width=560, height=46, gap=8, radius=10, pad=8, tile=30, tile_radius=8, icon=18, title=17, subtitle=14, line_gap=5),
+    1: dict(height=58, gap=10, radius=12, pad=11, tile=36, tile_radius=9, icon=22, title=21, subtitle=16, line_gap=7),
+    2: dict(height=46, gap=8, radius=10, pad=8, tile=30, tile_radius=8, icon=18, title=17, subtitle=14, line_gap=5),
 }
 
 SECTION_THEMES = {
@@ -59,7 +61,8 @@ LINK_THEMES = {
 
 LINK_EXTRA_HEIGHT = 6
 LINK_TEXT_GAP = 12
-LINK_ARROW_GAP = 28
+ARROW_GAP = 28
+SECTION_ARROW_EDGE = 6
 
 STYLES = {
     'section': dict(themes=SECTION_THEMES, display_scale=0.68, text_scale=0.68, title_only_text_scale=0.68, arrow_icon=SECTION_ARROW_ICON),
@@ -122,43 +125,62 @@ def main():
     if MANIFEST.exists():
         manifest_text = MANIFEST.read_text(encoding='utf-8')
         cards = json.loads(manifest_text)
-    renderer = _CardRenderer()
 
-    if args.command == 'snippet':
-        card = cards[args.key]
-        snippet_text = renderer.snippet(args.key, card, is_open=args.open, anchor=args.anchor, url=args.url)
-        print(snippet_text)
-        return
-
-    if args.command in ('add', 'link', STORE_KIND):
-        is_section = args.command == 'add'
+    is_new_card = args.command in ('add', 'link', STORE_KIND)
+    if is_new_card:
         if args.command == STORE_KIND:
             card = dict(kind=STORE_KIND, title=args.title, icon=args.icon, url=args.url, color=args.color, caption=args.caption, beta=args.beta)
         else:
             card = dict(title=args.title, icon=args.icon, level=args.level)
         if args.command == 'link':
             card.update(kind='link', url=args.url, subtitle=args.subtitle, width=args.width, color=args.color)
-        renderer.write(args.key, card)
         cards[args.key] = card
         manifest_text = json.dumps(cards, indent=2)
         MANIFEST.write_text(manifest_text + '\n', encoding='utf-8', newline='\n')
+
+    renderer = _CardRenderer(cards)
+    if args.command == 'snippet':
+        card = cards[args.key]
+        snippet_text = renderer.snippet(args.key, card, is_open=args.open, anchor=args.anchor, url=args.url)
+        print(snippet_text)
+        return
+
+    for key, card in cards.items():
+        renderer.write(key, card)
+    renderer.sync_readme_widths(cards)
+
+    if is_new_card:
+        is_section = args.command == 'add'
         is_open = is_section and args.open
         anchor = args.anchor if is_section else None
         snippet_text = renderer.snippet(args.key, card, is_open=is_open, anchor=anchor, url=None)
         print(snippet_text)
         return
 
-    for key, card in cards.items():
-        renderer.write(key, card)
     out_dir_relative = OUT_DIR.relative_to(ROOT)
     print('generated %d cards in %s' % (len(cards), out_dir_relative))
 
 
 class _CardRenderer:
-    def __init__(self):
+    def __init__(self, cards):
         self._icons = Icons()
         self._title_font = TextFont(LEXEND_DIR / 'LexendDeca-SemiBold.ttf')
         self._subtitle_font = TextFont(LEXEND_DIR / 'LexendDeca-Regular.ttf')
+        self._section_widths = self._compute_section_widths(cards)
+
+    def _compute_section_widths(self, cards):
+        section_widths = {}
+        for card in cards.values():
+            if card.get('kind'):
+                continue
+            level_number = card.get('level', 1)
+            level = LEVELS[level_number]
+            title_size, _ = self._text_sizes(card, level)
+            title_width = self._title_font.width(card['title'], title_size)
+            text_end = self._section_text_x(level) + title_width
+            width = round(text_end + ARROW_GAP + level['icon'] + level['pad'] + SECTION_ARROW_EDGE)
+            section_widths[level_number] = max(section_widths.get(level_number, 0), width)
+        return section_widths
 
     def write(self, key, card):
         OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -180,9 +202,7 @@ class _CardRenderer:
             alt = html.escape(card['title'])
             href = url or card['url']
             return f'<a href="{href}"><img src="{README_DIR}/{key}.svg" height="{STORE["display_height"]}" alt="{alt}"></a>'
-        style = self._style_of(card)
-        width = self._layout(card)['width']
-        display_width = round(width * style['display_scale'])
+        display_width = self._display_width(card)
         alt = html.escape(card['title'])
         picture = (
             f'<picture><source media="(prefers-color-scheme: dark)" srcset="{README_DIR}/{key}_dark.svg">'
@@ -195,18 +215,38 @@ class _CardRenderer:
         anchor_line = f'<a name="{anchor}"></a>\n' if anchor else ''
         return f'{anchor_line}<details{open_attribute}>\n<summary>{picture}</summary>'
 
+    def sync_readme_widths(self, cards):
+        with open(README_FILE, encoding='utf-8', newline='') as readme:
+            readme_text = readme.read()
+        synced_text = readme_text
+        for key, card in cards.items():
+            if card.get('kind') == STORE_KIND:
+                continue
+            display_width = self._display_width(card)
+            light_src = re.escape(f'{README_DIR}/{key}_light.svg')
+            width_regex = re.compile(f'(<img src="{light_src}" width=")\\d+"')
+            synced_text = width_regex.sub(f'\\g<1>{display_width}"', synced_text)
+        if synced_text == readme_text:
+            return
+        with open(README_FILE, 'w', encoding='utf-8', newline='') as readme:
+            readme.write(synced_text)
+        print('updated card widths in README.md')
+
+    def _display_width(self, card):
+        style = self._style_of(card)
+        width = self._layout(card)['width']
+        return round(width * style['display_scale'])
+
     def _layout(self, card):
         level = LEVELS[card.get('level', 1)]
         tile = level['tile']
         icon_size = level['icon']
         if card.get('kind') != 'link':
-            card_height = level['height']
             tile_x = level['pad']
-            text_x = tile_x * 2 + tile + 4
-            width = level['width']
+            width = self._section_widths[card.get('level', 1)]
             return dict(
-                width=width, card_height=card_height, card_radius=level['radius'], tile_x=tile_x, tile_radius=level['tile_radius'],
-                text_x=text_x, arrow_x=width - tile_x - 6 - icon_size,
+                width=width, card_height=level['height'], card_radius=level['radius'], tile_x=tile_x, tile_radius=level['tile_radius'],
+                text_x=self._section_text_x(level), arrow_x=width - tile_x - SECTION_ARROW_EDGE - icon_size,
             )
 
         card_height = level['height'] + LINK_EXTRA_HEIGHT
@@ -222,7 +262,7 @@ class _CardRenderer:
             if subtitle:
                 subtitle_width = self._subtitle_font.width(subtitle, subtitle_size)
             text_end = text_x + max(title_width, subtitle_width)
-            width = round(text_end + LINK_ARROW_GAP + card_radius + icon_size / 2)
+            width = round(text_end + ARROW_GAP + card_radius + icon_size / 2)
         return dict(
             width=width, card_height=card_height, card_radius=card_radius, tile_x=tile_x, tile_radius=tile / 2,
             text_x=text_x, arrow_x=width - card_radius - icon_size / 2,
@@ -334,6 +374,10 @@ class _CardRenderer:
     @staticmethod
     def _style_of(card):
         return STYLES[card.get('kind', 'section')]
+
+    @staticmethod
+    def _section_text_x(level):
+        return level['pad'] * 2 + level['tile'] + 4
 
 
 def _brand_theme(brand, colors, neutral):

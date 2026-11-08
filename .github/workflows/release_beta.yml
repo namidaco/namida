@@ -725,3 +725,13 @@ jobs:
       release_repo: ${{ needs.create_release.outputs.target_repo }}
       release_tag: ${{ needs.create_release.outputs.tag }}
     secrets: inherit
+
+  # -- stable drafts redraw the badges on their own when published
+  readme_badges:
+    if: ${{ !cancelled() && inputs.is_beta }}
+    needs: [build_android, build_windows, build_linux, build_appimage, build_flatpak, build_apple]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/readme_badges.yml

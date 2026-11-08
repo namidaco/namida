@@ -3,8 +3,11 @@ name: release_stable
 on:
   workflow_dispatch:
 
+# -- pages + id-token are for release_beta's readme_badges job, nested jobs can't get more than this
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   release:

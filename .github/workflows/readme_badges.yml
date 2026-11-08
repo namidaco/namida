@@ -2,10 +2,14 @@ name: readme_badges
 
 # -- redraws the README badge chips with fresh numbers and publishes them on this repo's GitHub Pages,
 # -- so the README links to fixed urls and nothing gets committed
+# -- daily for the numbers that change outside this repo, right away after a release
 on:
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
+  workflow_call:
+  release:
+    types: [published]
   push:
     branches: [main]
     paths:

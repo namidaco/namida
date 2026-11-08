@@ -9,13 +9,13 @@ A Beautiful and Feature-rich Music & Video Player with YouTube Support, Built in
 <a href="https://t.me/namida_official"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/channel_dark.svg"><img src="https://namidaco.github.io/namida/badges/channel_light.svg" height="24" alt="Channel"></picture></a>
 <a href="https://t.me/+FmdfsgKoGmM1ZGFk"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/chat_dark.svg"><img src="https://namidaco.github.io/namida/badges/chat_light.svg" height="24" alt="Chat"></picture></a>
 <a href="https://discord.gg/WeY7DTVChT"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/discord_dark.svg"><img src="https://namidaco.github.io/namida/badges/discord_light.svg" height="24" alt="Discord"></picture></a>
-<a href="#installation"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/platforms_dark.svg"><img src="https://namidaco.github.io/namida/badges/platforms_light.svg" height="24" alt="Platforms"></picture></a><br>
+<a href="#installation"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/platforms_dark.svg"><img src="https://namidaco.github.io/namida/badges/platforms_light.svg" height="24" alt="Platforms"></picture></a>
 <a href="https://github.com/namidaco/namida/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/stable_dark.svg"><img src="https://namidaco.github.io/namida/badges/stable_light.svg" height="24" alt="Stable"></picture></a>
 <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/beta_dark.svg"><img src="https://namidaco.github.io/namida/badges/beta_light.svg" height="24" alt="Beta"></picture></a>
 <a href="https://github.com/namidaco/namida/commits/main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/since_stable_dark.svg"><img src="https://namidaco.github.io/namida/badges/since_stable_light.svg" height="24" alt="Since stable"></picture></a>
 <a href="https://github.com/namidaco/namida/commits/main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/last_commit_dark.svg"><img src="https://namidaco.github.io/namida/badges/last_commit_light.svg" height="24" alt="Last commit"></picture></a>
 <a href="https://aur.archlinux.org/packages/namida-bin"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/aur_dark.svg"><img src="https://namidaco.github.io/namida/badges/aur_light.svg" height="24" alt="AUR"></picture></a>
-<a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/winget_dark.svg"><img src="https://namidaco.github.io/namida/badges/winget_light.svg" height="24" alt="winget"></picture></a><br>
+<a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/namidaco/Namida"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/winget_dark.svg"><img src="https://namidaco.github.io/namida/badges/winget_light.svg" height="24" alt="winget"></picture></a>
 <a href="https://github.com/namidaco/namida/stargazers"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/stars_dark.svg"><img src="https://namidaco.github.io/namida/badges/stars_light.svg" height="24" alt="Stars"></picture></a>
 <a href="https://github.com/namidaco/namida/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/downloads_dark.svg"><img src="https://namidaco.github.io/namida/badges/downloads_light.svg" height="24" alt="Downloads"></picture></a>
 <a href="https://github.com/namidaco/namida-snapshots/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://namidaco.github.io/namida/badges/beta_downloads_dark.svg"><img src="https://namidaco.github.io/namida/badges/beta_downloads_light.svg" height="24" alt="Beta downloads"></picture></a>
@@ -63,7 +63,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="library--indexing"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/library_indexing_dark.svg"><img src="./some%20stuff/summaries/library_indexing_light.svg" width="435" align="absmiddle" alt="Library &amp; Indexing"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/library_indexing_dark.svg"><img src="./some%20stuff/summaries/library_indexing_light.svg" width="303" align="absmiddle" alt="Library &amp; Indexing"></picture></summary>
 
 - Powerful Indexer & Tag Editor, powered by `taglib`.
 - Artists & Genres Separators.
@@ -75,7 +75,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="look--feel"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/look_feel_dark.svg"><img src="./some%20stuff/summaries/look_feel_light.svg" width="435" align="absmiddle" alt="Look &amp; Feel"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/look_feel_dark.svg"><img src="./some%20stuff/summaries/look_feel_light.svg" width="303" align="absmiddle" alt="Look &amp; Feel"></picture></summary>
 
 - Material3-like Theme with Dynamic Colors from the current artwork.
 - Home, Tracks, Albums, Artists, Genres, Playlists, Folders & Queues Pages, plus cool ones like Most Played, Moods, Tags, Ratings, Languages, Stats & more.
@@ -87,7 +87,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="sound"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/sound_dark.svg"><img src="./some%20stuff/summaries/sound_light.svg" width="435" align="absmiddle" alt="Sound"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/sound_dark.svg"><img src="./some%20stuff/summaries/sound_light.svg" width="303" align="absmiddle" alt="Sound"></picture></summary>
 
 - Parametric Equalizer with AutoEQ import. <sub><code>new</code></sub>
 - Bit-perfect Playback, USB DAC Direct Access, Exclusive Mode (desktop) & 32-bit float audio. <sub><code>new</code></sub>
@@ -103,7 +103,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="streaming--youtube"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/streaming_youtube_dark.svg"><img src="./some%20stuff/summaries/streaming_youtube_light.svg" width="435" align="absmiddle" alt="Streaming &amp; YouTube"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/streaming_youtube_dark.svg"><img src="./some%20stuff/summaries/streaming_youtube_light.svg" width="303" align="absmiddle" alt="Streaming &amp; YouTube"></picture></summary>
 
 - Best Video & Audio Quality, Audio Only & Data Saver Mode.
 - Sign in with Multiple Profiles, get your Feed, Subscriptions, Playlists & Notifications.
@@ -113,29 +113,26 @@ Everything you might expect from a music player, in addition to the following:
 - Subtitles & Captions.
 - Downloads, Caching & Offline Playback, with a Cache Priority System.
 - Split Downloads by Chapters & Remove Sponsor Segments. <sub><code>new</code></sub>
-- Downloads Tags config & Filename builder (similar to yt-dlp).
+- Downloads Tags config & Filename builder (similar to yt-dlp).<br>
+  <a href="https://docs.namida.app/features/youtube/#filename-formats"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_formats_dark.svg"><img src="./some%20stuff/summaries/yt_formats_light.svg" width="239" align="absmiddle" alt="Available formats &amp; example"></picture></a>
 - Auto title/artist/album extraction from video titles, for downloads & scrobbling.
-
-<a href="https://docs.namida.app/features/youtube/#filename-formats"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_formats_dark.svg"><img src="./some%20stuff/summaries/yt_formats_light.svg" width="239" align="absmiddle" alt="Available formats &amp; example"></picture></a>
 
 </details>
 
 <a name="video-integration"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_integration_dark.svg"><img src="./some%20stuff/summaries/video_integration_light.svg" width="435" align="absmiddle" alt="Video Integration"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_integration_dark.svg"><img src="./some%20stuff/summaries/video_integration_light.svg" width="303" align="absmiddle" alt="Video Integration"></picture></summary>
 
-- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube
-
-<a href="https://docs.namida.app/guides/medium/#link-local-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_local_dark.svg"><img src="./some%20stuff/summaries/video_local_light.svg" width="149" align="absmiddle" alt="How locally?"></picture></a>
-<a href="https://docs.namida.app/guides/medium/#link-yt-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_youtube_dark.svg"><img src="./some%20stuff/summaries/video_youtube_light.svg" width="158" align="absmiddle" alt="How youtube?"></picture></a>
-
+- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube<br>
+  <a href="https://docs.namida.app/guides/medium/#link-local-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_local_dark.svg"><img src="./some%20stuff/summaries/video_local_light.svg" width="149" align="absmiddle" alt="How locally?"></picture></a>
+  <a href="https://docs.namida.app/guides/medium/#link-yt-video"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/video_youtube_dark.svg"><img src="./some%20stuff/summaries/video_youtube_light.svg" width="158" align="absmiddle" alt="How youtube?"></picture></a>
 - Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
 
 </details>
 
 <a name="system-integration"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/system_integration_dark.svg"><img src="./some%20stuff/summaries/system_integration_light.svg" width="435" align="absmiddle" alt="System Integration"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/system_integration_dark.svg"><img src="./some%20stuff/summaries/system_integration_light.svg" width="303" align="absmiddle" alt="System Integration"></picture></summary>
 
 - Home Screen Widget & Quick Settings Tiles.
 - Android Auto & Wear OS. <sub><code>new</code></sub>
@@ -147,7 +144,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="others"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/others_dark.svg"><img src="./some%20stuff/summaries/others_light.svg" width="435" align="absmiddle" alt="Others"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/others_dark.svg"><img src="./some%20stuff/summaries/others_light.svg" width="303" align="absmiddle" alt="Others"></picture></summary>
 
 - Lyrics fetching & displaying (Synced, Plain & Word Synced lrc/ttml), and an Editor to sync them yourself. <sub><code>new</code></sub>
 - Smart Playlists with flexible rules, usable in search too.
@@ -169,7 +166,7 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="some-additional-cool-features"></a>
 <details open>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/cool_features_dark.svg"><img src="./some%20stuff/summaries/cool_features_light.svg" width="435" align="absmiddle" alt="Some additional cool features"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/cool_features_dark.svg"><img src="./some%20stuff/summaries/cool_features_light.svg" width="303" align="absmiddle" alt="Some additional cool features"></picture></summary>
 
 - Smort Tracks Generation: uuh.. with dis advanced algorithm brought for you, generate tracks u often listened to alongside the current one. also by release date, time range, ratings, moods, or randomly.
 - Lost Memories: meet tracks you listened to around this time, but n years ago.
@@ -179,8 +176,8 @@ Everything you might expect from a music player, in addition to the following:
 - Insert after latest inserted, want to insert multiple tracks one after each other? this will get your back.
 - Repeat for N times, in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
 - Extract feat. & ft. artists, u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
-- <p>CAN IMPORT YOUTUBE HISTORY & DATA <img src="some stuff/ong.png" width=16 height=16/></p>
-- <p>LASTFM, SPOTIFY & LISTENBRAINZ TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
+- CAN IMPORT YOUTUBE HISTORY & DATA <img src="some stuff/ong.png" width=16 height=16/>
+- LASTFM, SPOTIFY & LISTENBRAINZ TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/>
 - decent amount of options/customizations in settings & dialogs, make sure to check them out ^^
 
 </details>
@@ -196,12 +193,12 @@ Everything you might expect from a music player, in addition to the following:
 
 <a name="customization-settings"></a>
 <details>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/customization_dark.svg"><img src="./some%20stuff/summaries/customization_light.svg" width="435" align="absmiddle" alt="Customization Settings"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/customization_dark.svg"><img src="./some%20stuff/summaries/customization_light.svg" width="303" align="absmiddle" alt="Customization Settings"></picture></summary>
     <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_customization.webp" class="imgbr" width="50%">
 </details>
 
 <details>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/all_settings_dark.svg"><img src="./some%20stuff/summaries/all_settings_light.svg" width="435" align="absmiddle" alt="All Settings"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/all_settings_dark.svg"><img src="./some%20stuff/summaries/all_settings_light.svg" width="303" align="absmiddle" alt="All Settings"></picture></summary>
 
 <table>
   <tr><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_theme.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_indexer.webp" class="imgbr"/></td></tr>
@@ -212,12 +209,12 @@ Everything you might expect from a music player, in addition to the following:
 </details>
 
 <details>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_miniplayer_dark.svg"><img src="./some%20stuff/summaries/yt_miniplayer_light.svg" width="435" align="absmiddle" alt="YouTube Miniplayer"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/yt_miniplayer_dark.svg"><img src="./some%20stuff/summaries/yt_miniplayer_light.svg" width="303" align="absmiddle" alt="YouTube Miniplayer"></picture></summary>
     <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/manual/yt_miniplayer.jpg" class="imgbr" width="50%">
 </details>
 
 <details>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/screenshots_2023_dark.svg"><img src="./some%20stuff/summaries/screenshots_2023_light.svg" width="435" align="absmiddle" alt="2023 Screenshots"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/screenshots_2023_dark.svg"><img src="./some%20stuff/summaries/screenshots_2023_light.svg" width="303" align="absmiddle" alt="2023 Screenshots"></picture></summary>
 
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_1.jpg" class="imgbr"/>
 <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_2.jpg" class="imgbr"/>
@@ -229,7 +226,7 @@ Everything you might expect from a music player, in addition to the following:
 </details>
 
 <details open>
-<summary><a name="usage-preview"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/usage_preview_dark.svg"><img src="./some%20stuff/summaries/usage_preview_light.svg" width="435" align="absmiddle" alt="Usage Preview"></picture></summary>
+<summary><a name="usage-preview"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/usage_preview_dark.svg"><img src="./some%20stuff/summaries/usage_preview_light.svg" width="303" align="absmiddle" alt="Usage Preview"></picture></summary>
 
 <table>
 <tr><th width="50%">Animating Thumbnail</th><th width="50%">Recommends &amp; Listens</th></tr>
@@ -331,8 +328,9 @@ Full installation steps for every platform (which file to pick, dependencies and
 
 <a name="permission-note"></a>
 <details>
-<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/permissions_dark.svg"><img src="./some%20stuff/summaries/permissions_light.svg" width="435" align="absmiddle" alt="Android Permissions"></picture></summary>
+<summary><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/permissions_dark.svg"><img src="./some%20stuff/summaries/permissions_light.svg" width="303" align="absmiddle" alt="Android Permissions"></picture></summary>
 
+> The permissions namida uses on android and why:
 > - `WAKE_LOCK` & `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_MEDIA_PLAYBACK`: keep app alive for media playback.
 > - `INTERNET`: for many stuff like artist/album images, streaming & downloading, etc.
 > - `READ_EXTERNAL_STORAGE` (Android ≤ 12): list files from indexer folders only.
@@ -377,7 +375,7 @@ Come hang out with us for updates, tips, ideas or just to chat（。＾▽＾）
 <a href="https://discord.gg/WeY7DTVChT"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/social_discord_dark.svg"><img src="./some%20stuff/summaries/social_discord_light.svg" width="176" align="absmiddle" alt="Discord"></picture></a>
 
 <details>
-<summary><a name="companion-apps"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/companion_apps_dark.svg"><img src="./some%20stuff/summaries/companion_apps_light.svg" width="435" align="absmiddle" alt="Companion Apps"></picture></summary>
+<summary><a name="companion-apps"></a><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/companion_apps_dark.svg"><img src="./some%20stuff/summaries/companion_apps_light.svg" width="303" align="absmiddle" alt="Companion Apps"></picture></summary>
 
 > **Cool tools made by the community**
 >
@@ -437,5 +435,5 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 <br>
 
 > Made by human, **not** vibe coded. AI usage is minimal and very selective.
-> Every design choice comes after thoughtful decisions and series of refining, to every pixel.
-> Parts that are built by ai will have a disclaimer. [See here](https://github.com/namidaco/namida/issues/945) for more info.
+> Every design choice comes after thoughtful decisions and series of refining, to every pixel fr.
+> Parts that are built by ai will have a disclaimer. [See here](https://github.com/namidaco/namida/issues/945) for more info or read why [here](https://docs.namida.app/ai-usage).
