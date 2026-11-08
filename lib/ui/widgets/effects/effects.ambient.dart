@@ -11,7 +11,13 @@ class NamidaAmbientBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDarkMode;
-    final ambientWidget = Obx(
+    Color? shadeColor;
+    if (isUnderText) {
+      final shade = kind.textShadeOf(isDark: isDark);
+      final shadeBaseColor = isDark ? Colors.black : Colors.white;
+      shadeColor = shadeBaseColor.withOpacityExt(shade);
+    }
+    return Obx(
       (context) {
         final color = CurrentColor.inst.color;
         final palette = CurrentColor.inst.palette;
@@ -20,21 +26,10 @@ class NamidaAmbientBackdrop extends StatelessWidget {
           kind: kind,
           colors: colors,
           isDark: isDark,
+          shadeColor: shadeColor,
           isReactive: isReactive,
         );
       },
-    );
-    if (!isUnderText) return ambientWidget;
-    final shade = kind.textShadeOf(isDark: isDark);
-    final shadeColor = isDark ? Colors.black.withOpacityExt(shade) : Colors.white.withOpacityExt(shade);
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ambientWidget,
-        ColoredBox(
-          color: shadeColor,
-        ),
-      ],
     );
   }
 }
@@ -43,12 +38,14 @@ class _AmbientView extends StatefulWidget {
   final AmbientBackdrop kind;
   final List<Color> colors;
   final bool isDark;
+  final Color? shadeColor;
   final bool isReactive;
 
   const _AmbientView({
     required this.kind,
     required this.colors,
     required this.isDark,
+    required this.shadeColor,
     required this.isReactive,
   });
 
@@ -60,6 +57,7 @@ class _AmbientViewState extends State<_AmbientView> {
   late final _scene = _AmbientScene(
     colors: List.of(widget.colors, growable: false),
     isDark: widget.isDark,
+    shadeColor: widget.shadeColor,
     time: NamidaFloatClock.instance.seconds,
   );
   late _AmbientPainter _painter = _createPainter(widget.kind);
@@ -88,13 +86,14 @@ class _AmbientViewState extends State<_AmbientView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _routeAnimation = ModalRoute.of(context)?.animation;
+    _scene.pixelRatio = View.of(context).devicePixelRatio;
   }
 
   @override
   void didUpdateWidget(covariant _AmbientView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.kind != widget.kind) _painter = _createPainter(widget.kind);
-    if (oldWidget.isDark != widget.isDark) _scene.setDark(widget.isDark);
+    if (oldWidget.isDark != widget.isDark || oldWidget.shadeColor != widget.shadeColor) _scene.setLook(isDark: widget.isDark, shadeColor: widget.shadeColor);
     if (!listEquals(oldWidget.colors, widget.colors)) _startBlend(widget.colors);
   }
 
@@ -174,6 +173,33 @@ abstract class _AmbientPainter extends CustomPainter {
   final _AmbientScene scene;
 
   _AmbientPainter(this.scene) : super(repaint: scene);
+
+  /// backdrops are soft, so they're drawn this much smaller then stretched back.
+  static const _shrink = 4.0;
+  static final _imagePaint = Paint()..filterQuality = FilterQuality.low;
+
+  void paintScene(Canvas canvas, Size size);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    NamidaFloatClock.instance.markPainted();
+    if (size.isEmpty) return;
+    final pixelScale = scene.pixelRatio / _shrink;
+    final imageWidth = (size.width * pixelScale).ceil();
+    final imageHeight = (size.height * pixelScale).ceil();
+    final recorder = ui.PictureRecorder();
+    final imageCanvas = Canvas(recorder);
+    imageCanvas.scale(imageWidth / size.width, imageHeight / size.height);
+    paintScene(imageCanvas, size);
+    final shadeColor = scene.shadeColor;
+    if (shadeColor != null) imageCanvas.drawColor(shadeColor, BlendMode.srcOver);
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(imageWidth, imageHeight);
+    picture.dispose();
+    final source = Rect.fromLTWH(0.0, 0.0, imageWidth.toDouble(), imageHeight.toDouble());
+    canvas.drawImageRect(image, source, Offset.zero & size, _imagePaint);
+    image.dispose();
+  }
 
   static Color baseToneOf(Color color, {required bool isDark, double shift = 0.0}) {
     final hsl = HSLColor.fromColor(color);
@@ -256,9 +282,7 @@ class _MeshGradientPainter extends _AmbientPainter {
   }
 
   @override
-  void paint(Canvas canvas, Size size) {
-    NamidaFloatClock.instance.markPainted();
-    if (size.isEmpty) return;
+  void paintScene(Canvas canvas, Size size) {
     if (_meshSize != size) _buildMesh(size);
 
     final time = scene.time;
@@ -349,9 +373,7 @@ class _AmbientLightsPainter extends _AmbientPainter {
   bool? _isShadedDark;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    NamidaFloatClock.instance.markPainted();
-    if (size.isEmpty) return;
+  void paintScene(Canvas canvas, Size size) {
     final colors = scene.colors;
     final isDark = scene.isDark;
     final time = scene.time;
@@ -477,9 +499,7 @@ class _BokehPainter extends _AmbientPainter {
   }
 
   @override
-  void paint(Canvas canvas, Size size) {
-    NamidaFloatClock.instance.markPainted();
-    if (size.isEmpty) return;
+  void paintScene(Canvas canvas, Size size) {
     final colors = scene.colors;
     final isDark = scene.isDark;
     final time = scene.time;
@@ -567,14 +587,17 @@ abstract class _AmbientPalette {
 class _AmbientScene extends ChangeNotifier {
   final List<Color> colors;
   bool isDark;
+  Color? shadeColor;
   double time;
   double glow = 0.0;
   double age = 0.0;
+  double pixelRatio = 1.0;
 
-  _AmbientScene({required this.colors, required this.isDark, required this.time});
+  _AmbientScene({required this.colors, required this.isDark, required this.shadeColor, required this.time});
 
-  void setDark(bool value) {
-    isDark = value;
+  void setLook({required bool isDark, required Color? shadeColor}) {
+    this.isDark = isDark;
+    this.shadeColor = shadeColor;
     notifyListeners();
   }
 

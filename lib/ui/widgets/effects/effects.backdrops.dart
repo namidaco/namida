@@ -188,6 +188,7 @@ class _Backdrop extends StatelessWidget {
 
   static const _maxSigma = 40.0;
   static const _maxShrink = 8.0;
+  static const _overflowSigmas = 3.0;
 
   @override
   Widget build(BuildContext context) {
@@ -197,19 +198,23 @@ class _Backdrop extends StatelessWidget {
         // -- blurred in a box this much smaller then stretched back, so the blur only ever runs over a fraction of the pixels
         final sigma = blurFraction * _maxSigma;
         final shrink = (sigma / 4).clampDouble(1.0, _maxShrink);
-        final width = constraints.maxWidth / shrink;
-        final height = constraints.maxHeight / shrink;
+        // -- blur edges fade and flicker, the box spills past the view so they stay off screen
+        final overflow = sigma * _overflowSigmas;
+        final fullWidth = constraints.maxWidth + overflow * 2;
+        final fullHeight = constraints.maxHeight + overflow * 2;
+        final width = fullWidth / shrink;
+        final height = fullHeight / shrink;
         final image = imageBuilder(width, height, shrink == 1.0);
-        Widget picture = RepaintBoundary(
-          child: FittedBox(
-            fit: BoxFit.fill,
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: NamidaBlur(
-                blur: sigma / shrink,
-                child: image,
-              ),
+        Widget picture = FittedBox(
+          fit: BoxFit.fill,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: NamidaSnapshotBlur(
+              blur: sigma / shrink,
+              tileMode: TileMode.clamp,
+              isPixelExact: false,
+              child: image,
             ),
           ),
         );
@@ -224,7 +229,13 @@ class _Backdrop extends StatelessWidget {
           hasVignette: hasVignette,
           // -- blur spreads ~3 sigma past the box, pulse scales past it
           child: ClipRect(
-            child: picture,
+            child: OverflowBox(
+              minWidth: fullWidth,
+              maxWidth: fullWidth,
+              minHeight: fullHeight,
+              maxHeight: fullHeight,
+              child: picture,
+            ),
           ),
         );
       },
