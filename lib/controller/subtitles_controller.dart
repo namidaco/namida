@@ -10,6 +10,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/subtitle_cue.dart';
 import 'package:namida/class/subtitle_track.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -287,12 +288,9 @@ class Subtitles {
     }
     canHaveSubtitles.value = true;
 
-    final itemTracks = _itemTracks;
-    if (itemTracks == null) {
-      if (settings.enableSubtitles.value) _discoverItemTracks(item);
-    } else if (itemTracks.isEmpty) {
-      _discoverItemTracks(item);
-    }
+    // -- rebuilt even when listed, new streams carry fresh caption urls
+    final wasDiscovered = _itemTracks != null;
+    if (wasDiscovered || settings.enableSubtitles.value) _discoverItemTracks(item);
   }
 
   void _onLocalVideoChanged() {
@@ -353,10 +351,7 @@ class Subtitles {
     }
 
     // -- a sidecar file or a fetched youtube caption
-    File? file;
-    try {
-      file = await track.ensureLocalFile().timeout(_fetchTimeout);
-    } catch (_) {}
+    final file = track is SubtitleTrackYoutube ? await _fetchYoutubeCaption(track, opId) : await track.ensureLocalFile();
     if (opId != _operationId || file == null) return null;
 
     String? content;
@@ -399,6 +394,50 @@ class Subtitles {
     if (lrc == null) return null;
     currentSubtitle.value = lrc;
     return SubtitleRenderMode.lrc;
+  }
+
+  /// caption urls expire after a few hours, a failed fetch is retried once with a fresh url.
+  Future<File?> _fetchYoutubeCaption(SubtitleTrackYoutube track, int opId) async {
+    Object? error;
+    Future<File?> fetch(SubtitleTrackYoutube t) async {
+      try {
+        return await t.ensureLocalFile().timeout(_fetchTimeout);
+      } catch (e) {
+        error = e;
+        return null;
+      }
+    }
+
+    final file = await fetch(track);
+    if (file != null || opId != _operationId) return file;
+
+    final freshTrack = await _getFreshYoutubeTrack(track, opId);
+    if (opId != _operationId) return null;
+    final freshFile = freshTrack == null ? null : await fetch(freshTrack);
+    if (freshFile == null && opId == _operationId) logger.error('Failed fetching caption ${track.id} of ${track.videoId}', e: error);
+    return freshFile;
+  }
+
+  /// the listed one when newer streams already replaced it, otherwise refetches the streams. null when the url stays the same.
+  Future<SubtitleTrackYoutube?> _getFreshYoutubeTrack(SubtitleTrackYoutube track, int opId) async {
+    final listedTrack = _itemTracks?.firstWhereEff((e) => e.id == track.id);
+    if (listedTrack is SubtitleTrackYoutube && listedTrack.caption.url != track.caption.url) return listedTrack;
+
+    VideoStreamsResult? streams;
+    try {
+      streams = await YoutubeInfoController.video.fetchVideoStreams(track.videoId);
+    } catch (_) {}
+    if (opId != _operationId) return null;
+
+    final freshTracks = _discoverYoutube(track.videoId, streams);
+    if (freshTracks.isEmpty) return null;
+    _discoveryId++;
+    _itemTracks = freshTracks;
+    _rebuildAvailable();
+
+    final freshTrack = freshTracks.firstWhereEff((e) => e.id == track.id);
+    if (freshTrack == null || freshTrack.caption.url == track.caption.url) return null;
+    return freshTrack;
   }
 
   // ------------------------ lookup ------------------------
@@ -453,7 +492,7 @@ class Subtitles {
     return [];
   }
 
-  List<SubtitleTrack> _discoverYoutube(String videoId, VideoStreamsResult? streams) {
+  List<SubtitleTrackYoutube> _discoverYoutube(String videoId, VideoStreamsResult? streams) {
     if (streams == null || streams.videoId != videoId) return [];
     final captions = streams.captions;
     if (captions.isEmpty) return [];

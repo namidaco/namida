@@ -3995,7 +3995,7 @@ class AnimatingTile extends StatelessWidget {
     }
 
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
-      if (allowTilting && settings.extra.tiltingCardsEffect.value == true) {
+      if (allowTilting && settings.extra.tiltingCardsEffect.value) {
         child = _EncapsulateWithTilt(
           isInOpenSpace: false,
           child: child,
@@ -4047,7 +4047,7 @@ class AnimatingGrid extends StatelessWidget {
     }
 
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
-      if (settings.extra.tiltingCardsEffect.value == true) {
+      if (settings.extra.tiltingCardsEffect.value) {
         child = _EncapsulateWithTilt(
           isInOpenSpace: isInOpenSpace,
           child: child,
@@ -6569,7 +6569,7 @@ class NamidaScrollbar extends StatelessWidget {
   }
 
   ScrollbarThumbLabelResolver? _createThumbLabelIfEnabled() {
-    if (settings.scrollbarThumbLabel.value != true) return null;
+    if (!settings.scrollbarThumbLabel.value) return null;
     return thumbLabel?.call();
   }
 
@@ -6583,10 +6583,10 @@ class NamidaScrollbar extends StatelessWidget {
         showOnStart: showOnStart,
         scrollStep: scrollStep,
         thicknessWhileDragging: 8.5,
-        minInteractiveSize: instantThumbGrab == true ? 96.0 : 60.0,
+        minInteractiveSize: instantThumbGrab ? 96.0 : 60.0,
         pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 120),
         trackMode: () => settings.scrollbarTrackMode.value,
-        instantThumbGrab: () => settings.instantThumbGrab.value ?? false,
+        instantThumbGrab: () => settings.instantThumbGrab.value,
         onThumbLongPressStart: () => isScrollbarThumbDragging = true,
         onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
         thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,

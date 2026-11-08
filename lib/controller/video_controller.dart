@@ -353,7 +353,7 @@ class VideoController {
   }
 
   void holdVideoFrameFor(Playable item) {
-    if (settings.keepVideoFrameOnSwitch.value != true) return;
+    if (!settings.keepVideoFrameOnSwitch.value) return;
     if (_displayedVideoInfo.value?.isInitialized != true || !_hasReadyVideoFor(item)) return dropVideoFrameHold();
     _videoFrameHoldTimer?.cancel();
     _videoFrameHoldTimer = Timer(_kVideoFrameHoldTimeout, dropVideoFrameHold);

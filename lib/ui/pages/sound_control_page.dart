@@ -79,7 +79,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
 
   @override
   Widget build(BuildContext context) {
-    var initialIndex = settings.extra.audioConfigPageIndex.value ?? 0;
+    var initialIndex = settings.extra.audioConfigPageIndex.value;
     if (!settings.player.isPerTrackAudioConfigOverriden.value) {
       final isCurrentItemModified = Player.audioConfigs.getForCurrentItem() != null;
       if (isCurrentItemModified) {

@@ -614,7 +614,7 @@ class _RecentSearchesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (settings.extra.recentSearchesEnabled.value != true) return const SizedBox.expand();
+    if (!settings.extra.recentSearchesEnabled.value) return const SizedBox.expand();
     const chipBgColor = NColors(.secondary, opacity: 0.12);
     final chipTextStyle = NText.medium.of(context).copyWith(fontSize: 13.0);
     return ObxO(

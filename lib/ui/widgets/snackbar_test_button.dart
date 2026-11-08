@@ -48,7 +48,7 @@ class SnackbarTestAppBarIcon extends StatelessWidget {
   }
 
   void _openMenu(BuildContext context) {
-    final isReducedAnimations = settings.extra.reduceAnimations.value == true;
+    final isReducedAnimations = settings.extra.reduceAnimations.value;
     NamidaPopupWrapper(
       childrenDefault: () => [
         NamidaPopupItem(

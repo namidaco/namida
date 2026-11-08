@@ -169,7 +169,7 @@ class _ArtistsMapViewState extends State<_ArtistsMapView> with SingleTickerProvi
   double _flyFromScale = 1.0;
   double _flyToScale = 1.0;
 
-  bool _graphMode = settings.extra.artistsMapGraphLayout.value ?? true;
+  bool _graphMode = settings.extra.artistsMapGraphLayout.value;
   TransformationController? _controller;
   Size _viewport = Size.zero;
   double _fitScale = 1.0;

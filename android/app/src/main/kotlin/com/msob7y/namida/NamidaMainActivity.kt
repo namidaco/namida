@@ -633,6 +633,9 @@ class NamidaMainActivity : FlutterActivity() {
     super.onNewIntent(intent)
   }
 
+  // -- links are handled by namida, not as flutter routes. not the manifest flag cuz flutter reads it from the launching icon alias
+  override fun shouldHandleDeeplinking(): Boolean = false
+
   // ------- PIP -------
 
   private var pipBuilder: PictureInPictureParams.Builder? = null

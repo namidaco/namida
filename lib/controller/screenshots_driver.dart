@@ -903,7 +903,7 @@ class ScreenshotsDriver {
 
   /// a null value resets that key to its default.
   void _applySettings(String? file, Map<String, dynamic> values) {
-    final json = {'_v': 3, ...values};
+    final json = {'_v': 2, ...values};
     switch (file) {
       case 'player':
         settings.player.applyBackupJson(json);

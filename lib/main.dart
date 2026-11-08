@@ -935,7 +935,7 @@ class _HttpCacheCustomCacheConfig extends GlobalCacheConfig {
 /// [AnimationController]s cut their durations while [disableAnimations] is on, same as with the platform setting.
 class _NamidaWidgetsBinding extends WidgetsFlutterBinding {
   @override
-  bool get disableAnimations => settings.extra.reduceAnimations.value == true || super.disableAnimations;
+  bool get disableAnimations => settings.extra.reduceAnimations.value || super.disableAnimations;
 }
 
 class ScrollBehaviorModified extends ScrollBehavior {

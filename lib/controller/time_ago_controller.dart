@@ -8,7 +8,7 @@ class TimeAgoController {
 
   static Jiffy _getCurrentDateTime() {
     final years = settings.timeCapsuleYears.value;
-    if (years == null || years == 0) return Jiffy.now();
+    if (years == 0) return Jiffy.now();
     // -- years can be +ve or -ve so always add
     return Jiffy.now().add(years: years);
   }

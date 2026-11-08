@@ -1268,7 +1268,7 @@ const _kJellyHandPivot = Offset(0.655, 0.716);
 abstract class NamidaJellys {
   /// Whether jellyfishes are allowed to invade the ui.
   static bool get enabled => kAllowJellysInvasion && settings.extra.jellysInvasion.value == true;
-  static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette.value == true;
+  static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette.value;
 
   /// [enabled] as a listenable, for the jellies already on screen when it is flipped.
   ///

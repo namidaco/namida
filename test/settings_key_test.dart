@@ -67,7 +67,7 @@ void main() {
     expect(settings.sync.autoReconnect.userValue, null);
     expect(settings.sync.autoReconnect.value, true);
     expect(settings.sync.syncItems.value, SyncDataItem.essentialsSet);
-    expect(syncRaw(), {'_v': 3});
+    expect(syncRaw(), {'_v': 2});
   });
 
   test('legacy file loads, default-equal values are stripped', () async {
@@ -85,7 +85,7 @@ void main() {
     expect(settings.sync.serverWasRunning.userValue, null);
 
     final raw = syncRaw();
-    expect(raw['_v'], 3);
+    expect(raw['_v'], 2);
     expect(raw.containsKey('_legacy'), false);
     expect(raw.containsKey('allowedDeviceIds'), false);
     expect(raw.containsKey('autoReconnect'), false);
@@ -106,15 +106,15 @@ void main() {
   });
 
   test('save stores only overrides, reset removes, unknown keys kept', () async {
-    await loadSync({'_v': 3, 'unknown': 1});
+    await loadSync({'_v': 2, 'unknown': 1});
     settings.sync.autoReconnect.save(false);
     settings.sync.uniqueId.save('dev-2');
-    expect(syncRaw(), {'_v': 3, 'unknown': 1, 'autoReconnect': false, 'id': 'dev-2'});
+    expect(syncRaw(), {'_v': 2, 'unknown': 1, 'autoReconnect': false, 'id': 'dev-2'});
 
     settings.sync.autoReconnect.reset();
     expect(settings.sync.autoReconnect.value, true);
-    expect(syncRaw(), {'_v': 3, 'unknown': 1, 'id': 'dev-2'});
-    expect(await readSyncFile(), {'_v': 3, 'unknown': 1, 'id': 'dev-2'});
+    expect(syncRaw(), {'_v': 2, 'unknown': 1, 'id': 'dev-2'});
+    expect(await readSyncFile(), {'_v': 2, 'unknown': 1, 'id': 'dev-2'});
   });
 
   test('update copies the default instead of mutating it', () async {
@@ -133,7 +133,7 @@ void main() {
 
   test('collections are read-only outside update', () async {
     await loadSync({
-      '_v': 3,
+      '_v': 2,
       'allowedServerIds': ['srv-1'],
     });
     expect(() => settings.sync.allowedServerIds.value.toSet().add('x'), returnsNormally);
@@ -184,22 +184,22 @@ void main() {
     file.writeAsStringSync(jsonEncode({'llpfs': false}));
     await settings.tutorial.prepareSettingsFile();
     expect(settings.tutorial.lyricsFullscreenTipSeen.value, true);
-    expect(settings.tutorial.buildJson(), {'_v': 3, 'llpfsSeen': true});
+    expect(settings.tutorial.buildJson(), {'_v': 2, 'llpfsSeen': true});
 
     await flushWrites();
     file.writeAsStringSync(jsonEncode({'llpfs': true}));
     await settings.tutorial.prepareSettingsFile();
     expect(settings.tutorial.lyricsFullscreenTipSeen.userValue, null);
-    expect(settings.tutorial.buildJson(), {'_v': 3});
+    expect(settings.tutorial.buildJson(), {'_v': 2});
   });
 
   test('home items saved under an old name still load', () async {
-    File(AppPaths.SETTINGS).writeAsStringSync(jsonEncode({'_v': 3, 'homePageItems': ['mixes', 'pinnedPlaylists', 'nope']}));
+    File(AppPaths.SETTINGS).writeAsStringSync(jsonEncode({'_v': 2, 'homePageItems': ['mixes', 'pinnedPlaylists', 'nope']}));
     await settings.prepareSettingsFile();
     expect(settings.homePageItems.value, containsAllInOrder([HomePageItems.mixes, HomePageItems.pinned]));
     expect(settings.homePageItems.value.map((e) => e.name), isNot(contains('nope')));
 
-    File(AppPaths.SETTINGS_YOUTUBE).writeAsStringSync(jsonEncode({'_v': 3, 'ytHomePageItems': ['pinnedPlaylists']}));
+    File(AppPaths.SETTINGS_YOUTUBE).writeAsStringSync(jsonEncode({'_v': 2, 'ytHomePageItems': ['pinnedPlaylists']}));
     await settings.youtube.prepareSettingsFile();
     expect(settings.youtube.ytHomePageItems.value, contains(HomePageItems.pinned));
   });
@@ -208,7 +208,7 @@ void main() {
     final hiddenNames = HomePageItems.values.where((e) => e != HomePageItems.mixes).map((e) => e == HomePageItems.pinned ? 'pinnedPlaylists' : e.name).toList();
     File(AppPaths.SETTINGS).writeAsStringSync(
       jsonEncode({
-        '_v': 3,
+        '_v': 2,
         'homePageItems': ['mixes'],
         '_x': {'homePageItems': hiddenNames},
       }),
@@ -219,7 +219,7 @@ void main() {
     final hiddenNamesWithoutPinned = hiddenNames.where((e) => e != 'pinnedPlaylists').toList();
     File(AppPaths.SETTINGS).writeAsStringSync(
       jsonEncode({
-        '_v': 3,
+        '_v': 2,
         'homePageItems': ['mixes'],
         '_x': {'homePageItems': hiddenNamesWithoutPinned},
       }),
@@ -229,7 +229,7 @@ void main() {
   });
 
   test('syncable file: delta carries changed keys, newest wins, reset propagates', () async {
-    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 3}));
+    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2}));
     await settings.player.prepareSettingsFile();
     expect(settings.player.syncDelta(0), null);
 
@@ -260,7 +260,7 @@ void main() {
       'm': {'volume': speedMS + 1, '_v': speedMS + 1},
     });
     expect(settings.player.volume.value, 0.5);
-    expect(settings.player.buildJson()['_v'], 3);
+    expect(settings.player.buildJson()['_v'], 2);
 
     settings.player.applySyncDelta({
       'v': {},
@@ -273,11 +273,11 @@ void main() {
   });
 
   test('saving the current value writes nothing, saving the default removes the override', () async {
-    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 3}));
+    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2}));
     await settings.player.prepareSettingsFile();
     settings.player.speed.save(1.0);
     expect(settings.player.speed.userValue, null);
-    expect(settings.player.buildJson(), {'_v': 3});
+    expect(settings.player.buildJson(), {'_v': 2});
 
     settings.player.speed.save(1.5);
     final Map modified = settings.player.buildJson()['_m'];
@@ -302,7 +302,7 @@ void main() {
     file.writeAsStringSync(jsonEncode({'volume': 1.0, 'speed': 1.5, 'someRemovedKey': true}));
     await settings.player.prepareSettingsFile();
     final migrated = {
-      '_v': 3,
+      '_v': 2,
       'speed': 1.5,
       '_m': {'speed': 1},
     };
@@ -312,7 +312,7 @@ void main() {
   });
 
   test('map keys store only entries that differ from the default', () async {
-    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 3}));
+    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2}));
     await settings.player.prepareSettingsFile();
     settings.player.onInterrupted.update((actions) => actions[InterruptionType.shouldDuck] = InterruptionAction.pause);
     expect(settings.player.buildJson()['onInterrupted'], {'shouldDuck': 'pause'});
@@ -323,7 +323,7 @@ void main() {
 
     File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(
       jsonEncode({
-        '_v': 3,
+        '_v': 2,
         'onInterrupted': {'shouldPause': 'pause', 'unknown': 'doNothing'},
       }),
     );
@@ -341,7 +341,7 @@ void main() {
     ];
     file.writeAsStringSync(
       jsonEncode({
-        '_v': 3,
+        '_v': 2,
         'ytHomePageItems': ['mixes'],
         '_x': {'ytHomePageItems': excludedNames},
       }),
@@ -373,7 +373,7 @@ void main() {
   });
 
   test('int stored for a double key is accepted', () async {
-    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 3, 'volume': 1}));
+    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2, 'volume': 1}));
     await settings.player.prepareSettingsFile();
     expect(settings.player.volume.value, 1.0);
   });
@@ -397,12 +397,12 @@ void main() {
 
   test('old notification toggles migrate to notification buttons', () async {
     const transport = [NotificationButton.previous, NotificationButton.playPause, NotificationButton.next];
-    await loadFile(settings, {'_v': 3, 'displayFavouriteButtonInNotification': true, 'displayStopButtonInNotification': false});
+    await loadFile(settings, {'_v': 2, 'displayFavouriteButtonInNotification': true, 'displayStopButtonInNotification': false});
     expect(settings.notificationButtons.value, [NotificationButton.favourite, ...transport]);
     expect(settings.buildJson().containsKey('displayFavouriteButtonInNotification'), false);
     expect(settings.buildJson().containsKey('displayStopButtonInNotification'), false);
 
-    await loadFile(settings, {'_v': 3, 'displayStopButtonInNotification': true});
+    await loadFile(settings, {'_v': 2, 'displayStopButtonInNotification': true});
     expect(settings.notificationButtons.value, [...transport, NotificationButton.stop]);
     expect(settings.buildJson().containsKey('notificationButtons'), false);
   });
@@ -410,7 +410,7 @@ void main() {
   test('old custom most played ranges cover their first and last days whole, once', () async {
     final picked = DateRange(oldest: DateTime(2024, 1, 10), newest: DateTime(2024, 1, 14));
     final singleDay = DateRange(oldest: DateTime(2024, 1, 20), newest: DateTime(2024, 1, 20));
-    await loadFile(settings, {'_v': 3, 'mostPlayedCustomDateRange': picked.toJson(), 'ytMostPlayedCustomDateRange': singleDay.toJson()});
+    await loadFile(settings, {'_v': 2, 'mostPlayedCustomDateRange': picked.toJson(), 'ytMostPlayedCustomDateRange': singleDay.toJson()});
     expect(settings.mostPlayedCustomDateRange.value, DateRange(oldest: DateTime(2024, 1, 10), newest: DateTime(2024, 1, 14, 23, 59, 59, 999)));
     expect(settings.ytMostPlayedCustomDateRange.value, DateRange(oldest: DateTime(2024, 1, 20), newest: DateTime(2024, 1, 20, 23, 59, 59, 999)));
     expect(settings.buildJson().containsKey('mostPlayedCustomDateRange'), false);
@@ -421,12 +421,12 @@ void main() {
     await loadFile(settings, settings.buildJson());
     expect(settings.mostPlayedCustomDateRange.value, exact);
 
-    await loadFile(settings, {'_v': 3, 'ytMostPlayedCustomDateRange': DateRange.dummy().toJson()});
+    await loadFile(settings, {'_v': 2, 'ytMostPlayedCustomDateRange': DateRange.dummy().toJson()});
     expect(settings.ytMostPlayedCustomDateRange.userValue, null);
   });
 
   test('old scrollbar track toggles merge into one mode, easy grab becomes instant grab', () async {
-    await loadFile(settings, {'_v': 3, 'tapToScroll': true, 'enhancedDragToScroll': false, 'easyScrollbarGrab': true});
+    await loadFile(settings, {'_v': 2, 'tapToScroll': true, 'enhancedDragToScroll': false, 'easyScrollbarGrab': true});
     expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.jumpToTouch);
     expect(settings.instantThumbGrab.value, true);
     final json = settings.buildJson();
@@ -434,94 +434,15 @@ void main() {
     expect(json.containsKey('enhancedDragToScroll'), false);
     expect(json.containsKey('easyScrollbarGrab'), false);
 
-    await loadFile(settings, {'_v': 3, 'enhancedDragToScroll': false});
+    await loadFile(settings, {'_v': 2, 'enhancedDragToScroll': false});
     expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.thumbOnly);
 
-    await loadFile(settings, {'_v': 3, 'tapToScroll': false, 'enhancedDragToScroll': true});
+    await loadFile(settings, {'_v': 2, 'tapToScroll': false, 'enhancedDragToScroll': true});
     expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.dragAnywhere);
     expect(settings.buildJson().containsKey('scrollbarTrackMode'), false);
 
-    await loadFile(settings, {'_v': 3, 'tapToScroll': true, 'scrollbarTrackMode': ScrollbarTrackMode.thumbOnly.name});
+    await loadFile(settings, {'_v': 2, 'tapToScroll': true, 'scrollbarTrackMode': ScrollbarTrackMode.thumbOnly.name});
     expect(settings.scrollbarTrackMode.value, ScrollbarTrackMode.thumbOnly);
-  });
-
-  group('unique artwork hash default', () {
-    void setLibraryFiles({bool hasTracksDb = false, bool hasLegacyTracks = false}) {
-      final filesExistence = {AppPaths.TRACKS_DB_INFO.file: hasTracksDb, File(AppPaths.TRACKS_OLD): hasLegacyTracks};
-      for (final e in filesExistence.entries) {
-        final file = e.key;
-        if (e.value) {
-          file.writeAsStringSync('');
-        } else {
-          file.deleteIfExistsSync();
-        }
-      }
-    }
-
-    Future<Map<String, dynamic>> readMainFile() async {
-      await flushWrites();
-      final content = File(AppPaths.SETTINGS).readAsStringSync();
-      return jsonDecode(content) as Map<String, dynamic>;
-    }
-
-    tearDown(setLibraryFiles);
-
-    test('a new install gets it on and keeps it once a library exists', () async {
-      setLibraryFiles();
-      await loadFile(settings, null);
-      expect(settings.uniqueArtworkHash.value, true);
-      expect(await readMainFile(), {'_v': 3});
-
-      setLibraryFiles(hasTracksDb: true);
-      await settings.prepareSettingsFile();
-      expect(settings.uniqueArtworkHash.value, true);
-    });
-
-    test('a missing settings file next to an existing library keeps it off', () async {
-      for (final hasLegacyTracks in [false, true]) {
-        setLibraryFiles(hasTracksDb: !hasLegacyTracks, hasLegacyTracks: hasLegacyTracks);
-        await loadFile(settings, null);
-        expect(settings.uniqueArtworkHash.value, false, reason: 'hasLegacyTracks: $hasLegacyTracks');
-        expect(await readMainFile(), {'_v': 3, 'uniqueArtworkHash': false}, reason: 'hasLegacyTracks: $hasLegacyTracks');
-      }
-    });
-
-    test('files older than v3 keep it off unless it was turned on', () async {
-      final cases = <(Map<String, dynamic>, bool)>[
-        ({'_v': 2}, false),
-        ({'_v': 2, 'uniqueArtworkHash': false}, false),
-        ({'_v': 2, 'uniqueArtworkHash': true}, true),
-        ({'pitchBlack': true}, false),
-        ({'pitchBlack': true, 'uniqueArtworkHash': false}, false),
-        ({'pitchBlack': true, 'uniqueArtworkHash': true}, true),
-        ({'_v': 3}, true),
-        ({'_v': 3, 'uniqueArtworkHash': false}, false),
-      ];
-      for (final (fileContent, expected) in cases) {
-        await loadFile(settings, fileContent);
-        expect(settings.uniqueArtworkHash.value, expected, reason: '$fileContent');
-        await flushWrites();
-        await settings.prepareSettingsFile();
-        expect(settings.uniqueArtworkHash.value, expected, reason: 'reloaded $fileContent');
-      }
-    }, timeout: const Timeout(Duration(minutes: 2)));
-
-    test('turning it on in an old install survives a reload', () async {
-      await loadFile(settings, {'_v': 2});
-      expect(settings.uniqueArtworkHash.value, false);
-      settings.uniqueArtworkHash.save(true);
-      expect(await readMainFile(), {'_v': 3});
-      await settings.prepareSettingsFile();
-      expect(settings.uniqueArtworkHash.value, true);
-    });
-
-    test('a backup from before v3 turns it off, a newer one leaves it', () async {
-      await loadFile(settings, {'_v': 3});
-      settings.applyBackupJson({'_v': 3});
-      expect(settings.uniqueArtworkHash.value, true);
-      settings.applyBackupJson({'_v': 2});
-      expect(settings.uniqueArtworkHash.value, false);
-    });
   });
 
   group('keys', () {
@@ -531,11 +452,11 @@ void main() {
       expect(() => rx.value = false, throwsUnsupportedError);
       expect(() => rx.set(false), throwsUnsupportedError);
       expect(settings.sync.autoReconnect.value, true);
-      expect(syncRaw(), {'_v': 3});
+      expect(syncRaw(), {'_v': 2});
     });
 
     test('replace stores the new collection, a default-equal one resets', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       settings.commonPrefixes.replace(['le ']);
       expect(settings.commonPrefixes.value, ['le ']);
       expect(settings.buildJson()['commonPrefixes'], ['le ']);
@@ -552,11 +473,11 @@ void main() {
       expect(syncRaw()['deviceIdNames'], {'a': 'A'});
       settings.sync.deviceIdNames.replace({});
       expect(settings.sync.deviceIdNames.userValue, null);
-      expect(syncRaw(), {'_v': 3});
+      expect(syncRaw(), {'_v': 2});
     });
 
     test('updates copy the default and drop the override once back on it', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       final defaults = settings.commonPrefixes.fallback.toList();
       settings.commonPrefixes.update((list) => list.add('le '));
       expect(settings.commonPrefixes.fallback, defaults);
@@ -575,7 +496,7 @@ void main() {
     });
 
     test('nullable keys: null is the default, an explicit value is kept', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       expect(settings.fontScaleLRCFull.value, null);
       settings.fontScaleLRCFull.save(1.0);
       expect(settings.fontScaleLRCFull.value, 1.0);
@@ -587,7 +508,7 @@ void main() {
 
   group('read-only collections', () {
     test('list forwards reads and throws on every write', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       final List<String> list = settings.commonPrefixes.value;
       expect(list[1], 'a ');
       expect(list.length, 3);
@@ -630,7 +551,7 @@ void main() {
 
     test('set forwards reads and throws on every write', () async {
       await loadSync({
-        '_v': 3,
+        '_v': 2,
         'allowedServerIds': ['a', 'b'],
       });
       final Set<String> set = settings.sync.allowedServerIds.value;
@@ -658,7 +579,7 @@ void main() {
 
     test('map forwards reads and throws on every write', () async {
       await loadSync({
-        '_v': 3,
+        '_v': 2,
         'deviceIdNames': {'a': 'A'},
       });
       final Map<String, String> map = settings.sync.deviceIdNames.value;
@@ -693,7 +614,7 @@ void main() {
     test('a peer list is taken as is, nothing in it counts as added', () async {
       const kept = {HomePageItems.mixes, HomePageItems.recentListens};
       await loadFile(settings.youtube, {
-        '_v': 3,
+        '_v': 2,
         'ytHomePageItems': [for (final e in kept) e.name],
         '_x': {'ytHomePageItems': namesExcept(HomePageItems.values, kept)},
       });
@@ -717,7 +638,7 @@ void main() {
       final defaults = settings.youtube.ytHomePageItems.fallback.toList();
       final withoutLast = defaults.sublist(0, defaults.length - 1);
       await loadFile(settings.youtube, {
-        '_v': 3,
+        '_v': 2,
         'ytHomePageItems': [for (final e in withoutLast) e.name],
         '_x': {'ytHomePageItems': namesExcept(HomePageItems.values, defaults.toSet())},
       });
@@ -729,7 +650,7 @@ void main() {
 
     test('library tab variants collapse to their group', () async {
       await loadFile(settings, {
-        '_v': 3,
+        '_v': 2,
         'libraryTabs': ['tracksVideos', 'home', 'foldersMusic'],
       });
       expect(settings.libraryTabs.value, [LibraryTab.tracks, LibraryTab.home, LibraryTab.folders]);
@@ -744,7 +665,7 @@ void main() {
 
       final collapsed = ['home', 'folders', 'folders', 'folders', 'youtube', 'tracks', 'tracks', 'tracks', 'playlists', 'currentQueue'];
       await loadFile(settings, {
-        '_v': 3,
+        '_v': 2,
         'libraryTabs': collapsed,
         '_x': {'libraryTabs': namesExcept(LibraryTab.values, expected.toSet())},
       });
@@ -754,7 +675,7 @@ void main() {
 
   group('maps', () {
     test('a removed default entry comes back', () async {
-      await loadFile(settings.player, {'_v': 3});
+      await loadFile(settings.player, {'_v': 2});
       settings.player.onInterrupted.update((actions) => actions.remove(InterruptionType.unknown));
       expect(settings.player.onInterrupted.value[InterruptionType.unknown], InterruptionAction.pause);
       expect(settings.player.onInterrupted.userValue, null);
@@ -762,7 +683,7 @@ void main() {
 
     test('the old fixed band equalizer moves to the parametric key, bad bands are skipped', () async {
       await loadFile(settings.equalizer, {
-        '_v': 3,
+        '_v': 2,
         'equalizer': {'60.0': 2.5, 'bad': 1.0, '120.0': 'x', '910.0': -1.0},
       });
       final bands = settings.equalizer.equalizer.value.bands;
@@ -772,7 +693,7 @@ void main() {
     });
 
     test('track sorting of a media type is stored as one chain, unchanged input does nothing', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       final albumSorting = settings.mediaItemsTrackSorting.value[MediaType.album]!;
       settings.updateMediaItemsTrackSorting(MediaType.album, albumSorting);
       expect(settings.buildJson().containsKey('mediaItemsTrackSorting_v2'), false);
@@ -794,7 +715,7 @@ void main() {
 
     test('group sorting: variants share one entry, an empty chain falls back to the default', () async {
       await loadFile(settings, {
-        '_v': 3,
+        '_v': 2,
         'mediaGroupSorting': {
           'genre': {'sorts': []},
         },
@@ -815,7 +736,7 @@ void main() {
     });
 
     test('track sort presets: the active one is sorted by and edited, the default chain stays', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       final albumSorting = settings.mediaItemsTrackSorting.value[MediaType.album]!;
       settings.addTrackSortPreset(MediaType.album, 'a');
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activeIndex, 0);
@@ -861,7 +782,7 @@ void main() {
     });
 
     test('track search filter presets: the active one is searched by and edited, the default fields stay', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       final defaultFilters = settings.trackSearchFilter.value;
       settings.addTrackSearchFilterPreset('a');
       expect(settings.trackSearchFilterPresets.value.activeIndex, 0);
@@ -937,7 +858,7 @@ void main() {
     });
 
     test('grid counts fall back to auto', () async {
-      await loadFile(settings, {'_v': 3});
+      await loadFile(settings, {'_v': 2});
       expect(settings.mediaGridCounts.value.get(LibraryTab.playlists).rawValue, 1);
       expect(settings.mediaGridCounts.value.get(LibraryTab.albums), CountPerRow.autoForTab(LibraryTab.albums));
     });
@@ -961,7 +882,7 @@ void main() {
 
     test('delta leaves out names that are not synced keys', () async {
       await loadFile(settings.player, {
-        '_v': 3,
+        '_v': 2,
         'speed': 1.2,
         'volume': 0.3,
         '_m': {'speed': 50, 'volume': 50, 'nope': 50},
@@ -975,7 +896,7 @@ void main() {
 
     test('an interrupted migration finishes without touching real modification times', () async {
       await loadFile(settings.player, {
-        '_v': 3,
+        '_v': 2,
         'speed': 1.2,
         'pitch': 0.9,
         'gone': 1,
@@ -983,7 +904,7 @@ void main() {
         '_m': {'speed': 500},
       });
       expect(settings.player.buildJson(), {
-        '_v': 3,
+        '_v': 2,
         'speed': 1.2,
         'pitch': 0.9,
         '_m': {'speed': 500, 'pitch': 1},
@@ -991,7 +912,7 @@ void main() {
     });
 
     test('a file without sensitive keys is redacted into an equal copy', () async {
-      await loadFile(settings.player, {'_v': 3, 'speed': 1.2});
+      await loadFile(settings.player, {'_v': 2, 'speed': 1.2});
       final redacted = settings.player.redactedJson();
       expect(redacted, settings.player.buildJson());
       expect(identical(redacted, settings.player.buildJson()), false);
@@ -1000,7 +921,7 @@ void main() {
     test('a corrupted file loads the defaults', () async {
       await loadFile(settings.tutorial, '{not json');
       expect(settings.tutorial.lyricsFullscreenTipSeen.value, false);
-      expect(settings.tutorial.buildJson(), {'_v': 3});
+      expect(settings.tutorial.buildJson(), {'_v': 2});
     });
 
     test('a failed write keeps the value in memory', () async {
@@ -1055,7 +976,7 @@ void main() {
 
     test('main: sorts and their reverse merge into one chain per media', () async {
       await loadFile(settings, {
-        '_v': 3,
+        '_v': 2,
         'mediaItemsTrackSorting': {
           'album': ['title', 'year'],
         },
@@ -1089,7 +1010,7 @@ void main() {
 
     test('main: playlists sorted by the albums date modified move to their own', () async {
       await loadFile(settings, {
-        '_v': 3,
+        '_v': 2,
         'mediaGroupSorting': {
           'album': {
             'sorts': ['dateModified'],
@@ -1151,7 +1072,7 @@ void main() {
       );
       File(AppPaths.SETTINGS_EXTRA).writeAsStringSync(
         jsonEncode({
-          '_v': 3,
+          '_v': 2,
           'windowBounds': {'l': 5, 't': 6, 'r': 7, 'b': 8},
         }),
       );
@@ -1176,18 +1097,18 @@ void main() {
 
     test('equalizer and youtube: removed keys are dropped', () async {
       await loadFile(settings.equalizer, {'preset': 'x', 'equalizerEnabled': true});
-      expect(settings.equalizer.buildJson(), {'_v': 3, 'equalizerEnabled': true});
+      expect(settings.equalizer.buildJson(), {'_v': 2, 'equalizerEnabled': true});
 
       await loadFile(settings.youtube, {'innertubeClient': 'x', 'downloadParallelCount': 3, 'maxPageCacheDurationMin': 5});
-      expect(settings.youtube.buildJson(), {'_v': 3});
+      expect(settings.youtube.buildJson(), {'_v': 2});
     });
   });
 
   group('writer helpers', () {
     test('youtube: audio only mode is restored only when remembered', () async {
-      await loadFile(settings.youtube, {'_v': 3, 'isAudioOnlyMode': true, 'rememberAudioOnly': false});
+      await loadFile(settings.youtube, {'_v': 2, 'isAudioOnlyMode': true, 'rememberAudioOnly': false});
       expect(settings.youtube.isAudioOnlyMode.value, false);
-      await loadFile(settings.youtube, {'_v': 3, 'isAudioOnlyMode': true, 'rememberAudioOnly': true});
+      await loadFile(settings.youtube, {'_v': 2, 'isAudioOnlyMode': true, 'rememberAudioOnly': true});
       expect(settings.youtube.isAudioOnlyMode.value, true);
       expect(settings.youtube.kMaxDaysForPageCacheDuration, 90);
       expect(settings.youtube.kMinutesInMaxDaysForPageCache, 90 * 24 * 60);
@@ -1195,7 +1116,7 @@ void main() {
     });
 
     test('extra: library tab selection', () async {
-      await loadFile(settings.extra, {'_v': 3, 'autoLibraryTab': false, 'staticLibraryTab': 'albums', 'selectedLibraryTab': 'home'});
+      await loadFile(settings.extra, {'_v': 2, 'autoLibraryTab': false, 'staticLibraryTab': 'albums', 'selectedLibraryTab': 'home'});
       expect(settings.extra.selectedLibraryTab.value, LibraryTab.albums);
       settings.extra.setSelectedLibraryTab(LibraryTab.tracksVideos);
       expect(settings.extra.selectedLibraryTab.value, LibraryTab.tracksVideos);
@@ -1206,7 +1127,7 @@ void main() {
     });
 
     test('extra: yt home section sources', () async {
-      await loadFile(settings.extra, {'_v': 3});
+      await loadFile(settings.extra, {'_v': 2});
       expect(settings.extra.getYTHomeSectionSource(YTHomePages.home), YTHomeSource.local);
       expect(settings.extra.getYTHomeSectionSource(YTHomePages.notifications), YTHomeSource.youtube);
       expect(settings.extra.getYTHomeSectionSource(YTHomePages.downloads), YTHomeSource.local);
@@ -1219,7 +1140,7 @@ void main() {
 
       settings.extra.setYTHomeSectionSource(YTHomePages.channels, YTHomeSource.youtube);
       expect(settings.extra.buildJson(), {
-        '_v': 3,
+        '_v': 2,
         'ytHomeSectionSources': {'playlists': 'local', 'channels': 'youtube'},
       });
 
@@ -1230,7 +1151,7 @@ void main() {
     });
 
     test('extra: old yt split page indexes migrate to section sources', () async {
-      await loadFile(settings.extra, {'_v': 3, 'ytInitialHomePage': 'channels', 'ytHomePageIndex': 1, 'ytChannelsPageIndex': 0, 'ytPlaylistsPageIndex': 'x'});
+      await loadFile(settings.extra, {'_v': 2, 'ytInitialHomePage': 'channels', 'ytHomePageIndex': 1, 'ytChannelsPageIndex': 0, 'ytPlaylistsPageIndex': 'x'});
       expect(settings.extra.ytInitialHomePage.value, YTHomePages.channels);
       expect(settings.extra.ytHomeSectionSources.value, {YTHomePages.home: YTHomeSource.youtube, YTHomePages.channels: YTHomeSource.local});
       final migrated = settings.extra.buildJson();
@@ -1241,12 +1162,12 @@ void main() {
       await loadFile(settings.extra, migrated);
       expect(settings.extra.buildJson(), migrated);
 
-      await loadFile(settings.extra, {'_v': 3, 'ytPlaylistsPageIndex': null});
-      expect(settings.extra.buildJson(), {'_v': 3});
+      await loadFile(settings.extra, {'_v': 2, 'ytPlaylistsPageIndex': null});
+      expect(settings.extra.buildJson(), {'_v': 2});
     });
 
     test('extra: recent searches', () async {
-      await loadFile(settings.extra, {'_v': 3});
+      await loadFile(settings.extra, {'_v': 2});
       settings.extra.addRecentSearch('a');
       expect(settings.extra.recentSearches.value, isEmpty);
 
@@ -1270,22 +1191,22 @@ void main() {
       settings.extra.addRecentSearch('c');
       settings.extra.setRecentSearchesEnabled(false);
       expect(settings.extra.recentSearches.value, isEmpty);
-      expect(settings.extra.buildJson(), {'_v': 3, 'recentSearchesEnabled': false});
+      expect(settings.extra.buildJson(), {'_v': 2});
     });
 
     test('extra: window bounds round trip, broken bounds are dropped', () async {
-      await loadFile(settings.extra, {'_v': 3});
+      await loadFile(settings.extra, {'_v': 2});
       settings.extra.windowBounds.save(const Rect.fromLTRB(1, 2, 3, 4));
       expect(settings.extra.buildJson()['windowBounds'], {'l': 1.0, 't': 2.0, 'r': 3.0, 'b': 4.0});
       await loadFile(settings.extra, {
-        '_v': 3,
+        '_v': 2,
         'windowBounds': {'l': 1, 't': 'x', 'r': 3, 'b': 4},
       });
       expect(settings.extra.windowBounds.value, null);
     });
 
     test('equalizer: config presets put in place, rename, remove and reload equal', () async {
-      await loadFile(settings.equalizer, {'_v': 3});
+      await loadFile(settings.equalizer, {'_v': 2});
       final defaults = PlayerConfig(
         skipSilence: false,
         loudnessEnhancerEnabled: false,
@@ -1362,7 +1283,7 @@ void main() {
     });
 
     test('party: reactions and hidden owners', () async {
-      await loadFile(settings.party, {'_v': 3});
+      await loadFile(settings.party, {'_v': 2});
       final defaultReactions = settings.party.reactionsList();
       expect(defaultReactions.join(), settings.party.defaultReactions);
       settings.party.reactions.save('a b');
@@ -1386,5 +1307,42 @@ void main() {
       settings.sync.updateManualServerAddress('s', '2');
       expect(settings.sync.manualServerAddresses.value, {'s': '2'});
     });
+  });
+
+  test('keys that were nullable load old values like their old read site fallbacks', () async {
+    final oldFallbacks = <SettingsFileWriter, Map<SettingsKey<Object?>, Object>>{
+      settings: {
+        settings.timeCapsuleYears: 0, settings.ytStyleButtonSwitcher: false, settings.keepVideoFrameOnSwitch: false, //
+        settings.scrollbarThumbLabel: false, settings.instantThumbGrab: false, settings.smoothScrolling: true,
+        settings.mediaWaveHaptic: false, settings.backgroundImages: false,
+      },
+      settings.extra: {
+        settings.extra.recentSearchesEnabled: false, settings.extra.floatingArtworkEffect: false, settings.extra.tiltingCardsEffect: false, //
+        settings.extra.reduceAnimations: false, settings.extra.jellysPalette: false, settings.extra.artistAlbumsExpanded: true,
+        settings.extra.artistSinglesExpanded: false, settings.extra.artistEpsExpanded: false, settings.extra.artistsMapGraphLayout: true,
+        settings.extra.audioConfigPageIndex: 0,
+      },
+    };
+    Object flipped(Object fallback) => fallback is bool ? !fallback : 3;
+    final storedVariants = <Object? Function(Object fallback)>[(_) => null, (fallback) => fallback, flipped];
+
+    for (final e in oldFallbacks.entries) {
+      final writer = e.key;
+      final fallbacks = e.value;
+      await loadFile(writer, {'_v': 2});
+      for (final k in fallbacks.entries) {
+        expect(k.key.value, k.value, reason: '${k.key.name} missing');
+      }
+      for (final storedOf in storedVariants) {
+        await loadFile(writer, {'_v': 2, for (final k in fallbacks.entries) k.key.name: storedOf(k.value)});
+        for (final k in fallbacks.entries) {
+          final key = k.key;
+          final oldFallback = k.value;
+          final stored = storedOf(oldFallback);
+          final expected = stored ?? oldFallback;
+          expect(key.value, expected, reason: '${key.name} = $stored');
+        }
+      }
+    }
   });
 }

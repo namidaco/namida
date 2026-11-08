@@ -601,7 +601,7 @@ class CustomizationSettings extends SettingSubpageProvider {
 
   static bool _isPartyModeEnabled() => settings.enablePartyModeInMiniplayer.valueR;
 
-  static bool _isBackgroundImagesEnabled() => settings.backgroundImages.valueR == true;
+  static bool _isBackgroundImagesEnabled() => settings.backgroundImages.valueR;
 
   static String _toIntText(double value) => "${value.toInt()}";
 

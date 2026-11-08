@@ -28,7 +28,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
     value: YTHomeSource.values.asCodec(),
   );
 
-  late final recentSearchesEnabled = _key<bool?>('recentSearchesEnabled', null);
+  late final recentSearchesEnabled = _key('recentSearchesEnabled', false);
   late final recentSearches = _keyList<String>('recentSearches', const []);
 
   static const _maxRecentSearches = 20;
@@ -37,22 +37,22 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   static const _maxRecentColors = 12;
 
-  late final floatingArtworkEffect = _key<bool?>('floatingArtworkEffect', null);
-  late final tiltingCardsEffect = _key<bool?>('tiltingCardsEffect', null);
-  late final reduceAnimations = _key<bool?>('reduceAnimations', null);
+  late final floatingArtworkEffect = _key('floatingArtworkEffect', false);
+  late final tiltingCardsEffect = _key('tiltingCardsEffect', false);
+  late final reduceAnimations = _key('reduceAnimations', false);
   late final jellysInvasion = _key<bool?>('jellysInvasion', null);
-  late final jellysPalette = _key<bool?>('jellysPalette', null);
+  late final jellysPalette = _key('jellysPalette', false);
   late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
   late final namiweenOfferedYear = _key<int?>('namiweenOfferedYear', null);
-  late final artistAlbumsExpanded = _key<bool?>('artistAlbumsExpanded', null);
-  late final artistSinglesExpanded = _key<bool?>('artistSinglesExpanded', null);
-  late final artistEpsExpanded = _key<bool?>('artistEpsExpanded', null);
-  late final artistsMapGraphLayout = _key<bool?>('artistsMapGraphLayout', null);
+  late final artistAlbumsExpanded = _key('artistAlbumsExpanded', true);
+  late final artistSinglesExpanded = _key('artistSinglesExpanded', false); // cuz no space
+  late final artistEpsExpanded = _key('artistEpsExpanded', false);
+  late final artistsMapGraphLayout = _key('artistsMapGraphLayout', true);
 
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);
 
   late final ytAddToPlaylistsTabIndex = _key<int?>('ytAddToPlaylistsTabIndex', null);
-  late final audioConfigPageIndex = _key<int?>('audioConfigPageIndex', null);
+  late final audioConfigPageIndex = _key('audioConfigPageIndex', 0);
   late final widePlayerPageIndex = _key<int?>('widePlayerPageIndex', null);
 
   late final windowMaximized = _key('windowMaximized', false);
@@ -87,7 +87,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   }
 
   void addRecentSearch(String text) {
-    if (recentSearchesEnabled.value != true) return;
+    if (!recentSearchesEnabled.value) return;
     if (recentSearches.value.firstOrNull == text) return;
     recentSearches.update(
       (list) {

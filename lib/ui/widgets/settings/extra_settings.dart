@@ -508,13 +508,13 @@ class _ExtrasFlagsOptions extends StatelessWidget {
         title: 'instant thumb grab',
         hasDividerAbove: true,
         onTap: () {
-          final isInstantThumbGrab = settings.instantThumbGrab.value == true;
+          final isInstantThumbGrab = settings.instantThumbGrab.value;
           settings.instantThumbGrab.save(!isInstantThumbGrab);
         },
         trailing: ObxO(
           rx: settings.instantThumbGrab,
           builder: (context, instantThumbGrab) => CustomSwitch(
-            active: instantThumbGrab == true,
+            active: instantThumbGrab,
             width: 37.0,
             height: 20.0,
           ),
@@ -569,7 +569,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   rx: settings.extra.floatingArtworkEffect,
                   builder: (context, floatingArtworkEffect) => CustomSwitchListTile(
                     icon: Broken.recovery_convert,
-                    value: floatingArtworkEffect ?? false,
+                    value: floatingArtworkEffect,
                     onChanged: (isTrue) => settings.extra.floatingArtworkEffect.save(!isTrue),
                     title: 'floating_artwork_effect'.toUpperCase(),
                     subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
@@ -580,7 +580,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   rx: settings.extra.tiltingCardsEffect,
                   builder: (context, tiltingCardsEffect) => CustomSwitchListTile(
                     icon: Broken.d_rotate,
-                    value: tiltingCardsEffect ?? false,
+                    value: tiltingCardsEffect,
                     onChanged: (isTrue) => settings.extra.tiltingCardsEffect.save(!isTrue),
                     title: 'tilting_cards_effect'.toUpperCase(),
                     subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
@@ -593,7 +593,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
               //   rx: settings.extra.reduceAnimations,
               //   builder: (context, reduceAnimations) => CustomSwitchListTile(
               //     icon: Broken.flash_1,
-              //     value: reduceAnimations ?? false,
+              //     value: reduceAnimations,
               //     onChanged: (isTrue) => settings.extra.reduceAnimations.save(!isTrue),
               //     title: 'reduce_animations'.toUpperCase(),
               //     subtitle: 'Transitions and animations finish almost instantly.',
@@ -604,7 +604,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   rx: settings.mediaWaveHaptic,
                   builder: (context, mediaWaveHaptic) => CustomSwitchListTile(
                     icon: Broken.watch_status,
-                    value: mediaWaveHaptic ?? false,
+                    value: mediaWaveHaptic,
                     onChanged: (isTrue) => settings.mediaWaveHaptic.save(!isTrue),
                     title: 'media_wave_haptic'.toUpperCase(),
                     subtitle: 'Haptic feedback following the rhythm.\nMight affect battery usage.',
@@ -617,7 +617,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   builder: (context, smoothScrolling) => CustomSwitchListTile(
                     icon: Broken.coin,
                     rotateIcon: 2,
-                    value: smoothScrolling ?? true,
+                    value: smoothScrolling,
                     onChanged: (isTrue) => settings.smoothScrolling.save(!isTrue),
                     title: 'smooth_scrolling'.toUpperCase(),
                   ),
@@ -630,7 +630,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     secondaryIcon: Broken.text,
                     secondaryIconSize: 12.0,
                   ),
-                  value: scrollbarThumbLabel ?? false,
+                  value: scrollbarThumbLabel,
                   onChanged: (isTrue) => settings.scrollbarThumbLabel.save(!isTrue),
                   title: 'scrollbar_thumb_label'.toUpperCase(),
                   subtitle: 'show the current letter/section next to the scrollbar while dragging it',
@@ -641,7 +641,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 childBuilder: (openMenu) => Obx(
                   (context) {
                     final trackMode = settings.scrollbarTrackMode.valueR;
-                    final isInstantThumbGrab = settings.instantThumbGrab.valueR == true;
+                    final isInstantThumbGrab = settings.instantThumbGrab.valueR;
                     final trackModeSubtitle = trackMode.toSubtitle();
                     final subtitle = isInstantThumbGrab ? '$trackModeSubtitle\nthe thumb can be dragged with no delay and from a wider area.' : trackModeSubtitle;
                     final instantIcon = isInstantThumbGrab
@@ -744,7 +744,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 rx: settings.extra.recentSearchesEnabled,
                 builder: (context, recentSearchesEnabled) => CustomSwitchListTile(
                   icon: Broken.search_status,
-                  value: recentSearchesEnabled ?? false,
+                  value: recentSearchesEnabled,
                   onChanged: (isTrue) => settings.extra.setRecentSearchesEnabled(!isTrue),
                   title: 'recent_searches'.toUpperCase(),
                   subtitle: 'saves searches and shows them in the search page',
@@ -773,7 +773,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 rx: settings.ytStyleButtonSwitcher,
                 builder: (context, ytStyleButtonSwitcher) => CustomSwitchListTile(
                   icon: Broken.video_octagon,
-                  value: ytStyleButtonSwitcher ?? false,
+                  value: ytStyleButtonSwitcher,
                   onChanged: (isTrue) => settings.ytStyleButtonSwitcher.save(!isTrue),
                   title: 'yt_style_player_button_switcher'.toUpperCase(),
                   subtitle: 'shows a button to switch between local style player and youtube style player',
@@ -783,7 +783,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 rx: settings.keepVideoFrameOnSwitch,
                 builder: (context, keepVideoFrameOnSwitch) => CustomSwitchListTile(
                   icon: Broken.video_play,
-                  value: keepVideoFrameOnSwitch ?? false,
+                  value: keepVideoFrameOnSwitch,
                   onChanged: (isTrue) => settings.keepVideoFrameOnSwitch.save(!isTrue),
                   title: 'keep_video_frame_on_switch'.toUpperCase(),
                   subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
@@ -821,7 +821,6 @@ class _ExtrasFlagsOptions extends StatelessWidget {
               ObxO(
                 rx: settings.timeCapsuleYears,
                 builder: (context, timeCapsuleYears) {
-                  timeCapsuleYears ??= 0;
                   final now = DateTime.now();
                   const preferredYear = 2018;
 
@@ -1019,7 +1018,7 @@ class JellysFlagsTiles extends StatelessWidget {
           rx: settings.extra.jellysPalette,
           builder: (context, jellysPalette) => CustomSwitchListTile(
             icon: Broken.color_swatch,
-            value: jellysPalette ?? false,
+            value: jellysPalette,
             onChanged: (isTrue) => NamidaJellys.setPaletteHijack(!isTrue),
             title: 'jellys_color_palette'.toUpperCase(),
           ),

@@ -326,7 +326,7 @@ class AppWallpaperTile extends StatelessWidget {
     return ObxO(
       rx: settings.backgroundImages,
       builder: (context, backgroundImages) {
-        if (backgroundImages != true) return const SizedBox();
+        if (!backgroundImages) return const SizedBox();
         return CustomListTile(
           bgColor: bgColor,
           icon: Broken.gallery,
@@ -364,7 +364,7 @@ class BackgroundImagesFlagTile extends StatelessWidget {
       rx: settings.backgroundImages,
       builder: (context, backgroundImages) => CustomSwitchListTile(
         icon: Broken.gallery,
-        value: backgroundImages ?? false,
+        value: backgroundImages,
         onChanged: _toggle,
         title: 'background_images'.toUpperCase(),
         subtitle: '${lang.wallpaper} & ${lang.playerBackground}',
@@ -411,7 +411,7 @@ class _PlayerBackgroundOptions extends StatelessWidget {
       (context) {
         final source = settings.playerBackground.valueR;
         final imagePath = settings.playerBackgroundImage.valueR;
-        final backgroundImages = settings.backgroundImages.valueR == true;
+        final backgroundImages = settings.backgroundImages.valueR;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -166,7 +166,7 @@ class SubtitleTrackYoutube extends SubtitleTrack {
   /// which end up parsed as karaoke parts.
   String get _requestUrl => '${caption.url.replaceAll(_fmtParamRegex, '')}&fmt=vtt';
 
-  /// caption urls expire after a few hours, so the fetched file is kept around.
+  /// caption urls expire after a few hours, so the fetched file is kept around. throws when the request fails.
   @override
   Future<File?> ensureLocalFile() async {
     final cacheFile = this.cacheFile;
@@ -182,8 +182,6 @@ class SubtitleTrackYoutube extends SubtitleTrack {
       if (body.isEmpty) return null;
       await cacheFile.writeAsString(body);
       return cacheFile;
-    } catch (_) {
-      return null;
     } finally {
       client?.close().ignoreError();
     }

@@ -58,20 +58,20 @@ class _Log {
     final existing = _entries[key];
     if (existing != null) {
       existing.count++;
-      file.updateCounter(existing);
+      existing.lastSeen = DateTime.now();
+      file.updateHeader(existing);
       return;
     }
 
-    final entry = _LogEntry();
+    final firstSeenText = _LogsFile.timestampText(DateTime.now());
+    final entry = _LogEntry(firstSeenText);
     _entries[key] = entry;
-    final text = _formatEntry(message, e, stString);
-    file.append(entry, text);
+    final body = _formatBody(message, e, stString);
+    file.append(entry, body);
   }
 
-  static String _formatEntry(dynamic message, Object? e, String? stString) {
-    final timestamp = DateTime.now().toString().substring(0, 19);
-    final buffer = StringBuffer(' ');
-    buffer.writeln(timestamp);
+  static String _formatBody(dynamic message, Object? e, String? stString) {
+    final buffer = StringBuffer('\n');
     if (e != null) buffer.writeln(e);
     final messageText = message?.toString() ?? '';
     if (messageText.isNotEmpty) buffer.writeln(messageText);
@@ -111,6 +111,17 @@ class _LogsFile {
 
   static String _counterText(int count) => 'x${(count > _counterMax ? _counterMax : count).toString().padLeft(_counterDigits, '0')}';
 
+  static String timestampText(DateTime time) => time.toString().substring(0, 19);
+
+  static final _lastSeenPlaceholder = ' ' * ' (last 0000-00-00 00:00:00)'.length;
+
+  /// fixed width, so repeats can rewrite it in place.
+  static String _headerText(_LogEntry entry) {
+    final lastSeen = entry.lastSeen;
+    final lastSeenText = lastSeen == null ? _lastSeenPlaceholder : ' (last ${timestampText(lastSeen)})';
+    return '${_counterText(entry.count)} ${entry.firstSeenText}$lastSeenText';
+  }
+
   Future<void> _open(File file) async {
     try {
       final raf = await file.open(mode: FileMode.append);
@@ -123,12 +134,12 @@ class _LogsFile {
     _chain = _chain.then((_) => op());
   }
 
-  void append(_LogEntry entry, String text) {
+  void append(_LogEntry entry, String body) {
     _enqueue(() async {
       final raf = _raf;
       if (raf == null) return;
-      final bytes = utf8.encode('${_counterText(1)}$text');
-      entry.counterOffset = _endOffset;
+      final bytes = utf8.encode('${_headerText(entry)}$body');
+      entry.headerOffset = _endOffset;
       try {
         await raf.writeFrom(bytes);
         _endOffset += bytes.length;
@@ -137,17 +148,17 @@ class _LogsFile {
     });
   }
 
-  void updateCounter(_LogEntry entry) {
+  void updateHeader(_LogEntry entry) {
     if (entry.dirty) return;
     entry.dirty = true;
     _enqueue(() async {
       entry.dirty = false;
       final raf = _raf;
-      if (raf == null || entry.counterOffset < 0) return;
-      final text = _counterText(entry.count);
+      if (raf == null || entry.headerOffset < 0) return;
+      final text = _headerText(entry);
       try {
         try {
-          await raf.setPosition(entry.counterOffset);
+          await raf.setPosition(entry.headerOffset);
           await raf.writeFrom(ascii.encode(text));
         } finally {
           await raf.setPosition(_endOffset);
@@ -170,7 +181,11 @@ class _LogsFile {
 }
 
 class _LogEntry {
+  final String firstSeenText;
+  DateTime? lastSeen;
   int count = 1;
-  int counterOffset = -1;
+  int headerOffset = -1;
   bool dirty = false;
+
+  _LogEntry(this.firstSeenText);
 }

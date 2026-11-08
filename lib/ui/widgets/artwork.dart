@@ -607,7 +607,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     if (NamidaFeaturesVisibility.floatingArtworkEffect) {
       if (widget.allowFloating) {
-        if (settings.extra.floatingArtworkEffect.value == true) {
+        if (settings.extra.floatingArtworkEffect.value) {
           artwork = _EncapsulateWithFloatingTilt(
             compressed: widget.compressed,
             child: artwork,

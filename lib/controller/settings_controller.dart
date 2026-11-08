@@ -304,7 +304,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final showUnknownFieldsInTrackInfoDialog = _key('showUnknownFieldsInTrackInfoDialog_v2', false);
   late final extractFeatArtistFromTitle = _key('extractFeatArtistFromTitle', true);
   late final groupArtworksByAlbum = _key('groupArtworksByAlbum', false, sync: false);
-  late final uniqueArtworkHash = _key('uniqueArtworkHash', true, sync: false);
+  late final uniqueArtworkHash = _key('uniqueArtworkHash', false, sync: false);
   late final enableM3USync = _key('enableM3USync', false, sync: false);
   late final enableM3USyncStartup = _key('enableM3USyncStartup', true, sync: false);
   late final importServerPlaylists = _key('importServerPlaylists', true, sync: false);
@@ -343,7 +343,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final visualDelayMS = _key('visualDelayMS', 0);
   late final lyricsEditorLatencyMS = _key('lyricsEditorLatencyMS', 0, sync: false);
   late final lyricsEditorFontScale = _key('lyricsEditorFontScale', 1.0, sync: false);
-  late final timeCapsuleYears = _key<int?>('timeCapsuleYears', null);
+  late final timeCapsuleYears = _key('timeCapsuleYears', 0);
 
   late final playlistAddTracksAtBeginning = _key('playlistAddTracksAtBeginning', false);
   late final playlistAddTracksAtBeginningYT = _key('playlistAddTracksAtBeginningYT', false);
@@ -385,14 +385,14 @@ class _SettingsController extends _SettingsKeysWriter {
   late final gradientTiles = _key('gradientTiles', true);
   late final preferredSearchType = _keyEnum('preferredSearchType', SearchType.auto, SearchType.values);
   late final resumeUIEnabled = _key('resumeUIEnabled', true);
-  late final ytStyleButtonSwitcher = _key<bool?>('ytStyleButtonSwitcher', null);
-  late final keepVideoFrameOnSwitch = _key<bool?>('keepVideoFrameOnSwitch', null, sync: false);
-  late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null, sync: false);
+  late final ytStyleButtonSwitcher = _key('ytStyleButtonSwitcher', false);
+  late final keepVideoFrameOnSwitch = _key('keepVideoFrameOnSwitch', false, sync: false);
+  late final scrollbarThumbLabel = _key('scrollbarThumbLabel', false, sync: false);
   late final scrollbarTrackMode = _keyEnum('scrollbarTrackMode', ScrollbarTrackMode.dragAnywhere, ScrollbarTrackMode.values, sync: false);
-  late final instantThumbGrab = _key<bool?>('instantThumbGrab', null, sync: false);
-  late final smoothScrolling = _key<bool?>('smoothScrolling', null, sync: false);
-  late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null, sync: false);
-  late final backgroundImages = _key<bool?>('backgroundImages', null, sync: false);
+  late final instantThumbGrab = _key('instantThumbGrab', false, sync: false);
+  late final smoothScrolling = _key('smoothScrolling', true, sync: false);
+  late final mediaWaveHaptic = _key('mediaWaveHaptic', false, sync: false);
+  late final backgroundImages = _key('backgroundImages', false, sync: false);
 
   late final editTagsKeepFileDates = _key('editTagsKeepFileDates', true);
   late final downloadFilesWriteUploadDate = _key('downloadFilesWriteUploadDate', false);
@@ -679,19 +679,6 @@ class _SettingsController extends _SettingsKeysWriter {
         return wholeDaysRange.toJson();
       });
     }
-
-    // -- v3 made hashed artworks the default, older installs keep their filename keyed artworks and palettes readable.
-    // -- apparently the proper fix is enabling it for everyone but that involves possible bugs and perf issue especially
-    // -- with backup restore / syncing / etc
-    final fileVersion = _fileVersion;
-    final bool isOldInstall;
-    if (fileVersion == null) {
-      isOldInstall = AppPaths.TRACKS_DB_INFO.file.existsSync() || File(AppPaths.TRACKS_OLD).existsSync();
-    } else {
-      isOldInstall = fileVersion < 3;
-    }
-    if (isOldInstall) _raw['uniqueArtworkHash'] ??= false;
-    if (fileVersion == null) writeToStorage();
   }
 
   /// [sorts] and [reverse] as their old separate keys stored them, a missing one is taken from [defaultSorting].

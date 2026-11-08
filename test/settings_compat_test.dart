@@ -30,7 +30,7 @@ const _junkValues = <dynamic>[
 
 /// old nullable fields that now resolve to a default: the old dump wrote null, the new value is the default.
 const _resolvedNullables = <String, Set<String>>{
-  'namida_settings.json': {'extensionsBlacklist', 'backupItemslist_v2'},
+  'namida_settings.json': {'extensionsBlacklist', 'backupItemslist_v2', 'timeCapsuleYears'},
   'namida_settings_youtube.json': {'downloadParallelCount_v2', 'downloadThreadsCount', 'personalizedRelatedVideos'},
 };
 

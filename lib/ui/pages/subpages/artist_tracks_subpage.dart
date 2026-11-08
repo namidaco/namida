@@ -274,9 +274,9 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value ?? true;
-    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value ?? false;
-    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value ?? false; // cuz no space
+    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value;
+    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value;
+    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value;
     final extrasInitiallyExpanded = widget.albums.isEmpty && widget.eps.isEmpty && widget.singles.isEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
