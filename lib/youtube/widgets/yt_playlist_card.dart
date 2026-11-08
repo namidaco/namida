@@ -23,6 +23,7 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
+import 'package:namida/youtube/widgets/yt_feedback_scope.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 /// Playlist info is fetched automatically after 3 seconds of being displayed, or after attempting an action.
@@ -119,8 +120,9 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   FutureOr<List<NamidaPopupItem>> getMenuItems() {
     if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
 
+    final feedbackMenuItem = YTFeedbackScope.moreMenuItemOf(context, widget.playlist, itemTitle: widget.playlist.title);
     final playlistToFetch = this.playlistToFetch;
-    if (playlistToFetch == null) return [];
+    if (playlistToFetch == null) return [?feedbackMenuItem];
     return widget.playlist.getPopupMenuItems(
       queueSource: widget.queueSource,
       playlistToFetch: playlistToFetch,
@@ -128,6 +130,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
       showProgressSheet: true,
       displayPlay: !widget.playOnTap,
       displayOpenPlaylist: widget.playOnTap,
+      moreMenuChildren: [?feedbackMenuItem],
     );
   }
 

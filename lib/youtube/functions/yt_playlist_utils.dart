@@ -468,6 +468,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     bool displayPlay = true,
     bool displayOpenPlaylist = false,
     bool isInFullScreen = false,
+    List<NamidaPopupItem>? moreMenuChildren,
   }) async {
     final playlist = this;
     final videosCount = playlist.videosCount;
@@ -706,6 +707,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           );
         },
       ),
+      ...?moreMenuChildren,
     ];
   }
 }

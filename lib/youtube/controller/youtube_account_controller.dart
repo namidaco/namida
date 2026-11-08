@@ -57,6 +57,8 @@ class YoutubeAccountController {
     YoutiPieOperation.markNotificationRead: false,
     YoutiPieOperation.fetchNotificationComments: false,
     YoutiPieOperation.fetchNotificationCommentsNext: false,
+    YoutiPieOperation.sendFeedback: false,
+    YoutiPieOperation.undoFeedback: false,
   };
 
   static const _operationHasErrorPage = <YoutiPieOperation, bool>{

@@ -1300,6 +1300,13 @@ extension SponsorBlockActionExt on SponsorBlockAction {
   }
 }
 
+extension FeedbackMenuActionTypeUtils on FeedbackMenuActionType {
+  IconData toIcon() => switch (this) {
+    FeedbackMenuActionType.notInterested => Broken.eye_slash,
+    FeedbackMenuActionType.dontRecommendChannel => Broken.user_remove,
+  };
+}
+
 extension RouteUtils on NamidaRoute {
   AlbumIdentifierWrapper? get routeDataAlbumIdentifier => routeData is AlbumIdentifierWrapper ? (routeData as AlbumIdentifierWrapper) : null;
 

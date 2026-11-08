@@ -69,6 +69,7 @@ class YoutubeInfoController {
   static const comment = YoutiPie.comment;
   static const commentAction = YoutiPie.commentAction;
   static const notificationsAction = YoutiPie.notificationsAction;
+  static const feedbackAction = YoutiPie.feedbackAction;
   static const search = _SearchInfoController();
   static const feed = YoutiPie.feed;
   static const hashtag = YoutiPie.hashtag;

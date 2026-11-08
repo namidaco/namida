@@ -63,8 +63,9 @@ class _MusicItemActions {
     Player.inst.playOrPause(0, videos, queueSource, shuffle: shuffle);
   }
 
-  static Future<List<NamidaPopupItem>> menuItems(YoutubeFeed item, String queueTitle) async {
+  static Future<List<NamidaPopupItem>> menuItems(BuildContext context, YoutubeFeed item, String queueTitle) async {
     final queueSource = QueueSourceYoutubeID.ytMusic(queueTitle);
+    final feedbackMenuItem = YTFeedbackScope.moreMenuItemOf(context, item, itemTitle: item.getMusicTitle());
     if (item is StreamInfoItem) {
       return YTUtils.getVideoCardMenuItems(
         queueSource: queueSource,
@@ -75,19 +76,21 @@ class _MusicItemActions {
         channelID: item.channel?.id,
         playlistID: null,
         idsNamesLookup: {item.id: item.title},
+        moreMenuChildren: [?feedbackMenuItem],
       );
     }
     if (item case final PlaylistBasicInfo playlistInfo) {
       final playlist = await _fetchPlaylist(playlistInfo);
-      if (playlist == null) return const [];
+      if (playlist == null) return [?feedbackMenuItem];
       return playlistInfo.getPopupMenuItems(
         queueSource: queueSource,
         showProgressSheet: true,
         playlistToFetch: playlist,
         userPlaylist: null,
+        moreMenuChildren: [?feedbackMenuItem],
       );
     }
-    return const [];
+    return [?feedbackMenuItem];
   }
 
   static Future<YoutiPiePlaylistResultBase?> _fetchPlaylist(PlaylistBasicInfo info) {
@@ -131,7 +134,7 @@ class _MusicCard extends StatelessWidget {
     final isArtist = item is ChannelInfoItem;
     return NamidaPopupWrapper(
       openOnTap: false,
-      childrenDefault: () => _MusicItemActions.menuItems(item, queueTitle),
+      childrenDefault: () => _MusicItemActions.menuItems(context, item, queueTitle),
       child: NamidaInkWell(
         width: artWidth,
         borderRadius: 10.0,
@@ -181,7 +184,7 @@ class _MusicListRow extends StatelessWidget {
       height: _MusicDims.rowHeight,
       child: NamidaPopupWrapper(
         openOnTap: false,
-        childrenDefault: () => _MusicItemActions.menuItems(item, queueTitle),
+        childrenDefault: () => _MusicItemActions.menuItems(context, item, queueTitle),
         child: NamidaInkWell(
           borderRadius: 10.0,
           padding: const EdgeInsets.symmetric(horizontal: 6.0),

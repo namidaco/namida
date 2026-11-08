@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
+import 'package:namida/youtube/widgets/yt_feedback_scope.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
@@ -55,8 +56,9 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                   thumbnailWidth: thumbnailWidth,
                   thumbnailHeight: thumbnailHeight,
                 ),
-                sliverListBuilder: (feed, itemBuilder, dummyCard) {
-                  return SliverVariedExtentList.builder(
+                sliverListBuilder: (feed, itemBuilder, dummyCard) => YTFeedbackScope(
+                  list: feed,
+                  builder: (context) => SliverVariedExtentList.builder(
                     itemExtentBuilder: (index, dimensions) {
                       if (isShortsVisible) {
                         if (feed.shortsSection.relatedItemsShortsData[index] != null) {
@@ -110,8 +112,8 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                       }
                       return itemBuilder(feed.items[index], index, feed);
                     },
-                  );
-                },
+                  ),
+                ),
                 itemBuilder: (item, i, _) {
                   if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
                   if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();

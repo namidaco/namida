@@ -57,7 +57,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final Widget dummyCard;
   final double? itemExtent;
   final YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder;
-  final RenderObjectWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
+  final Widget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
   final bool showRefreshInsteadOfRefreshing;
   final ValueKey? fetchTimeMapKey;
   final LibraryTab? libraryTab;
