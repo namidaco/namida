@@ -136,9 +136,10 @@ class EditDeleteController {
     }
   }
 
-  Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
+  /// returns the new track, null when [newPath] couldn't be read.
+  Future<Track?> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
     final newtrlist = await Indexer.inst.convertPathsToTracksAndAddToLists([newPath]);
-    if (newtrlist.isEmpty) return;
+    if (newtrlist.isEmpty) return null;
     final newTrack = newtrlist.first;
     final oldNewMap = {oldTrack: newTrack};
 
@@ -155,6 +156,7 @@ class EditDeleteController {
     if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
       SelectedTracksController.inst.replaceThisTrack(oldTrack, newTrack);
     }
+    return newTrack;
   }
 
   Future<void> updateDirectoryInEveryPartOfNamida(

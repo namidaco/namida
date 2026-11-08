@@ -17,7 +17,9 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Rational
+import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
+import android.window.SplashScreenView
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -40,6 +42,7 @@ class NamidaMainActivity : FlutterActivity() {
     var currentLifecycle: Lifecycle? = null
     var currentApplicationContext : Context? = null
     private var pipAspectRatio: Rational? = null
+    private const val SPLASH_EXIT_DURATION_MS = 300L
   }
 
 
@@ -561,11 +564,33 @@ class NamidaMainActivity : FlutterActivity() {
     ProcessExitReporter.installJavaCrashRecorder(applicationContext)
 
     super.onCreate(savedInstanceState)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      splashScreen.setOnExitAnimationListener { animateSplashExit(it) }
+    }
     if (intent?.action == NamidaConstants.BABE_WAKE_UP) {
       moveTaskToBack(true)
     }
     DisplayRefreshRate.applyMax(this)
     LauncherIconController.tryFixLauncherIconIfNeeded();
+  }
+
+  @RequiresApi(Build.VERSION_CODES.S)
+  private fun animateSplashExit(splashView: SplashScreenView) {
+    val interpolator = DecelerateInterpolator()
+    // -- the icon can be its own surface, the parent alpha doesnt reach it
+    splashView.iconView?.animate()
+      ?.alpha(0f)
+      ?.setDuration(SPLASH_EXIT_DURATION_MS)
+      ?.setInterpolator(interpolator)
+    splashView.animate()
+      .alpha(0f)
+      .setDuration(SPLASH_EXIT_DURATION_MS)
+      .setInterpolator(interpolator)
+      .withEndAction {
+        splashView.remove()
+        // -- remove() resets the system bars to the theme ones
+        updateSystemUiOverlays()
+      }
   }
 
   override fun onWindowFocusChanged(hasFocus: Boolean) {

@@ -141,52 +141,34 @@ object NamidaFileUtils {
 
   fun extractRealPathFromFileProvider(context: Context, uri: Uri, storagePaths: List<String>): String? {
       // for: content://com.etc.launcher.release.fileprovider/external_files/Music/...
-      if (uri.authority?.contains("fileprovider") == true) {
+      // samsung: content://com.sec.android.app.myfiles.FileProvider/device_storage/0/Music/...
+      if (uri.authority?.contains("fileprovider", ignoreCase = true) == true) {
           val pathSegments = uri.pathSegments
-          // Skip the first segment (e.g., "external_files")
           if (pathSegments.size > 1) {
-              val relativePath = pathSegments.drop(1).joinToString("/")
-              val decodedPath = Uri.decode(relativePath)
-              val primaryPath = "${Environment.getExternalStorageDirectory()}/$decodedPath"
-              if (File(primaryPath).exists()) {
-                  return primaryPath
-              }
-
-              val firstSegment = decodedPath.substringBefore('/')
-              val sdCardPattern = Regex("^[0-9A-F]{4}-[0-9A-F]{4}$")
-              if (sdCardPattern.matches(firstSegment)) {
-                  // Path already contains SD card ID, use it directly
-                  val fullSdPath = "/storage/$decodedPath"
-                  if (File(fullSdPath).exists()) {
-                      return fullSdPath
-                  }
-              }
-
-              // fallback to SD card and other external storage volumes
-              if (storagePaths.isNotEmpty()) {
-                  for (storagePath in storagePaths) {
-                      val fullPath = "$storagePath/$decodedPath"
-                      if (File(fullPath).exists()) {
-                          return fullPath
-                      }
-                  }
-              } else {
+              val primaryStorageRoot = Environment.getExternalStorageDirectory().toString()
+              val storageRoots = linkedSetOf(primaryStorageRoot)
+              storageRoots.addAll(storagePaths)
+              if (storagePaths.isEmpty()) {
                   val externalDirs = context.getExternalFilesDirs(null)
                   externalDirs?.forEach { dir ->
                       if (dir != null) {
                           // Extract the storage root from the external files dir
                           // e.g., /storage/XXXX-XXXX/Android/data/... -> /storage/XXXX-XXXX/
                           val storagePath = extractStorageRoot(dir.absolutePath)
-                          if (storagePath != null) {
-                              val sdcardPath = "$storagePath/$decodedPath"
-                              if (File(sdcardPath).exists()) {
-                                  return sdcardPath
-                              }
-                          }
+                          if (storagePath != null) storageRoots.add(storagePath)
                       }
                   }
               }
-              return primaryPath
+              // -- for bare sd card ids
+              storageRoots.add("/storage")
+
+              val existingPath = FileProviderPaths.resolveExistingPath(pathSegments, storageRoots) { File(it).exists() }
+              if (existingPath != null) return existingPath
+
+              // Skip the first segment (e.g., "external_files")
+              val relativePath = pathSegments.drop(1).joinToString("/")
+              val decodedPath = Uri.decode(relativePath)
+              return "$primaryStorageRoot/$decodedPath"
           }
       }
       return null

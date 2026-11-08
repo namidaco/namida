@@ -453,9 +453,18 @@ class VideoController {
 
     NamidaVideo? erabaretaVideo;
     if (possibleVideos.isNotEmpty) {
+      final trackFilenameWOExt = track.path.getFilenameWOExt;
+      final localPaths = possibleVideos.where((e) => e.ytID == null).map((e) => e.path);
+      final sureLocalPaths = FilePathMatcher.getSureTrackVideos(videoPaths: localPaths, trackFilenameWOExt: trackFilenameWOExt, trackYTID: trackYTID);
+      int getPickPriority(NamidaVideo video) {
+        if (sureLocalPaths.contains(video.path)) return 2;
+        if (video.ytID != null) return 1;
+        return 0;
+      }
+
       possibleVideos.sortByReverseAlts(
         [
-          (e) => e.ytID != null ? 1 : 0, // prefer cached videos
+          getPickPriority,
           (e) {
             if (e.resolution != 0) return e.resolution;
             if (e.height != 0) return e.height;
@@ -853,10 +862,11 @@ class VideoController {
         try {
           final v = await NamidaFFMPEG.inst.ffmpegExtractMetadata(l);
           if (v != null) {
+            final thumbnailKey = Video.explicit(l).cacheKeyForImage(AppDirs.THUMBNAILS);
             ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: l,
               isLocal: true,
-              idOrFileNameWithExt: l.getFilename,
+              idOrFileNameWithExt: thumbnailKey,
               forceExtract: true,
             );
             final newVidInfo = addLocalVideoFileInfoToCacheMap(l, v, await File(l).stat());

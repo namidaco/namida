@@ -309,6 +309,11 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             val value = try { tag.getFirst(fieldKey) } catch (_: Exception) { "" }
             if (value.isNotEmpty()) extraTags[picardName] = value
           }
+          for ((picardName, fieldKey) in extraTagMultiValueFields) {
+            val values = try { tag.getAll(fieldKey) } catch (_: Exception) { emptyList<String>() }
+            val value = values.filter { it.isNotEmpty() }.joinToString("; ")
+            if (value.isNotEmpty()) extraTags[picardName] = value
+          }
           if (extraTags.isNotEmpty()) metadata["extraTags"] = extraTags
           val ratingRaw = tag.getFirst(FieldKey.RATING)
           metadata["bpm"] = tag.getFirst(FieldKey.BPM)
@@ -388,13 +393,8 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                 if (artworkBytes != null && artworkBytes.isNotEmpty()) {
                   if (artworkDirectory != null) {
                     try {
-                      var artworkFilenameToUse: String
-                      if (uniqueArtworkHash) {
-                        val artworkFilename = path.split("/").last()
-                        artworkFilenameToUse = "${artworkFilename}_${path.toFastHashKey()}"
-                      } else if (artworkIdentifiers == null || artworkIdentifiers.isEmpty()) {
-                        artworkFilenameToUse = path.split("/").last()
-                      } else {
+                      var artworkFilenameToUse = ""
+                      if (artworkIdentifiers != null && artworkIdentifiers.isNotEmpty()) {
                         var parts = ""
                         if (artworkIdentifiers[ArtworkIdentifier.albumName] == true) {
                           if (album != null) parts += album
@@ -413,7 +413,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         }
                         artworkFilenameToUse = cleanupFilename(parts, artworkDirectory)
                       }
-                      if (artworkFilenameToUse.isEmpty()) artworkFilenameToUse = path.split("/").last()
+                      if (artworkFilenameToUse.isEmpty()) {
+                        val artworkFilename = path.split("/").last()
+                        artworkFilenameToUse = if (uniqueArtworkHash) "${artworkFilename}_${path.toFastHashKey()}" else artworkFilename
+                      }
 
                       val artworkSavePath = "$artworkDirectory${artworkFilenameToUse}.png"
                       if (overrideOldArtwork || !File(artworkSavePath.toString()).exists()) {
@@ -607,13 +610,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     "MUSICBRAINZ_TRACKID" to FieldKey.MUSICBRAINZ_TRACK_ID,
     "MUSICBRAINZ_RELEASETRACKID" to FieldKey.MUSICBRAINZ_RELEASE_TRACK_ID,
     "MUSICBRAINZ_ALBUMID" to FieldKey.MUSICBRAINZ_RELEASEID,
-    "MUSICBRAINZ_ALBUMARTISTID" to FieldKey.MUSICBRAINZ_RELEASEARTISTID,
-    "MUSICBRAINZ_ARTISTID" to FieldKey.MUSICBRAINZ_ARTISTID,
     "MUSICBRAINZ_RELEASEGROUPID" to FieldKey.MUSICBRAINZ_RELEASE_GROUP_ID,
     "ACOUSTID_ID" to FieldKey.ACOUSTID_ID,
     "ISRC" to FieldKey.ISRC,
     "BARCODE" to FieldKey.BARCODE,
     "CATALOGNUMBER" to FieldKey.CATALOG_NO,
+  )
+  private val extraTagMultiValueFields = listOf(
+    "MUSICBRAINZ_ARTISTID" to FieldKey.MUSICBRAINZ_ARTISTID,
+    "MUSICBRAINZ_ALBUMARTISTID" to FieldKey.MUSICBRAINZ_RELEASEARTISTID,
   )
 
   private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]""", RegexOption.IGNORE_CASE)

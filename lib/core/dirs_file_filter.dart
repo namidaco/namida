@@ -17,6 +17,9 @@ part 'dirs_file_filter.windows.dart';
 class DirsFileFilter {
   final NamidaFileExtensionsWrapper extensions;
   final NamidaFileExtensionsWrapper? imageExtensions;
+
+  /// collected into [DirsFileFilterResult.m3uPaths], .nomedia and [blacklistExtensions] don't apply.
+  final NamidaFileExtensionsWrapper? m3uExtensions;
   final List<String>? blacklistExtensions;
   final bool strictNoMedia;
   final bool withStats;
@@ -29,6 +32,7 @@ class DirsFileFilter {
   DirsFileFilter({
     required this.extensions,
     this.imageExtensions,
+    this.m3uExtensions,
     this.blacklistExtensions,
     this.strictNoMedia = true,
     this.withStats = false,
@@ -210,89 +214,16 @@ class _DartDirsWalker extends _DirsWalker {
   }
 }
 
-class DirsFileFilterSimple {
-  final NamidaFileExtensionsWrapper extensions;
-
-  final List<DirectoryIndex> _directoriesToScan;
-  final List<DirectoryIndex> _directoriesToExclude;
-
-  DirsFileFilterSimple({
-    required this.extensions,
-  }) : _directoriesToScan = settings.directoriesToScan.value,
-       _directoriesToExclude = settings.directoriesToExclude.value;
-
-  Future<DirsFileFilterResult> filter() async {
-    return await Isolate.run(() => _filterIsolate(this));
-  }
-
-  Future<DirsFileFilterResult> filterSync() => _filterIsolate(this);
-
-  static Future<DirsFileFilterResult> _filterIsolate(DirsFileFilterSimple parameters) async {
-    final directoriesToExclude = parameters._directoriesToExclude;
-    final extensions = parameters.extensions;
-
-    final allPaths = <String>{};
-
-    final directoriesToScan = parameters._directoriesToScan;
-
-    final allAvailableDirectories = <DirectoryIndex>{};
-
-    for (final d in directoriesToScan) {
-      // -- skip if a parent already exists
-      if (allAvailableDirectories.any((k) => d.sourceRaw.startsWith(k.sourceRaw))) continue;
-
-      // -- remove existing children for this current parent
-      allAvailableDirectories.removeWhere((k) => k.sourceRaw.startsWith(d.sourceRaw));
-      allAvailableDirectories.add(d);
-    }
-
-    Future<void> listFilesAndAdd(DirectoryIndex d) async {
-      try {
-        final stream = d.list(recursive: true);
-        if (stream != null) {
-          await for (final systemEntity in stream) {
-            if (systemEntity is File) {
-              final path = systemEntity.path;
-
-              // -- skips if the file is included in one of the excluded folders.
-              if (directoriesToExclude.any((exc) => path.startsWith(exc.sourceRaw))) {
-                continue;
-              }
-
-              // -- skip if not in extensions
-              if (!extensions.isPathValid(path)) {
-                continue;
-              }
-
-              // -- skip if hidden
-              if (path.getFilename.startsWith('.')) continue;
-
-              allPaths.add(path);
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    await Future.wait(allAvailableDirectories.map(listFilesAndAdd));
-
-    return DirsFileFilterResult(
-      allPaths: allPaths,
-      excludedByNoMedia: const {},
-      folderCovers: {},
-      stats: null,
-    );
-  }
-}
-
 class _DirsFilesCollector {
   final allPaths = <String>{};
   final excludedByNoMedia = <String, List<String>>{};
   final folderCovers = <Folder, String>{};
+  final m3uPaths = <String>{};
 
   final List<DirectoryIndex> _directoriesToExclude;
   final NamidaFileExtensionsWrapper _extensions;
   final NamidaFileExtensionsWrapper? _imageExtensions;
+  final NamidaFileExtensionsWrapper? _m3uExtensions;
   final bool _respectNoMedia;
   final bool fillFolderCovers;
 
@@ -300,6 +231,7 @@ class _DirsFilesCollector {
     : _directoriesToExclude = parameters._directoriesToExclude,
       _extensions = parameters.extensions.without(parameters.blacklistExtensions),
       _imageExtensions = parameters.imageExtensions,
+      _m3uExtensions = parameters.m3uExtensions,
       _respectNoMedia = parameters._respectNoMedia,
       fillFolderCovers = parameters.imageExtensions?.extensions.isNotEmpty == true;
 
@@ -326,7 +258,12 @@ class _DirsFilesCollector {
     }
 
     // -- skip if not in extensions
-    if (!_extensions.isPathValid(path)) return false;
+    if (!_extensions.isPathValid(path)) {
+      final m3uExtensions = _m3uExtensions;
+      final isM3U = m3uExtensions != null && m3uExtensions.isPathValid(path);
+      if (isM3U && !path.getFilename.startsWith('.')) m3uPaths.add(path);
+      return false;
+    }
 
     // -- skip if hidden
     if (path.getFilename.startsWith('.')) return false;
@@ -346,6 +283,7 @@ class _DirsFilesCollector {
       allPaths: allPaths,
       excludedByNoMedia: excludedByNoMedia,
       folderCovers: folderCovers,
+      m3uPaths: m3uPaths,
       stats: stats,
     );
   }
@@ -386,12 +324,14 @@ class DirsFileFilterResult {
   /// {folder that has the .nomedia: files excluded by it}.
   final Map<String, List<String>> excludedByNoMedia;
   final Map<Folder, String> folderCovers;
+  final Set<String> m3uPaths;
   final FilesStats? stats;
 
   const DirsFileFilterResult({
     required this.allPaths,
     required this.excludedByNoMedia,
     required this.folderCovers,
+    required this.m3uPaths,
     required this.stats,
   });
 }

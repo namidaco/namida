@@ -55,15 +55,15 @@ import 'package:namida/ui/pages/sound_control_page.dart';
 import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
-import 'package:namida/ui/widgets/mascots/mascots.dart';
-import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
-import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/live_progress.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/live_progress.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/seek_magnet.dart';
+import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
+import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
@@ -625,23 +625,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
     final maxQueueHeight = MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0;
 
-    final colorScheme = CurrentColor.inst.color;
-
     Widget buildQueueColumn(Widget header, TrackTileProperties? trackTileProperties, VideoTileProperties? videoTileProperties) {
       return Column(
         children: [
           NBuilder(
             builder: (context, colors) {
-              final scaffoldBgColor = Color.alphaBlend(colors.scaffold.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
+              final accentColor = colors.accent ?? CurrentColor.inst.color;
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
-                      Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
-                    ],
+                  gradient: NamidaGradients.accentCard(
+                    scaffold: colors.scaffold,
+                    accent: accentColor,
+                    isDarkMode: context.isDarkMode,
+                    opacity: 0.5,
                   ),
                 ),
                 child: Column(
@@ -768,14 +764,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     child: QueueUtilsRow(
                       itemsKeyword: (number) => widget.itemsKeyword(number, _getcurrentItem),
                       onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
-                      scrollQueueWidget: ObxO(
-                        rx: MiniPlayerController.inst.queueFollower.arrowIcon,
-                        builder: (context, arrow) => NamidaButton(
-                          tooltip: () => lang.jump,
-                          onTap: MiniPlayerController.inst.queueFollower.animateToCurrentItem,
-                          icon: arrow,
-                        ),
-                      ),
+                      queueFollower: MiniPlayerController.inst.queueFollower,
                     ),
                   ),
                 ),

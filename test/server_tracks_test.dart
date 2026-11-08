@@ -294,6 +294,25 @@ void main() {
       expect(everythingOf(reload(fresh)), everythingOf(fresh));
     });
 
+    test('recording and album mbids and the first isrc become tag ids', () {
+      const album = AlbumModel(id: 'al4', name: 'Album', songCount: 1, duration: null, musicBrainzId: 'mb-album');
+      final fresh = trackOf(
+        const MediaModel(id: 'so6', isDir: false, title: 'Song', musicBrainzId: 'mb-recording', isrc: ['', 'ISRC1', 'ISRC2']),
+        album: album,
+      );
+      expect(fresh.extraTags, {'MUSICBRAINZ_TRACKID': 'mb-recording', 'MUSICBRAINZ_ALBUMID': 'mb-album', 'ISRC': 'ISRC1'});
+      expect(everythingOf(reload(fresh)), everythingOf(fresh));
+    });
+
+    test('empty ids from the server are not tag ids', () {
+      const album = AlbumModel(id: 'al5', name: 'Album', songCount: 1, duration: null, musicBrainzId: '');
+      final fresh = trackOf(
+        const MediaModel(id: 'so7', isDir: false, title: 'Song', musicBrainzId: '', isrc: ['']),
+        album: album,
+      );
+      expect(fresh.extraTags, isNull);
+    });
+
     test('album date is ignored when it is not the song year', () {
       const album = AlbumModel(id: 'al3', name: 'Album', songCount: 1, duration: null, releaseDate: ItemDateModel(year: 2001, month: 5, day: 7));
       final fresh = trackOf(

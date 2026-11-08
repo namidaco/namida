@@ -528,6 +528,43 @@ void main() {
     });
   });
 
+  group('known parts', () {
+    final clock = clockValue('18:30:15');
+    final fullParts = SmartPlaylistDatePartsValue(year: 2019, month: 5, day: 14, secondOfDay: clock.secondOfDay, hasSeconds: true);
+
+    test('a typed date gives the parts its precision covers', () {
+      expect(SmartPlaylistDatePartsValue.knownIn(SmartPlaylistDate(DateTime(2024, 11), .month)), const SmartPlaylistDatePartsValue(year: 2024, month: 11));
+      const tuesday = SmartPlaylistDatePartsValue(year: 2024, month: 11, day: 5, weekday: DateTime.tuesday);
+      expect(SmartPlaylistDatePartsValue.knownIn(SmartPlaylistDate(DateTime(2024, 11, 5), .day)), tuesday);
+      final minute = SmartPlaylistDatePartsValue.knownIn(SmartPlaylistDate(DateTime(2024, 11, 5, 18, 30), .minute));
+      expect(minute.secondOfDay, clockValue('18:30').secondOfDay);
+      expect(minute.hasSeconds, isFalse);
+      expect(SmartPlaylistDatePartsValue.knownIn(const SmartPlaylistNowDate(offsetAmount: 0, offsetUnit: .days)), const SmartPlaylistDatePartsValue());
+    });
+
+    test('shown parts replace, hidden ones stay', () {
+      final yearAndMonth = SmartPlaylistDateParts.of(const [.year, .month]);
+      final merged = fullParts.mergedWith(const SmartPlaylistDatePartsValue(year: 2020), yearAndMonth);
+      expect(merged, SmartPlaylistDatePartsValue(year: 2020, day: 14, secondOfDay: clock.secondOfDay, hasSeconds: true));
+      final withWeekday = fullParts.mergedWith(const SmartPlaylistDatePartsValue(year: 2024, weekday: DateTime.friday), SmartPlaylistDateParts.of(const [.year]));
+      expect(withWeekday.weekday, DateTime.friday);
+      expect(withWeekday.month, 5);
+    });
+
+    test('back to a full date as far as the parts go', () {
+      expect(fullParts.toDate(withClock: true), SmartPlaylistDate(DateTime(2019, 5, 14, 18, 30, 15), .second));
+      expect(fullParts.toDate(withClock: false), SmartPlaylistDate(DateTime(2019, 5, 14), .day));
+      expect(const SmartPlaylistDatePartsValue(year: 2019, month: 2, day: 31).toDate(withClock: false), SmartPlaylistDate(DateTime(2019, 2), .month));
+      expect(const SmartPlaylistDatePartsValue(year: 2019, month: 13, day: 1).toDate(withClock: false), SmartPlaylistDate(DateTime(2019), .year));
+      expect(const SmartPlaylistDatePartsValue(month: 5, day: 14).toDate(withClock: false), isNull);
+    });
+
+    test('only the compared parts are saved', () {
+      final monthAndTime = SmartPlaylistDateParts.of(const [.month, .time]);
+      expect(fullParts.onlyParts(monthAndTime), SmartPlaylistDatePartsValue(month: 5, secondOfDay: clock.secondOfDay, hasSeconds: true));
+    });
+  });
+
   group('now values', () {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

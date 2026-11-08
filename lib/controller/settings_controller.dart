@@ -15,11 +15,11 @@ import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/named_presets.dart';
 import 'package:namida/class/player_config_preset.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/sort_chain.dart';
-import 'package:namida/class/named_presets.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
@@ -304,7 +304,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final showUnknownFieldsInTrackInfoDialog = _key('showUnknownFieldsInTrackInfoDialog_v2', false);
   late final extractFeatArtistFromTitle = _key('extractFeatArtistFromTitle', true);
   late final groupArtworksByAlbum = _key('groupArtworksByAlbum', false, sync: false);
-  late final uniqueArtworkHash = _key('uniqueArtworkHash', false, sync: false);
+  late final uniqueArtworkHash = _key('uniqueArtworkHash', true, sync: false);
   late final enableM3USync = _key('enableM3USync', false, sync: false);
   late final enableM3USyncStartup = _key('enableM3USyncStartup', true, sync: false);
   late final importServerPlaylists = _key('importServerPlaylists', true, sync: false);
@@ -679,6 +679,19 @@ class _SettingsController extends _SettingsKeysWriter {
         return wholeDaysRange.toJson();
       });
     }
+
+    // -- v3 made hashed artworks the default, older installs keep their filename keyed artworks and palettes readable.
+    // -- apparently the proper fix is enabling it for everyone but that involves possible bugs and perf issue especially
+    // -- with backup restore / syncing / etc
+    final fileVersion = _fileVersion;
+    final bool isOldInstall;
+    if (fileVersion == null) {
+      isOldInstall = AppPaths.TRACKS_DB_INFO.file.existsSync() || File(AppPaths.TRACKS_OLD).existsSync();
+    } else {
+      isOldInstall = fileVersion < 3;
+    }
+    if (isOldInstall) _raw['uniqueArtworkHash'] ??= false;
+    if (fileVersion == null) writeToStorage();
   }
 
   /// [sorts] and [reverse] as their old separate keys stored them, a missing one is taken from [defaultSorting].

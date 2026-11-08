@@ -20,7 +20,7 @@ class Dimensions {
   static final Dimensions _instance = Dimensions._internal();
   Dimensions._internal();
 
-  bool get showNavigationAtSide => miniplayerIsWideScreen;
+  bool get showNavigationAtSide => screenIsWide;
   bool showSubpageInfoAtSideContext(BuildContext context) {
     context.width; // vip to rebuild
     return showSubpageInfoAtSide;
@@ -36,6 +36,7 @@ class Dimensions {
   bool showSubpageInfoAtSide = false;
   double availableAppContentWidth = 0.0;
   bool miniplayerIsWideScreen = false;
+  bool screenIsWide = false;
 
   double getSettingsHorizontalMargin(BuildContext context) {
     if (context.width < 600) return 0.0;
@@ -51,9 +52,10 @@ class Dimensions {
   }
 
   bool get shouldHideFABR {
-    final fab = settings.floatingActionButton.valueR;
     final currentRoute = NamidaNavigator.inst.currentRouteR;
     final route = currentRoute?.route;
+    if (_isSettingsRoute(route)) return false;
+    final fab = settings.floatingActionButton.valueR;
     final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.valueR
         ? false
         : fab == FABType.none ||
@@ -62,7 +64,7 @@ class Dimensions {
               route == RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE || // bcz has middle button
               route == RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE || // bcz bcz..
               route == RouteType.PAGE_party || // bcz has chat input
-              ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInsideReactive() != true) ||
+              (fab.isPlayback && currentRoute?.hasTracksInsideReactive() != true) ||
               _isTracksTabBarHiddenR();
     return shouldHide;
   }
@@ -75,9 +77,10 @@ class Dimensions {
   bool get shouldShowSettingsFABR {
     final currentRoute = NamidaNavigator.inst.currentRouteR;
     final route = currentRoute?.route;
-    final shouldShow = route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage;
-    return shouldShow;
+    return _isSettingsRoute(route);
   }
+
+  static bool _isSettingsRoute(RouteType? route) => route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage;
 
   static const _kMiniplayerBottomPadding = 90.0;
 
@@ -85,7 +88,7 @@ class Dimensions {
 
   /// + active miniplayer padding
   double get globalBottomPaddingEffectiveR {
-    final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.miniplayerIsWideScreen ? 0.0 : _getDeviceBottomGesturePaddingOrZero();
+    final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.showNavigationAtSide ? 0.0 : _getDeviceBottomGesturePaddingOrZero();
 
     final currentItem = Player.inst.currentItem.valueR;
     // -- a mixed queue shows the regular miniplayer even for a youtube item, it is taller

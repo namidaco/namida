@@ -56,7 +56,8 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
               SliverToBoxAdapter(
                 child: Obx(
                   (context) {
-                    final unloadedCount = QueueController.inst.totalQueuesCount.valueR - QueueController.inst.queuesMap.valueR.length;
+                    final totalCount = QueueController.inst.totalQueuesCount.valueR ?? 0;
+                    final unloadedCount = totalCount - QueueController.inst.queuesMap.valueR.length;
                     return unloadedCount > 0 ? _LoadAllQueuesButton(unloadedCount: unloadedCount) : const SizedBox.shrink();
                   },
                 ),

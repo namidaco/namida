@@ -16,6 +16,9 @@ val newBuildDir: Directory =
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
+// -- has to run before :app is evaluated, so the patched jar repo comes before flutter's
+apply(from = "flutter_key_patch.gradle.kts")
+
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)

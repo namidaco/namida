@@ -508,9 +508,11 @@ Future<void> showGeneralPopupDialog(
               text: lang.confirm,
               onTap: () async {
                 isUpdating.value = true;
-                await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
+                final newTrack = await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
                 isUpdating.value = false;
                 NamidaNavigator.inst.closeDialog(2);
+                final didFixFailedCurrentTrack = errorPlayingTrack != null && newTrack != null && Player.inst.currentTrack?.track == newTrack;
+                if (didFixFailedCurrentTrack) Player.inst.skipToQueueItem(Player.inst.currentIndex.value);
               },
             ),
           ),
@@ -706,6 +708,14 @@ Future<void> showGeneralPopupDialog(
           ),
         );
 
+  String getRemoveFromPlaylistSubtitle(String playlistName) {
+    final playlistText = playlistName.translatePlaylistName();
+    final isOneSelectedListen = source == QueueSource.selectedTracks && playlistName == k_PLAYLIST_NAME_HISTORY && tracksWithDates.length == 1;
+    if (!isOneSelectedListen) return playlistText;
+    final listenText = tracksWithDates.first.dateAdded.dateAndClockFormatted;
+    return '$playlistText • $listenText';
+  }
+
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? ObxO(
           rx: colorDelightened,
@@ -713,7 +723,7 @@ Future<void> showGeneralPopupDialog(
             color: colorDelightened,
             compact: true,
             title: lang.removeFromPlaylist,
-            subtitle: playlistName!.translatePlaylistName(),
+            subtitle: getRemoveFromPlaylistSubtitle(playlistName!),
             icon: Broken.box_remove,
             onTap: () async {
               cancelSkipTimer();

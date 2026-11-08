@@ -206,6 +206,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
           allTracksSet.add(e.track.path);
         }
       }
+      for (final e in PlaylistController.inst.favouritesPlaylist.value.tracks) {
+        allTracksSet.add(e.track.path);
+      }
       addTracksCountToStep(_LoadingProgress.findingPlaylistTracks);
 
       final params = _FetchMissingTracksParams(

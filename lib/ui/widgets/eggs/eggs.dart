@@ -286,6 +286,14 @@ class _EggsSectionState extends State<EggsSection> with _AfterRouteSettled {
       rx: settings.eggs,
       builder: (context, data) {
         final collectedCount = data.collectedCount();
+        final unlockedCards = EggUnlockable.values
+            .where(data.isUnlocked)
+            .map(
+              (item) => _UnlockedCard(
+                item: item,
+              ),
+            )
+            .toFixedList();
         return SettingsCard(
           icon: Broken.gift,
           title: 'Eggs',
@@ -296,11 +304,18 @@ class _EggsSectionState extends State<EggsSection> with _AfterRouteSettled {
                 padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 child: _EggsStage(),
               ),
-              for (final item in EggUnlockable.values)
-                if (data.isUnlocked(item))
-                  _UnlockedTile(
-                    item: item,
+              if (unlockedCards.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Wrap(
+                      spacing: 6.0,
+                      runSpacing: 6.0,
+                      children: unlockedCards,
+                    ),
                   ),
+                ),
             ],
           ),
         );
@@ -361,10 +376,10 @@ class _CrackEggButton extends StatelessWidget {
   }
 }
 
-class _UnlockedTile extends StatelessWidget {
+class _UnlockedCard extends StatelessWidget {
   final EggUnlockable item;
 
-  const _UnlockedTile({required this.item});
+  const _UnlockedCard({required this.item});
 
   void _confirmSelling() {
     NamidaNavigator.inst.navigateDialog(
@@ -387,15 +402,61 @@ class _UnlockedTile extends StatelessWidget {
     );
   }
 
+  static BoxDecoration _iconBadgeDecoration(NColorsData colors) => BoxDecoration(
+    color: colors.secondary.withOpacityExt(0.14),
+    borderRadius: BorderRadius.circular(7.0.multipliedRadius),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      icon: item.toIcon(),
-      title: item.toText(),
-      trailing: NamidaIconButton(
-        icon: Broken.wallet_add,
-        tooltip: () => 'sell back for ${item.price} eggs',
-        onPressed: _confirmSelling,
+    return NBuilder(
+      builder: (context, colors) => NamidaInkWell(
+        bgColor: const NColors(.onSurface, opacity: 0.03),
+        borderRadius: 10.0,
+        padding: const EdgeInsetsDirectional.only(start: 4.0, end: 8.0, top: 4.0, bottom: 4.0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: colors.secondary.withOpacityExt(0.18),
+          ),
+        ),
+        onTap: _confirmSelling,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NContainer(
+              width: 24.0,
+              height: 24.0,
+              alignment: Alignment.center,
+              decoration: _iconBadgeDecoration,
+              child: NIcon(
+                item.toIcon(),
+                size: 14.0,
+                color: NColors.secondary,
+              ),
+            ),
+            const SizedBox(width: 6.0),
+            Flexible(
+              child: NamidaText(
+                item.toText(),
+                style: const NText(.medium, size: .s13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8.0),
+            const NContainer(
+              width: 1.0,
+              height: 14.0,
+              color: NColors(.onSurface, opacity: 0.12),
+            ),
+            const SizedBox(width: 6.0),
+            const NIcon(
+              Broken.wallet_add,
+              size: 13.0,
+              color: NColors(.onSurface, opacity: 0.6),
+            ),
+          ],
+        ),
       ),
     );
   }

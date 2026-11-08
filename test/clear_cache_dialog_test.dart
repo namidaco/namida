@@ -101,6 +101,24 @@ void main() {
     expect(find.text(lang.clear), findsNothing);
   });
 
+  testWidgets('temp files show up after opening, even from the clean state', (tester) async {
+    const id = 'ddddddddddd';
+    final partFile = File('${AppDirs.AUDIOS_CACHE}${id}_128000.m4a.part')
+      ..createSync(recursive: true)
+      ..writeAsStringSync('part');
+    await openDialog(tester, id);
+    expect(find.text(lang.nothingIsCached), findsOneWidget);
+    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 500)));
+    await frames(tester);
+    expect(find.text(lang.nothingIsCached), findsNothing);
+    expect(find.text(lang.audioCache), findsOneWidget);
+
+    await tester.tap(find.text(lang.deleteTempFiles));
+    await frames(tester, 2);
+    await tapDelete(tester);
+    expect(partFile.existsSync(), false);
+  });
+
   testWidgets('deleting a part closes the dialog', (tester) async {
     final english = writeSubtitle('ccccccccccc', '.en');
     final french = writeSubtitle('ccccccccccc', '.fr');

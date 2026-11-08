@@ -489,6 +489,7 @@ class _SubsonicWebServer extends MusicWebServer {
     );
     final bpm = media.bpm;
     final validBpm = bpm == null || bpm <= 0 ? null : bpm;
+    final extraTags = _extraTagsOf(media, album);
 
     return TrackExtended.derive(
       splitConfig: splitConfig,
@@ -534,13 +535,25 @@ class _SubsonicWebServer extends MusicWebServer {
       gainData: gainData,
       sortInfo: sortInfo,
       multiValues: multiValues,
-      extraTags: null,
+      extraTags: extraTags,
       hashKey: media.id, // TrackExtended.generateHashKeyIfEnabled(null, path, null)
       isVideo: media.isVideo ?? false,
       server: server,
       serverFolder: serverFolder,
       hasNoEmbeddedArtwork: false,
     );
+  }
+
+  static Map<String, String>? _extraTagsOf(MediaModel media, AlbumModel? album) {
+    final recordingId = media.musicBrainzId?.nullifyEmpty();
+    final albumId = album?.musicBrainzId?.nullifyEmpty();
+    final isrc = media.isrc.firstWhereEff((e) => e.isNotEmpty);
+    if (recordingId == null && albumId == null && isrc == null) return null;
+    return {
+      TagLibField.MUSICBRAINZ_TRACKID: ?recordingId,
+      TagLibField.MUSICBRAINZ_ALBUMID: ?albumId,
+      TagLibField.isrc: ?isrc,
+    };
   }
 }
 

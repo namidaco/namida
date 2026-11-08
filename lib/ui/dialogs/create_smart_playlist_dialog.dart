@@ -755,8 +755,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
   List<SmartPlaylistTextDataToken>? _textTokens2;
   SmartPlaylistRelativeDuration? _relativeDuration;
   final _datePartsNotifier = ValueNotifier(SmartPlaylistDateParts.date);
-  SmartPlaylistDateValue? _dateValue;
-  SmartPlaylistDateValue? _dateValue2;
+  SmartPlaylistNowDate? _nowDate;
+  SmartPlaylistNowDate? _nowDate2;
+  var _knownDateParts = const SmartPlaylistDatePartsValue();
+  var _knownDateParts2 = const SmartPlaylistDatePartsValue();
 
   // -- used to keep previous filters while changing sources
   final _tempFilterForTypeMap = <SmartPlaylistFilterType?, SmartPlaylistRuleFilter?>{};
@@ -778,9 +780,13 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         _data2Controller.text = selectedRule.data2ToText(selectedRule.data2) ?? '';
       }
       if (selectedRule is SmartPlaylistRuleDateTime) {
+        final data = selectedRule.data;
+        final data2 = selectedRule.data2;
         _datePartsNotifier.value = selectedRule.parts;
-        _dateValue = selectedRule.data;
-        _dateValue2 = selectedRule.data2;
+        if (data is SmartPlaylistNowDate) _nowDate = data;
+        if (data2 is SmartPlaylistNowDate) _nowDate2 = data2;
+        _knownDateParts = SmartPlaylistDatePartsValue.knownIn(data);
+        _knownDateParts2 = SmartPlaylistDatePartsValue.knownIn(data2);
       }
     } else {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -808,8 +814,8 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
         final data2 = _withPendingLiteral(_textTokens2, _data2Controller.text);
         rule = selectedRule.copyWith(datas: (data, data2));
       } else if (selectedRule is SmartPlaylistRuleDateTime) {
-        final data = _dateValueOf(selectedRule, _dateValue, _dataController);
-        final data2 = _dateValueOf(selectedRule, _dateValue2, _data2Controller);
+        final data = _dateValueOf(selectedRule, _nowDate, _knownDateParts, _dataController);
+        final data2 = _dateValueOf(selectedRule, _nowDate2, _knownDateParts2, _data2Controller);
         rule = selectedRule.copyWith(datas: (data, data2));
       } else {
         final data = selectedRule.textToData(_dataController.text);
@@ -831,13 +837,18 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     return [...?tokens, SmartPlaylistTextDataTokenLiteral(pendingText)];
   }
 
-  /// full dates are typed, the other parts and "now" values come from their own fields.
-  static SmartPlaylistDateValue? _dateValueOf(SmartPlaylistRuleDateTime rule, SmartPlaylistDateValue? draft, TextEditingController controller) {
-    if (draft is SmartPlaylistNowDate || !rule.parts.isCalendarDate) return draft;
-    return rule.textToData(controller.text);
+  /// full dates are typed, the other parts come from their own fields.
+  static SmartPlaylistDateValue? _dateValueOf(
+    SmartPlaylistRuleDateTime rule,
+    SmartPlaylistNowDate? nowDate,
+    SmartPlaylistDatePartsValue knownParts,
+    TextEditingController controller,
+  ) {
+    if (nowDate != null) return nowDate;
+    final parts = rule.parts;
+    if (parts.isCalendarDate) return rule.textToData(controller.text);
+    return knownParts.onlyParts(parts);
   }
-
-  static SmartPlaylistDateValue? _nowValueOrNull(SmartPlaylistDateValue? value) => value is SmartPlaylistNowDate ? value : null;
 
   void _toggleDatePart(SmartPlaylistDatePart part) {
     final selectedRule = _selectedRule;
@@ -845,17 +856,33 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     final previousParts = _datePartsNotifier.value;
     final parts = previousParts.toggled(part);
     if (parts == previousParts) return;
-    final keepsTypedDates = previousParts.isCalendarDate && parts.isCalendarDate;
-    if (!keepsTypedDates) {
-      _dataController.clear();
-      _data2Controller.clear();
-    }
+    final rule = selectedRule.copyWith(parts: parts);
+    _knownDateParts = _moveKnownDateParts(selectedRule, rule, _knownDateParts, _dataController);
+    _knownDateParts2 = _moveKnownDateParts(selectedRule, rule, _knownDateParts2, _data2Controller);
     _datePartsNotifier.value = parts;
-    setState(() {
-      _dateValue = _nowValueOrNull(_dateValue);
-      _dateValue2 = _nowValueOrNull(_dateValue2);
-      _selectedRule = selectedRule.copyWith(parts: parts);
-    });
+    setState(() => _selectedRule = rule);
+  }
+
+  /// the typed full date joins the known parts, then gets typed again from them.
+  static SmartPlaylistDatePartsValue _moveKnownDateParts(
+    SmartPlaylistRuleDateTime previousRule,
+    SmartPlaylistRuleDateTime rule,
+    SmartPlaylistDatePartsValue knownParts,
+    TextEditingController controller,
+  ) {
+    var movedParts = knownParts;
+    final previousParts = previousRule.parts;
+    if (previousParts.isCalendarDate) {
+      final typedDate = previousRule.textToData(controller.text);
+      final typedParts = SmartPlaylistDatePartsValue.knownIn(typedDate);
+      movedParts = movedParts.mergedWith(typedParts, previousParts);
+    }
+    final parts = rule.parts;
+    if (parts.isCalendarDate) {
+      final date = movedParts.toDate(withClock: parts.has(.time));
+      controller.text = rule.dataToText(date) ?? '';
+    }
+    return movedParts;
   }
 
   void _setRelativeDuration(SmartPlaylistRelativeDuration relativeDuration) {
@@ -1002,8 +1029,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               _textTokens2 = null;
               _relativeDuration = null;
               _datePartsNotifier.value = SmartPlaylistDateParts.date;
-              _dateValue = null;
-              _dateValue2 = null;
+              _nowDate = null;
+              _nowDate2 = null;
+              _knownDateParts = const SmartPlaylistDatePartsValue();
+              _knownDateParts2 = const SmartPlaylistDatePartsValue();
             }
             final filter = _tempFilterForTypeMap[s.type] ?? s.recommendedFilter;
             setState(() {
@@ -1226,8 +1255,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                   key: ValueKey((selectedRule.parts, isData2: false)),
                   rule: selectedRule,
                   textController: _dataController,
-                  value: _dateValue,
-                  onChanged: (value) => setState(() => _dateValue = value),
+                  nowDate: _nowDate,
+                  knownParts: _knownDateParts,
+                  onNowChanged: (nowDate) => setState(() => _nowDate = nowDate),
+                  onKnownPartsChanged: (knownParts) => _knownDateParts = knownParts,
                 ),
                 SmartPlaylistRuleNumber() => _NumberValueField(
                   rule: selectedRule,
@@ -1250,8 +1281,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                   key: ValueKey((selectedRule.parts, isData2: true)),
                   rule: selectedRule,
                   textController: _data2Controller,
-                  value: _dateValue2,
-                  onChanged: (value) => setState(() => _dateValue2 = value),
+                  nowDate: _nowDate2,
+                  knownParts: _knownDateParts2,
+                  onNowChanged: (nowDate) => setState(() => _nowDate2 = nowDate),
+                  onKnownPartsChanged: (knownParts) => _knownDateParts2 = knownParts,
                 ),
                 SmartPlaylistRuleNumber() => _NumberValueField(
                   rule: selectedRule,
@@ -1525,15 +1558,19 @@ class _NumberValueField extends StatelessWidget {
 class _DateValueEditor extends StatefulWidget {
   final SmartPlaylistRuleDateTime rule;
   final TextEditingController textController;
-  final SmartPlaylistDateValue? value;
-  final void Function(SmartPlaylistDateValue? value) onChanged;
+  final SmartPlaylistNowDate? nowDate;
+  final SmartPlaylistDatePartsValue knownParts;
+  final void Function(SmartPlaylistNowDate? nowDate) onNowChanged;
+  final void Function(SmartPlaylistDatePartsValue knownParts) onKnownPartsChanged;
 
   const _DateValueEditor({
     super.key,
     required this.rule,
     required this.textController,
-    required this.value,
-    required this.onChanged,
+    required this.nowDate,
+    required this.knownParts,
+    required this.onNowChanged,
+    required this.onKnownPartsChanged,
   });
 
   @override
@@ -1557,19 +1594,17 @@ class _DateValueEditorState extends State<_DateValueEditor> {
   @override
   void initState() {
     super.initState();
-    final value = widget.value;
-    if (value is SmartPlaylistDatePartsValue) {
-      final weekday = value.weekday;
-      final secondOfDay = value.secondOfDay;
-      _yearController.text = value.year?.toString() ?? '';
-      _monthController.text = value.month?.toString() ?? '';
-      _dayController.text = value.day?.toString() ?? '';
-      _weekday = weekday;
-      if (weekday != null) _weekdayController.text = SmartPlaylistDatePartsValue.weekdayToText(weekday, short: true);
-      if (secondOfDay != null) _clockController.text = SmartPlaylistDatePartsValue.clockToText(secondOfDay, hasSeconds: value.hasSeconds);
-    } else if (value is SmartPlaylistNowDate) {
-      _offsetController.text = value.offsetAmount.toString();
-    }
+    final knownParts = widget.knownParts;
+    final weekday = knownParts.weekday;
+    final secondOfDay = knownParts.secondOfDay;
+    final nowDate = widget.nowDate;
+    _yearController.text = knownParts.year?.toString() ?? '';
+    _monthController.text = knownParts.month?.toString() ?? '';
+    _dayController.text = knownParts.day?.toString() ?? '';
+    _weekday = weekday;
+    if (weekday != null) _weekdayController.text = SmartPlaylistDatePartsValue.weekdayToText(weekday, short: true);
+    if (secondOfDay != null) _clockController.text = SmartPlaylistDatePartsValue.clockToText(secondOfDay, hasSeconds: knownParts.hasSeconds);
+    if (nowDate != null) _offsetController.text = nowDate.offsetAmount.toString();
   }
 
   @override
@@ -1583,9 +1618,9 @@ class _DateValueEditorState extends State<_DateValueEditor> {
     super.dispose();
   }
 
-  SmartPlaylistDatePartsValue _partsValueFromFields() {
+  void _reportKnownParts() {
     final clock = SmartPlaylistDatePartsValue.tryParseClock(_clockController.text);
-    return SmartPlaylistDatePartsValue(
+    final knownParts = SmartPlaylistDatePartsValue(
       year: int.tryParse(_yearController.text),
       month: int.tryParse(_monthController.text),
       day: int.tryParse(_dayController.text),
@@ -1593,22 +1628,19 @@ class _DateValueEditorState extends State<_DateValueEditor> {
       secondOfDay: clock?.secondOfDay,
       hasSeconds: clock?.hasSeconds ?? false,
     );
-  }
-
-  void _reportPartsValue() {
-    widget.onChanged(_partsValueFromFields());
+    widget.onKnownPartsChanged(knownParts);
   }
 
   void _setWeekday(int weekday) {
     _weekday = weekday;
     _weekdayController.text = SmartPlaylistDatePartsValue.weekdayToText(weekday, short: true);
-    _reportPartsValue();
+    _reportKnownParts();
   }
 
   void _setClock(DateTime clock) {
     final secondOfDay = SmartPlaylistDatePartsValue.secondOfDayOf(clock);
     _clockController.text = SmartPlaylistDatePartsValue.clockToText(secondOfDay, hasSeconds: false);
-    _reportPartsValue();
+    _reportKnownParts();
   }
 
   void _setPickedDate(DateTime date) {
@@ -1617,23 +1649,22 @@ class _DateValueEditorState extends State<_DateValueEditor> {
   }
 
   void _toggleNow() {
-    if (widget.value is SmartPlaylistNowDate) {
-      final fixedValue = widget.rule.parts.isCalendarDate ? null : _partsValueFromFields();
-      widget.onChanged(fixedValue);
+    if (widget.nowDate != null) {
+      widget.onNowChanged(null);
       return;
     }
     _offsetController.text = '0';
-    widget.onChanged(const SmartPlaylistNowDate(offsetAmount: 0, offsetUnit: .days));
+    widget.onNowChanged(const SmartPlaylistNowDate(offsetAmount: 0, offsetUnit: .days));
   }
 
   void _setNowOffset({int? amount, SmartPlaylistRelativeUnit? unit}) {
-    final value = widget.value;
-    if (value is! SmartPlaylistNowDate) return;
-    final nowValue = SmartPlaylistNowDate(
-      offsetAmount: amount ?? value.offsetAmount,
-      offsetUnit: unit ?? value.offsetUnit,
+    final nowDate = widget.nowDate;
+    if (nowDate == null) return;
+    final shiftedNowDate = SmartPlaylistNowDate(
+      offsetAmount: amount ?? nowDate.offsetAmount,
+      offsetUnit: unit ?? nowDate.offsetUnit,
     );
-    widget.onChanged(nowValue);
+    widget.onNowChanged(shiftedNowDate);
   }
 
   List<NamidaPopupItem> _weekdayItems() {
@@ -1650,8 +1681,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
   }
 
   List<NamidaPopupItem> _offsetUnitItems() {
-    final value = widget.value;
-    final selectedUnit = value is SmartPlaylistNowDate ? value.offsetUnit : null;
+    final selectedUnit = widget.nowDate?.offsetUnit;
     return SmartPlaylistRelativeUnit.values
         .map(
           (unit) => NamidaPopupItem(
@@ -1686,19 +1716,19 @@ class _DateValueEditorState extends State<_DateValueEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final value = widget.value;
+    final nowDate = widget.nowDate;
     final rule = widget.rule;
     final parts = rule.parts;
     final nowToggle = NamidaToggleCard(
       icon: Broken.timer_1,
       title: lang.now,
-      active: value is SmartPlaylistNowDate,
+      active: nowDate != null,
       padding: const EdgeInsets.all(12.0),
       onTap: _toggleNow,
     );
 
     final rows = <Widget>[];
-    if (value is SmartPlaylistNowDate) {
+    if (nowDate != null) {
       rows.add(
         CustomTagTextField(
           controller: _offsetController,
@@ -1718,7 +1748,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
                 mainAxisSize: .min,
                 children: [
                   NamidaText(
-                    value.offsetUnit.toText(),
+                    nowDate.offsetUnit.toText(),
                     style: NText.small,
                   ),
                   const SizedBox(width: 4.0),
@@ -1755,7 +1785,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
             showChangedMark: false,
             isNumeric: true,
             validator: _intValidator(1, 9999),
-            onChanged: (_) => _reportPartsValue(),
+            onChanged: (_) => _reportKnownParts(),
           ),
         if (parts.has(.month))
           CustomTagTextField(
@@ -1765,7 +1795,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
             showChangedMark: false,
             isNumeric: true,
             validator: _intValidator(1, 12),
-            onChanged: (_) => _reportPartsValue(),
+            onChanged: (_) => _reportKnownParts(),
           ),
         if (parts.has(.day))
           CustomTagTextField(
@@ -1775,7 +1805,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
             showChangedMark: false,
             isNumeric: true,
             validator: _intValidator(1, 31),
-            onChanged: (_) => _reportPartsValue(),
+            onChanged: (_) => _reportKnownParts(),
           ),
         if (parts.has(.weekday))
           NamidaPopupWrapper(
@@ -1818,7 +1848,7 @@ class _DateValueEditorState extends State<_DateValueEditor> {
             labelText: lang.clock,
             showChangedMark: false,
             validator: _clockValidator,
-            onChanged: (_) => _reportPartsValue(),
+            onChanged: (_) => _reportKnownParts(),
             suffixIcon: _CalendarPickerIconWidget(
               pickClock: true,
               onSelect: _setClock,

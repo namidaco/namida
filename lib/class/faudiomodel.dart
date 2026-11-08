@@ -202,9 +202,9 @@ class FTags {
   // -- same as android's FAudioTagger, a prefix match pulls the huge ACOUSTID_FINGERPRINT
   static const _kExtraTagKeys = [
     'MUSICBRAINZ_TRACKID', 'MUSICBRAINZ_RELEASETRACKID', 'MUSICBRAINZ_ALBUMID', //
-    'MUSICBRAINZ_ALBUMARTISTID', 'MUSICBRAINZ_ARTISTID', 'MUSICBRAINZ_RELEASEGROUPID', //
-    'ACOUSTID_ID', 'ISRC', 'BARCODE', 'CATALOGNUMBER', //
+    'MUSICBRAINZ_RELEASEGROUPID', 'ACOUSTID_ID', 'ISRC', 'BARCODE', 'CATALOGNUMBER', //
   ];
+  static const _kExtraTagMultiValueKeys = ['MUSICBRAINZ_ARTISTID', 'MUSICBRAINZ_ALBUMARTISTID'];
 
   static Map<String, String>? pickExtraTags(Map<String, List<String>> properties) {
     Map<String, String>? picked;
@@ -212,6 +212,14 @@ class FTags {
       final values = properties[key];
       if (values == null) continue;
       final value = values.firstWhereEff((v) => v.isNotEmpty);
+      if (value == null) continue;
+      picked ??= <String, String>{};
+      picked[key] = value;
+    }
+    for (final key in _kExtraTagMultiValueKeys) {
+      final values = properties[key];
+      if (values == null) continue;
+      final value = values.joinText(separator: FTagsMultiValues.kJoiner).nullifyEmpty();
       if (value == null) continue;
       picked ??= <String, String>{};
       picked[key] = value;

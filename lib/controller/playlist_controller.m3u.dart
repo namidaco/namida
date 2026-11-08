@@ -67,48 +67,24 @@ abstract final class M3UFiles {
 
     final backupDirPath = params.backupDirPath;
 
-    final libraryTracksPaths = <String>[];
+    final libraryTracksPaths = <String>{};
 
-    bool didLoadTracksDb = false;
-    Future<void> loadTracksDb() async {
-      didLoadTracksDb = true;
-      DBWrapperSync? tracksDBManager;
-      try {
-        tracksDBManager = await DBWrapper.openFromInfoSyncTry(
-          fileInfo: params.tracksDbInfo,
-          config: const DBConfig(
-            createIfNotExist: true,
-            autoDisposeTimerDuration: null, // we close manually
-          ),
-        );
-        tracksDBManager?.loadAllKeys(libraryTracksPaths.add);
-      } finally {
-        tracksDBManager?.close();
-      }
+    DBWrapperSync? tracksDBManager;
+    try {
+      tracksDBManager = await DBWrapper.openFromInfoSyncTry(
+        fileInfo: params.tracksDbInfo,
+        config: const DBConfig(
+          createIfNotExist: true,
+          autoDisposeTimerDuration: null, // we close manually
+        ),
+      );
+      tracksDBManager?.loadAllKeys(libraryTracksPaths.add);
+    } finally {
+      tracksDBManager?.close();
     }
 
-    bool pathExists(String path) => File(path).existsSync();
-
-    String closestPathBySuffix(List<String> candidates, String lowerPath) {
-      if (candidates.length == 1) return candidates[0];
-      var best = candidates[0];
-      var bestMatchedLength = -1;
-      for (final candidate in candidates) {
-        final candidateLower = candidate.toLowerCase();
-        var i = candidateLower.length;
-        var j = lowerPath.length;
-        while (i > 0 && j > 0 && candidateLower.codeUnitAt(i - 1) == lowerPath.codeUnitAt(j - 1)) {
-          i--;
-          j--;
-        }
-        final matchedLength = lowerPath.length - j;
-        if (matchedLength > bestMatchedLength) {
-          bestMatchedLength = matchedLength;
-          best = candidate;
-        }
-      }
-      return best;
-    }
+    // -- no disk checks for library paths, slow on sd cards with big playlists
+    bool pathExists(String path) => libraryTracksPaths.contains(path) || File(path).existsSync();
 
     late final libraryPathsByLowerFilename = () {
       final index = <String, List<String>>{};
@@ -140,14 +116,12 @@ abstract final class M3UFiles {
           latestInfo = line; // could be a comment, would get overriden by the next #EXTINF anyways
         } else if (line.isNotEmpty) {
           isInHeader = false;
-          final entry = resolveEntryLine(line, fileParentDirectory, context, pathExists);
+          final entry = resolveEntryLine(line, fileParentDirectory, context, pathExists, storageRoots: params.storageRoots);
           var fullPath = entry.path;
           if (!entry.isResolved) {
             // no idea, trying to get from library
-            if (!didLoadTracksDb) await loadTracksDb();
-            final lowerPath = fullPath.toLowerCase();
-            final candidates = libraryPathsByLowerFilename[lowerPath.getFilename];
-            if (candidates != null) fullPath = closestPathBySuffix(candidates, lowerPath);
+            final libraryPath = findLibraryPath(fullPath, libraryPathsByLowerFilename, context);
+            if (libraryPath != null) fullPath = libraryPath;
           }
           fullTracks.add(Track.orVideo(fullPath));
           infoMap[fullPath] = latestInfo;
@@ -186,13 +160,26 @@ abstract final class M3UFiles {
 
   static final _urlRegex = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]+://');
   static final _pathSeparatorsRegex = RegExp(r'[\\/]');
+  static final _contentUriSegmentSeparatorsRegex = RegExp(r'[/:]');
+  static const _kContentUriPrefix = 'content://';
+  static const _kContentUriMinProbedSegments = 2;
 
   /// [line] resolved against [m3uDirectory], or against the root for posix lines that lost their leading slash.
+  /// `content://` lines are looked for inside [storageRoots].
   /// unresolved ones should be looked up in the library.
   @visibleForTesting
-  static ({String path, bool isResolved}) resolveEntryLine(String line, String m3uDirectory, p.Context context, bool Function(String path) exists) {
+  static ({String path, bool isResolved}) resolveEntryLine(
+    String line,
+    String m3uDirectory,
+    p.Context context,
+    bool Function(String path) exists, {
+    List<String> storageRoots = const [],
+  }) {
     final localPath = _entryLineToLocalPath(line, context);
-    if (localPath == null) return (path: line, isResolved: true);
+    if (localPath == null) {
+      if (line.startsWith(_kContentUriPrefix)) return _resolveContentUriLine(line, context, exists, storageRoots);
+      return (path: line, isResolved: true);
+    }
     final joinedPath = context.join(m3uDirectory, localPath);
     final path = context.normalize(joinedPath);
     if (exists(path)) return (path: path, isResolved: true);
@@ -217,6 +204,69 @@ abstract final class M3UFiles {
     } catch (_) {
       return null;
     }
+  }
+
+  /// the longest end of the uri path that exists inside one of [storageRoots], like `Music/a.mp3` of `device_storage/0/Music/a.mp3`.
+  static ({String path, bool isResolved}) _resolveContentUriLine(String line, p.Context context, bool Function(String path) exists, List<String> storageRoots) {
+    final segments = _contentUriToPathSegments(line);
+    if (segments != null) {
+      final lastStart = segments.length - _kContentUriMinProbedSegments;
+      for (int start = 0; start <= lastStart; start++) {
+        final relativePath = context.joinAll(segments.skip(start));
+        for (final storageRoot in storageRoots) {
+          final path = context.join(storageRoot, relativePath);
+          if (exists(path)) return (path: path, isResolved: true);
+        }
+      }
+    }
+    return (path: line, isResolved: false);
+  }
+
+  /// `content://x/document/primary%3AMusic%2Fa.mp3` => `[document, primary, Music, a.mp3]`, null when the uri is malformed.
+  static List<String>? _contentUriToPathSegments(String contentUri) {
+    try {
+      final uri = Uri.parse(contentUri);
+      return uri.pathSegments.expand((e) => e.split(_contentUriSegmentSeparatorsRegex)).where((e) => e.isNotEmpty).toFixedList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// the library path with the same filename as [entryPath] and the longest matching end, [entryPath] can be a `content://` uri.
+  @visibleForTesting
+  static String? findLibraryPath(String entryPath, Map<String, List<String>> libraryPathsByLowerFilename, p.Context context) {
+    String lookupPath = entryPath;
+    if (entryPath.startsWith(_kContentUriPrefix)) {
+      final segments = _contentUriToPathSegments(entryPath);
+      if (segments == null || segments.isEmpty) return null;
+      lookupPath = context.joinAll(segments);
+    }
+    final lowerPath = lookupPath.toLowerCase();
+    final lowerFilename = context.basename(lowerPath);
+    final candidates = libraryPathsByLowerFilename[lowerFilename];
+    if (candidates == null) return null;
+    return _closestPathBySuffix(candidates, lowerPath);
+  }
+
+  static String _closestPathBySuffix(List<String> candidates, String lowerPath) {
+    if (candidates.length == 1) return candidates[0];
+    var best = candidates[0];
+    var bestMatchedLength = -1;
+    for (final candidate in candidates) {
+      final candidateLower = candidate.toLowerCase();
+      var i = candidateLower.length;
+      var j = lowerPath.length;
+      while (i > 0 && j > 0 && candidateLower.codeUnitAt(i - 1) == lowerPath.codeUnitAt(j - 1)) {
+        i--;
+        j--;
+      }
+      final matchedLength = lowerPath.length - j;
+      if (matchedLength > bestMatchedLength) {
+        bestMatchedLength = matchedLength;
+        best = candidate;
+      }
+    }
+    return best;
   }
 
   /// same-named files get their folder name as a prefix, files in [boundNamesByPath] keep their names.
@@ -575,12 +625,14 @@ class _ParseM3UPlaylistFilesParams {
   final Map<String, String> boundNamesByPath;
   final DbWrapperFileInfo tracksDbInfo; // used as a fallback lookup
   final String backupDirPath; // used as a backup for newly found m3u files.
+  final List<String> storageRoots;
 
   const _ParseM3UPlaylistFilesParams({
     required this.allm3uPaths,
     required this.boundNamesByPath,
     required this.tracksDbInfo,
     required this.backupDirPath,
+    required this.storageRoots,
   });
 }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -349,22 +350,18 @@ extension ListieListieUtils<T> on List<T> {
       return copy;
     }
 
-    final selectedIndices = <int>{};
+    // -- partial fisher-yates over the indices, each item is tested once at most and any of them can be picked
+    final indices = Uint32List(totalLength);
+    for (int i = 0; i < totalLength; i++) {
+      indices[i] = i;
+    }
     final selectedItems = <T>[];
-
-    int attempts = 0;
-    final maxAttempts = totalLength;
-
-    for (var i = totalLength - sampleCount; i < totalLength && attempts < maxAttempts;) {
-      final t = random.nextInt(i + 1);
-      final indexToSelect = selectedIndices.contains(t) ? i : t;
-      final item = list[indexToSelect];
-      attempts++;
-      if (test(item)) {
-        selectedIndices.add(indexToSelect);
-        selectedItems.add(item);
-        i++;
-      }
+    for (int i = 0; i < totalLength && selectedItems.length < sampleCount; i++) {
+      final swapIndex = i + random.nextInt(totalLength - i);
+      final index = indices[swapIndex];
+      indices[swapIndex] = indices[i];
+      final item = list[index];
+      if (test(item)) selectedItems.add(item);
     }
 
     return selectedItems;
@@ -403,7 +400,8 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
       return;
     }
     final keys = List<Comparable>.generate(length, (i) => key(this[i]), growable: false);
-    _applySortedOrder(_sortedIndicesOf(length, (a, b) => keys[a].compareTo(keys[b]), reverse));
+    final sortedIndices = _sortedIndicesOf(length, (a, b) => keys[a].compareTo(keys[b]), reverse);
+    if (sortedIndices != null) _applySortedOrder(sortedIndices);
   }
 
   /// [alternativesReverse] flips each alternative on its own, [reverse] flips the whole order on top.
@@ -439,16 +437,17 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
       growable: false,
     );
 
-    _applySortedOrder(
-      _sortedIndicesOf(length, (a, b) {
-        for (int i = 0; i < alternativesLength; i++) {
-          final key = keys[i];
-          final compare = key[a].compareTo(key[b]);
-          if (compare != 0) return alternativesReverse != null && alternativesReverse[i] ? -compare : compare;
-        }
-        return 0;
-      }, reverse),
-    );
+    int compareIndices(int a, int b) {
+      for (int i = 0; i < alternativesLength; i++) {
+        final key = keys[i];
+        final compare = key[a].compareTo(key[b]);
+        if (compare != 0) return alternativesReverse != null && alternativesReverse[i] ? -compare : compare;
+      }
+      return 0;
+    }
+
+    final sortedIndices = _sortedIndicesOf(length, compareIndices, reverse);
+    if (sortedIndices != null) _applySortedOrder(sortedIndices);
   }
 
   /// Returns a new sorted list, keeping items that compare equal in their original order.
@@ -539,9 +538,53 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
     }
   }
 
-  static List<int> _sortedIndicesOf(int length, int Function(int a, int b) compare, bool reverse) {
-    final indices = List<int>.generate(length, (i) => i, growable: false);
-    indices.sort(reverse ? (a, b) => compare(b, a) : compare);
+  /// unsorted tails longer than `length / this` get the whole list sorted instead.
+  static const _maxMergedTailDivisor = 8;
+
+  /// null when already sorted. a short unsorted tail (ex. newly added tracks) is sorted alone then merged in,
+  /// since sorting the whole list again shuffles items with equal keys.
+  static List<int>? _sortedIndicesOf(int length, int Function(int a, int b) compare, bool reverse) {
+    final effectiveCompare = reverse ? (int a, int b) => compare(b, a) : compare;
+
+    int sortedEnd = 1;
+    while (sortedEnd < length && effectiveCompare(sortedEnd - 1, sortedEnd) <= 0) {
+      sortedEnd++;
+    }
+    if (sortedEnd == length) return null;
+
+    final tailLength = length - sortedEnd;
+    if (tailLength * _maxMergedTailDivisor > length) {
+      final indices = List<int>.generate(length, (i) => i, growable: false);
+      indices.sort(effectiveCompare);
+      return indices;
+    }
+
+    final tail = List<int>.generate(tailLength, (i) => sortedEnd + i, growable: false);
+    tail.sort(effectiveCompare);
+
+    final indices = List<int>.filled(length, 0);
+    int sortedIndex = 0;
+    int resultIndex = 0;
+    for (final item in tail) {
+      // -- after the sorted items equal to it
+      int low = sortedIndex;
+      int high = sortedEnd;
+      while (low < high) {
+        final mid = (low + high) >> 1;
+        if (effectiveCompare(mid, item) > 0) {
+          high = mid;
+        } else {
+          low = mid + 1;
+        }
+      }
+      while (sortedIndex < low) {
+        indices[resultIndex++] = sortedIndex++;
+      }
+      indices[resultIndex++] = item;
+    }
+    while (sortedIndex < sortedEnd) {
+      indices[resultIndex++] = sortedIndex++;
+    }
     return indices;
   }
 

@@ -884,6 +884,28 @@ final class SmartPlaylistDatePartsValue extends SmartPlaylistDateValue {
     hasSeconds: date.second != 0,
   );
 
+  /// the parts [value] gives, a full date gives as many as its precision covers.
+  factory SmartPlaylistDatePartsValue.knownIn(SmartPlaylistDateValue? value) => switch (value) {
+    SmartPlaylistDatePartsValue partsValue => partsValue,
+    SmartPlaylistDate date => SmartPlaylistDatePartsValue._ofDate(date),
+    SmartPlaylistNowDate() || null => const SmartPlaylistDatePartsValue(),
+  };
+
+  factory SmartPlaylistDatePartsValue._ofDate(SmartPlaylistDate value) {
+    final date = value.date;
+    final precision = value.precision;
+    final hasMonth = precision != SmartPlaylistDatePrecision.year;
+    final hasDay = hasMonth && precision != SmartPlaylistDatePrecision.month;
+    return SmartPlaylistDatePartsValue(
+      year: date.year,
+      month: hasMonth ? date.month : null,
+      day: hasDay ? date.day : null,
+      weekday: hasDay ? date.weekday : null,
+      secondOfDay: precision.hasClock ? secondOfDayOf(date) : null,
+      hasSeconds: precision == SmartPlaylistDatePrecision.second,
+    );
+  }
+
   factory SmartPlaylistDatePartsValue._fromJson(Map map) => SmartPlaylistDatePartsValue(
     year: map['year'] as int?,
     month: map['month'] as int?,
@@ -899,6 +921,49 @@ final class SmartPlaylistDatePartsValue extends SmartPlaylistDateValue {
       (day != null || !parts.has(SmartPlaylistDatePart.day)) &&
       (weekday != null || !parts.has(SmartPlaylistDatePart.weekday)) &&
       (secondOfDay != null || !parts.has(SmartPlaylistDatePart.time));
+
+  SmartPlaylistDatePartsValue onlyParts(SmartPlaylistDateParts parts) {
+    final hasTime = parts.has(SmartPlaylistDatePart.time);
+    return SmartPlaylistDatePartsValue(
+      year: parts.has(SmartPlaylistDatePart.year) ? year : null,
+      month: parts.has(SmartPlaylistDatePart.month) ? month : null,
+      day: parts.has(SmartPlaylistDatePart.day) ? day : null,
+      weekday: parts.has(SmartPlaylistDatePart.weekday) ? weekday : null,
+      secondOfDay: hasTime ? secondOfDay : null,
+      hasSeconds: hasTime && hasSeconds,
+    );
+  }
+
+  /// [shown] replaces the values of [parts], and fills the other parts it knows.
+  SmartPlaylistDatePartsValue mergedWith(SmartPlaylistDatePartsValue shown, SmartPlaylistDateParts parts) {
+    int? valueOf(SmartPlaylistDatePart part, int? shownValue, int? knownValue) => parts.has(part) ? shownValue : shownValue ?? knownValue;
+    final takesShownClock = parts.has(SmartPlaylistDatePart.time) || shown.secondOfDay != null;
+    return SmartPlaylistDatePartsValue(
+      year: valueOf(SmartPlaylistDatePart.year, shown.year, year),
+      month: valueOf(SmartPlaylistDatePart.month, shown.month, month),
+      day: valueOf(SmartPlaylistDatePart.day, shown.day, day),
+      weekday: valueOf(SmartPlaylistDatePart.weekday, shown.weekday, weekday),
+      secondOfDay: takesShownClock ? shown.secondOfDay : secondOfDay,
+      hasSeconds: takesShownClock ? shown.hasSeconds : hasSeconds,
+    );
+  }
+
+  /// the full date these give, as precise as the known parts go.
+  SmartPlaylistDate? toDate({required bool withClock}) {
+    final year = this.year;
+    final month = this.month;
+    final day = this.day;
+    final secondOfDay = this.secondOfDay;
+    if (year == null) return null;
+    if (month == null || month < 1 || month > 12) return SmartPlaylistDate(DateTime(year), SmartPlaylistDatePrecision.year);
+    if (day == null || day < 1 || day > DateUtils.getDaysInMonth(year, month)) return SmartPlaylistDate(DateTime(year, month), SmartPlaylistDatePrecision.month);
+    if (!withClock || secondOfDay == null) return SmartPlaylistDate(DateTime(year, month, day), SmartPlaylistDatePrecision.day);
+    final hour = secondOfDay ~/ Duration.secondsPerHour;
+    final minute = secondOfDay % Duration.secondsPerHour ~/ Duration.secondsPerMinute;
+    final second = secondOfDay % Duration.secondsPerMinute;
+    final precision = hasSeconds ? SmartPlaylistDatePrecision.second : SmartPlaylistDatePrecision.minute;
+    return SmartPlaylistDate(DateTime(year, month, day, hour, minute, second), precision);
+  }
 
   static int secondOfDayOf(DateTime date) => date.hour * Duration.secondsPerHour + date.minute * Duration.secondsPerMinute + date.second;
 

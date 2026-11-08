@@ -473,14 +473,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 child: QueueUtilsRow(
                                   itemsKeyword: (number) => number.displayVideoKeyword,
                                   onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
-                                  scrollQueueWidget: ObxO(
-                                    rx: _queueFollower.arrowIcon,
-                                    builder: (context, arrowIcon) => NamidaButton(
-                                      tooltip: () => lang.jump,
-                                      onTap: _queueFollower.animateToCurrentItem,
-                                      icon: arrowIcon,
-                                    ),
-                                  ),
+                                  queueFollower: _queueFollower,
                                 ),
                               ),
                             ),

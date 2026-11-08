@@ -399,7 +399,7 @@ class ExpandableBoxChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = this.icon;
     return NamidaInkWell(
-      bgColor: const NColors(.secondary, opacity: 0.12),
+      bgColor: const NColors(.secondary, opacity: 0.08),
       borderRadius: 10.0,
       padding: showArrow ? const EdgeInsets.only(left: 8.0, right: 6.0, top: 7.0, bottom: 7.0) : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 7.0),
       onTap: onTap,

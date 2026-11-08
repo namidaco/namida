@@ -226,6 +226,17 @@ class _ArtistAlbumsHeader extends StatefulWidget {
     required this.extras,
   });
 
+  static final _newestFirstSorting = SortChain.of(const [GroupSortType.year], reverse: true);
+
+  static SortChain<GroupSortType> globalSortingOrNewestFirst() {
+    final albumSorting = settings.groupSortingOf(MediaType.album);
+    final firstType = albumSorting.firstType;
+    final isSortedByName = firstType == GroupSortType.album;
+    final isArtistLevel = firstType?.isArtistLevel ?? false;
+    if (isSortedByName || isArtistLevel) return _newestFirstSorting;
+    return albumSorting;
+  }
+
   @override
   State<_ArtistAlbumsHeader> createState() => _ArtistAlbumsHeaderState();
 }
@@ -250,7 +261,7 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
 
   void _sortAll() {
     final sort = settings.artistAlbumsSort.value;
-    final sorting = sort == null ? _artistAlbumsAutoSorting() : SortChain.of([sort], reverse: settings.artistAlbumsSortReversed.value);
+    final sorting = sort == null ? _ArtistAlbumsHeader.globalSortingOrNewestFirst() : SortChain.of([sort], reverse: settings.artistAlbumsSortReversed.value);
     for (final list in [widget.albums, widget.eps, widget.singles, widget.extras]) {
       if (list.length > 1) SearchSortController.inst.sortAlbumsListRaw(list, sorting);
     }
@@ -450,7 +461,7 @@ class _ArtistAlbumsSortMenu extends StatelessWidget {
       (context) {
         final sort = settings.artistAlbumsSort.valueR;
         final sortReversed = settings.artistAlbumsSortReversed.valueR;
-        final autoSorting = _artistAlbumsAutoSorting();
+        final autoSorting = _ArtistAlbumsHeader.globalSortingOrNewestFirst();
         final autoSort = autoSorting.entries.first.type;
         final effectiveSort = sort ?? autoSort;
         final effectiveReversed = sort == null ? autoSorting.reverse : sortReversed;
@@ -472,7 +483,7 @@ class _ArtistAlbumsSortMenu extends StatelessWidget {
               active: sort == null,
               onTap: () => settings.artistAlbumsSort.save(null),
             ),
-            ...GroupSortType.forAlbums().map(
+            ...GroupSortType.forAlbums().where((e) => !e.isArtistLevel).map(
               (e) => SmallListTile(
                 borderRadius: 12.0,
                 visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
@@ -487,12 +498,6 @@ class _ArtistAlbumsSortMenu extends StatelessWidget {
       },
     );
   }
-}
-
-SortChain<GroupSortType> _artistAlbumsAutoSorting() {
-  final albumSorting = settings.groupSortingOf(MediaType.album);
-  if (albumSorting.entries.first.type.suitsDiscography()) return albumSorting;
-  return SortChain.of(const [GroupSortType.year], reverse: true);
 }
 
 extension _TracksYearsRange on List<Track> {
@@ -511,33 +516,4 @@ extension _TracksYearsRange on List<Track> {
     if (oldest == 0) return '';
     return oldest == newest ? '$oldest' : '$oldest – $newest';
   }
-}
-
-extension _GroupSortTypeDiscography on GroupSortType {
-  bool suitsDiscography() => switch (this) {
-    GroupSortType.album || GroupSortType.albumSort || GroupSortType.albumArtist || GroupSortType.albumArtistSort || GroupSortType.artistsList => false,
-    GroupSortType.title ||
-    GroupSortType.year ||
-    GroupSortType.genresList ||
-    GroupSortType.dateAdded ||
-    GroupSortType.dateModified ||
-    GroupSortType.composer ||
-    GroupSortType.label ||
-    GroupSortType.releaseType ||
-    GroupSortType.bpm ||
-    GroupSortType.duration ||
-    GroupSortType.numberOfTracks ||
-    GroupSortType.playCount ||
-    GroupSortType.latestPlayed ||
-    GroupSortType.lastPlayed ||
-    GroupSortType.firstListen ||
-    GroupSortType.albumsCount ||
-    GroupSortType.creationDate ||
-    GroupSortType.modifiedDate ||
-    GroupSortType.artistSort ||
-    GroupSortType.composerSort ||
-    GroupSortType.shuffle ||
-    GroupSortType.shuffleDaily ||
-    GroupSortType.custom => true,
-  };
 }

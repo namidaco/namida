@@ -2276,14 +2276,17 @@ class Indexer<T extends Track> {
     tracksExcludedByNoMedia.value = 0;
 
     final extensions = _includeVideosAsTracks ? NamidaFileExtensionsWrapper.audioAndVideo : NamidaFileExtensionsWrapper.audio;
+    final m3uExtensions = settings.enableM3USyncStartup.value ? NamidaFileExtensionsWrapper.m3u : null;
     final dirsFilterer = DirsFileFilter(
       extensions: extensions,
       imageExtensions: NamidaFileExtensionsWrapper.image,
+      m3uExtensions: m3uExtensions,
       blacklistExtensions: settings.extensionsBlacklist.value,
       strictNoMedia: strictNoMedia,
       withStats: withStats,
     );
     final result = await dirsFilterer.filter();
+    if (m3uExtensions != null) unawaited(PlaylistController.inst.importListedM3UFiles(result.m3uPaths));
 
     final allPaths = result.allPaths;
 

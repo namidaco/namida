@@ -55,7 +55,7 @@ Future<void> showClearCacheDialog({List<Selectable> tracks = const [], List<Stri
         rx: controller.isCleanRx,
         builder: (context, isClean) => isClean
             ? _ClearCacheCleanState(
-                showText: controller.isInitiallyClean,
+                showText: controller.isNothingFound,
               )
             : _ClearCacheGroupsList(
                 controller: controller,
@@ -63,19 +63,31 @@ Future<void> showClearCacheDialog({List<Selectable> tracks = const [], List<Stri
       ),
     ),
   );
+  controller.collectTempFiles();
 }
 
 class _ClearCacheDialogController {
   final ItemsCache cache;
-  final List<ItemCacheEntry> _allEntries;
 
-  _ClearCacheDialogController(this.cache) : _allEntries = cache.groups.expand((g) => g.entries).toFixedList();
+  _ClearCacheDialogController(this.cache);
 
+  late final groupsRx = cache.groups.obso;
   final selectedRx = <ItemCacheEntry>{}.obs;
-  late final isInitiallyClean = _allEntries.isEmpty;
-  late final isCleanRx = isInitiallyClean.obso;
+  late final isCleanRx = isNothingFound.obso;
 
-  bool get isAllSelectedR => selectedRx.valueR.length == _allEntries.length;
+  bool get isNothingFound => cache.entries.isEmpty;
+  bool get isAllSelectedR => selectedRx.valueR.length == cache.entries.length;
+
+  bool _isDisposed = false;
+
+  void collectTempFiles() async {
+    final wasNothingFound = isNothingFound;
+    final didAdd = await cache.collectTempFiles();
+    if (!didAdd || _isDisposed) return;
+    groupsRx.value = cache.groups;
+    selectedRx.refresh();
+    if (wasNothingFound) isCleanRx.value = false;
+  }
 
   void toggle(ItemCacheEntry entry) {
     final selected = selectedRx.value;
@@ -85,10 +97,11 @@ class _ClearCacheDialogController {
 
   void toggleAll() {
     final selected = selectedRx.value;
-    if (selected.length == _allEntries.length) {
+    final allEntries = cache.entries;
+    if (selected.length == allEntries.length) {
       selected.clear();
     } else {
-      selected.addAll(_allEntries);
+      selected.addAll(allEntries);
     }
     selectedRx.refresh();
   }
@@ -99,7 +112,7 @@ class _ClearCacheDialogController {
   /// when nothing is left, the clean state shows shortly before closing.
   Future<void> deleteSelected() async {
     final selected = selectedRx.value;
-    final isAllSelected = selected.length == _allEntries.length;
+    final isAllSelected = selected.length == cache.entries.length;
     await cache.deleteEntries(selected);
     if (isAllSelected) {
       isCleanRx.value = true;
@@ -110,7 +123,9 @@ class _ClearCacheDialogController {
   }
 
   void dispose() {
+    _isDisposed = true;
     _cleanStateCloseTimer?.cancel();
+    groupsRx.close();
     selectedRx.close();
     isCleanRx.close();
   }
@@ -158,16 +173,20 @@ class _ClearCacheGroupsList extends StatelessWidget {
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: namida.height * 0.6),
       child: SmoothSingleChildScrollView(
-        child: Column(
-          children: controller.cache.groups
-              .map(
-                (group) => _ClearCacheGroupTile(
-                  group: group,
-                  controller: controller,
-                ),
-              )
-              .addSeparators(separator: const SizedBox(height: 4.0))
-              .toFixedList(),
+        child: ObxO(
+          rx: controller.groupsRx,
+          builder: (context, groups) => Column(
+            children: groups
+                .map(
+                  (group) => _ClearCacheGroupTile(
+                    key: ValueKey(group.type),
+                    group: group,
+                    controller: controller,
+                  ),
+                )
+                .addSeparators(separator: const SizedBox(height: 4.0))
+                .toFixedList(),
+          ),
         ),
       ),
     );
@@ -338,6 +357,7 @@ class _ClearCacheGroupTile extends StatelessWidget {
   final _ClearCacheDialogController controller;
 
   const _ClearCacheGroupTile({
+    super.key,
     required this.group,
     required this.controller,
   });

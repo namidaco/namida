@@ -41,6 +41,11 @@ void main() {
     createFile(['nomedia sibling', 'i.mp3']);
     createFile(['excluded', 'g.mp3']);
     createFile(['日本語 ñ', 'sóng 🎵.mp3'], size: 7);
+    createFile(['list.m3u']);
+    createFile(['sub1', 'deep', 'other.M3U8']);
+    createFile(['nomedia', 'child', 'hidden by nomedia.m3u']);
+    createFile(['.hidden.m3u']);
+    createFile(['excluded', 'excluded.m3u']);
     final longDirName = 'long' * 30;
     createFile([longDirName, longDirName, longDirName, 'h.mp3'], size: 9);
     Directory(pathOf(['empty'])).createSync();
@@ -64,6 +69,7 @@ void main() {
     final dirsFilterer = DirsFileFilter(
       extensions: NamidaFileExtensionsWrapper.audioAndVideo,
       imageExtensions: NamidaFileExtensionsWrapper.image,
+      m3uExtensions: NamidaFileExtensionsWrapper.m3u,
       strictNoMedia: strictNoMedia,
       withStats: true,
       useNativeLister: useNativeLister,
@@ -102,6 +108,7 @@ void main() {
     final dartCovers = {for (final e in dart.folderCovers.entries) e.key.path: e.value};
     expect(nativeCovers, dartCovers);
     expect(nativeStats, statsByPath(dart));
+    expect(native.m3uPaths, dart.m3uPaths);
   }
 
   for (final respectNoMedia in [false, true]) {
@@ -126,6 +133,11 @@ void main() {
         expect(native.allPaths.contains(pathOf(['nomedia sibling', 'i.mp3'])), true);
         expect(native.allPaths.any((path) => path.getFilename == 'g.mp3'), false);
         expect(native.allPaths.any((path) => path.getFilename == '.hidden.mp3'), false);
+        expect(native.m3uPaths, {
+          pathOf(['list.m3u']),
+          pathOf(['sub1', 'deep', 'other.M3U8']),
+          pathOf(['nomedia', 'child', 'hidden by nomedia.m3u']),
+        });
       });
     }
   }
@@ -155,5 +167,6 @@ void main() {
     final result = await dirsFilterer.filterSync();
     expect(result.stats, null);
     expect(result.allPaths.isNotEmpty, true);
+    expect(result.m3uPaths, isEmpty);
   });
 }

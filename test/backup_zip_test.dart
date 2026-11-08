@@ -211,7 +211,7 @@ void main() {
 
   test('a restored backup keeps the sync id and pair secrets of this device, its other sync settings restore', () async {
     final ownSyncSettings = {
-      '_v': 2,
+      '_v': 3,
       'id': 'this-device',
       'issuedPairSecrets': {'paired-here': 'aGVyZQ=='},
     };
@@ -219,7 +219,7 @@ void main() {
     await settings.sync.prepareSettingsFile();
 
     final backedUpSyncSettings = {
-      '_v': 2,
+      '_v': 3,
       'id': 'backed-up-device',
       'customDeviceName': 'Old Phone',
       'allowedDeviceIds': ['paired-there'],
@@ -247,7 +247,7 @@ void main() {
 
   test('a backup of the sync settings leaves out the sync id and pair secrets, the live file keeps them and restores into itself', () async {
     final liveSyncSettings = {
-      '_v': 2,
+      '_v': 3,
       'id': 'this-device',
       'customDeviceName': 'My Phone',
       'allowedDeviceIds': ['paired-device'],
@@ -274,7 +274,7 @@ void main() {
     expect(File(p.join(localEntries.path, 'namida_settings_sync.json')).existsSync(), false);
     final backedUpSyncSettings = jsonDecode(File(p.join(mainEntries.path, 'namida_settings_sync.json')).readAsStringSync());
     expect(backedUpSyncSettings, {
-      '_v': 2,
+      '_v': 3,
       'customDeviceName': 'My Phone',
       'allowedDeviceIds': ['paired-device'],
     });

@@ -519,6 +519,14 @@ class TracksSearchWrapper {
     return result;
   }
 
+  List<int> filterRelevantIndicesAsList(String text) {
+    final result = <int>[];
+    void onRelevantMatch(_CustomTrackExtended trExt) => result.add(trExt.ogIndex);
+    void onLessRelevantMatch(_CustomTrackExtended trExt) {}
+    _filter(text, onRelevantMatch, onLessRelevantMatch);
+    return result;
+  }
+
   Set<int> filterIndicesAsSet(String text) {
     final result = <int>{};
     void onMatch(_CustomTrackExtended trExt) => result.add(trExt.ogIndex);

@@ -87,6 +87,9 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
   @override
   ScrollController? get providedScrollController => HistoryController.inst.scrollController;
 
+  @override
+  bool get showsMatchesInOwnOrder => true;
+
   List<int>? _filteredForResults;
   _FilteredHistory? _filteredHistory;
 

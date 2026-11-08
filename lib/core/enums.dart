@@ -96,9 +96,9 @@ enum SortType {
 enum GroupSortType {
   title,
   album,
-  albumArtist,
+  albumArtist(isArtistLevel: true),
   year,
-  artistsList,
+  artistsList(isArtistLevel: true),
   genresList,
   dateAdded,
   dateModified,
@@ -116,13 +116,17 @@ enum GroupSortType {
   creationDate,
   modifiedDate,
   albumSort,
-  albumArtistSort,
-  artistSort,
+  albumArtistSort(isArtistLevel: true),
+  artistSort(isArtistLevel: true),
   composerSort,
   shuffle,
   shuffleDaily,
   custom,
   ;
+
+  final bool isArtistLevel;
+
+  const GroupSortType({this.isArtistLevel = false});
 
   bool get requiresHistory => this == GroupSortType.playCount || this == GroupSortType.latestPlayed || this == GroupSortType.firstListen;
 
@@ -1221,9 +1225,14 @@ enum SettingSubpageEnum {
 
 enum FABType {
   none,
-  play,
-  shuffle,
+  play(isPlayback: true),
+  shuffle(isPlayback: true),
   search,
+  ;
+
+  final bool isPlayback;
+
+  const FABType({this.isPlayback = false});
 }
 
 enum YTHomeSource {

@@ -38,8 +38,8 @@ class QueueController {
   /// holds all queues mapped & sorted by `date` chronologically & reversly.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
 
-  /// counts the ones not loaded yet into [queuesMap] too.
-  final totalQueuesCount = 0.obs;
+  /// counts the ones not loaded yet into [queuesMap] too, null before the queues files are read.
+  final totalQueuesCount = Rxn<int>();
 
   List<int> _unloadedQueuesDates = const [];
   Future<void>? _loadAllQueuesOperation;
@@ -619,7 +619,6 @@ class QueueController {
   }
 
   final _queuesLoad = Completer<bool>();
-  bool get isQueuesLoaded => _queuesLoad.isCompleted;
 
   int get playerQueueModifiedTime => _playerQueueModifiedTime;
   int _playerQueueModifiedTime = 0;

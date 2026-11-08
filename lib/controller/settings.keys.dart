@@ -5,13 +5,16 @@ part of 'settings_controller.dart';
 /// reserved file keys: `_v` format version, `_legacy` names not yet migrated from the full-dump format, `_m` modification times of synced keys,
 /// `_x` enum values a customized enum list left out, to tell them apart from values added to the enum later.
 sealed class _SettingsKeysWriter with SettingsFileWriter {
-  static const _kVersion = 2;
+  static const _kVersion = 3;
 
   /// older than any real change, so a value set on another device always wins over a migrated one.
   static const _kLegacyModifiedMS = 1;
 
   Map<String, dynamic> _raw = {'_v': _kVersion};
   List? _legacy;
+
+  /// `_v` of the file being loaded or migrated, null when there was no file, 0 for the full-dump format.
+  int? _fileVersion;
   final _keys = <String, SettingsKey>{};
   bool _didCreateAllKeys = false;
 
@@ -86,6 +89,7 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     if (json is! Map<String, dynamic>) {
       _raw = {'_v': _kVersion};
       _legacy = null;
+      _fileVersion = null;
     } else if (json['_v'] == null) {
       isLegacyFormat = true;
       final legacy = json.keys.toList();
@@ -93,10 +97,12 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
       json['_v'] = _kVersion;
       _legacy = legacy;
       _raw = json;
+      _fileVersion = 0;
       _migrateLegacy();
     } else {
       _legacy = json['_legacy'];
       _raw = json;
+      _fileVersion = json['_v'];
       json['_v'] = _kVersion;
     }
     _migrateKeys();
@@ -269,9 +275,12 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
   (Map<String, dynamic>, Set<String>?) _migrateDetached(Map<String, dynamic> json) {
     final ownRaw = _raw;
     final ownLegacy = _legacy;
-    final isLegacyFormat = json['_v'] == null;
+    final ownFileVersion = _fileVersion;
+    final int? fileVersion = json['_v'];
+    final isLegacyFormat = fileVersion == null;
     _raw = json;
     _legacy = isLegacyFormat ? json.keys.toList() : json['_legacy'] as List?;
+    _fileVersion = fileVersion ?? 0;
     _isMigratingDetached = true;
     try {
       if (isLegacyFormat) _migrateLegacy();
@@ -281,6 +290,7 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     } finally {
       _raw = ownRaw;
       _legacy = ownLegacy;
+      _fileVersion = ownFileVersion;
       _isMigratingDetached = false;
     }
   }

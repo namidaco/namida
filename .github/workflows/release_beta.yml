@@ -21,6 +21,10 @@ on:
       android:
         type: boolean
         default: true
+      android_key_patch:
+        description: patched flutter key input for gboard select, drop once flutter#185849 is fixed
+        type: boolean
+        default: true
       windows:
         type: boolean
         default: true
@@ -54,6 +58,9 @@ on:
         type: boolean
         default: true
       android:
+        type: boolean
+        default: true
+      android_key_patch:
         type: boolean
         default: true
       windows:
@@ -285,6 +292,8 @@ jobs:
           echo "ORG_GRADLE_PROJECT_namidaSnapshot=true" >> $GITHUB_ENV
 
       - name: Build APKs
+        env:
+          ORG_GRADLE_PROJECT_namidaFlutterKeyPatch: ${{ inputs.android_key_patch }}
         run: |
           mkdir -p build_final
           flutter build apk --target-platform android-arm64 --release

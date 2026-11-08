@@ -105,16 +105,28 @@ class _SmoothScrollPositionWithSingleContext extends ScrollPositionWithSingleCon
 
   /// 滚动动画结束时的状态监听，清理一些资源
   void _statusListener(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      currentSpeed = 0.0;
-      isScrollingNotifier.value = false;
-      isForwardScroll = null;
-      _ignoreUpScroll = null;
-      _ignoreDownScroll = null;
+    if (status == AnimationStatus.completed) _endSmoothScroll();
+  }
 
-      didEndScroll();
-      context.setIgnorePointer(false);
+  void _endSmoothScroll() {
+    currentSpeed = 0.0;
+    isScrollingNotifier.value = false;
+    isForwardScroll = null;
+    _ignoreUpScroll = null;
+    _ignoreDownScroll = null;
+
+    didEndScroll();
+    context.setIgnorePointer(false);
+  }
+
+  // -- idle is skipped, the wheel animation runs on it and extent changes mid-animation go idle again
+  @override
+  void beginActivity(ScrollActivity? newActivity) {
+    if (isForwardScroll != null && newActivity is! IdleScrollActivity) {
+      controller.stop();
+      _endSmoothScroll();
     }
+    super.beginActivity(newActivity);
   }
 
   /// 滚动动画监听器，执行滚动逻辑

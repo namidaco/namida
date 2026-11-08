@@ -229,6 +229,47 @@ void main() {
       expect(isRuleDialogOpen(), isFalse);
     });
 
+    List<String> fieldTexts(WidgetTester tester) => tester.widgetList<TextField>(find.byType(TextField)).map((e) => e.controller!.text).toList();
+
+    testWidgets('changing the parts keeps the typed dates', (tester) async {
+      await openDialog(tester);
+      await addRule(tester, SmartPlaylistRuleFilterDateTimeSource.dateAdded);
+      await pickFilter(tester, SmartPlaylistRuleFilterDateTime.isInBetween);
+      await tester.enterText(find.byType(TextField).at(0), '2019-05-14');
+      await tester.enterText(find.byType(TextField).at(1), '2020-06-15');
+      await frames(tester, 2);
+      await toggleParts(tester, const [.month]);
+      expect(fieldTexts(tester), containsAll(['2019', '14', '2020', '15']));
+      await toggleParts(tester, const [.month]);
+      expect(fieldTexts(tester), containsAll(['2019-05-14', '2020-06-15']));
+    });
+
+    testWidgets('a weekday comes from the typed date', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await tester.enterText(valueField(), '2024-11-05');
+      await frames(tester, 2);
+      await toggleParts(tester, const [.weekday]);
+      expect(fieldTexts(tester), containsAll(['2024', '11', SmartPlaylistDatePartsValue.weekdayToText(DateTime.tuesday, short: true)]));
+      await tapText(tester, lang.add);
+      expect(isRuleDialogOpen(), isFalse);
+    });
+
+    testWidgets('now keeps the typed parts', (tester) async {
+      await openDialog(tester);
+      await addSameDateRule(tester);
+      await tester.enterText(valueField(), '2019-05-14');
+      await frames(tester, 2);
+      await tester.tap(find.byIcon(Broken.timer_1).first);
+      await frames(tester, 3);
+      await toggleParts(tester, const [.month]);
+      await tester.tap(find.byIcon(Broken.timer_1).first);
+      await frames(tester, 3);
+      expect(fieldTexts(tester), containsAll(['2019', '14']));
+      await toggleParts(tester, const [.month]);
+      expect(fieldTexts(tester), contains('2019-05-14'));
+    });
+
     testWidgets('now instead of a typed date', (tester) async {
       await openDialog(tester);
       await addSameDateRule(tester);

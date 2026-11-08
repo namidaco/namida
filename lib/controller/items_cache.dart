@@ -1,4 +1,4 @@
-// logic rewritten by claude, new one finds every cached file of tracks and youtube videos in one isolate pass and cleans the cache maps on delete
+// logic rewritten by claude, new one finds every cached file of tracks and youtube videos in one isolate pass, temp files in a later one, and cleans the cache maps on delete
 import 'dart:io';
 
 import 'package:namida/class/file_parts.dart';
@@ -23,18 +23,65 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class ItemsCache {
-  final List<ItemCacheGroup> groups;
+  final bool _isSingle;
+  final Set<String> _videoIds;
   final _ItemsCacheRefs _refs;
 
-  const ItemsCache._(this.groups, this._refs);
+  ItemsCache._(this._isSingle, this._videoIds, this._refs);
+
+  final _entries = <ItemCacheEntry>[];
+  final _entriesByType = <ItemCacheType, List<ItemCacheEntry>>{};
+  final _groupedEntries = <String, ItemCacheEntry>{};
+  var _groups = const <ItemCacheGroup>[];
+
+  List<ItemCacheEntry> get entries => _entries;
+  List<ItemCacheGroup> get groups => _groups;
 
   /// a single item lists each file, several items merge files of the same kind into one entry.
+  /// temp files are left for [collectTempFiles].
   static Future<ItemsCache> collect({required Iterable<Track> tracks, required Iterable<String> videoIds}) async {
     final candidates = await _ItemsCacheCandidates.build(tracks: tracks, videoIds: videoIds);
     final scanParams = _ScanParams.inAppDirs(paths: candidates.paths, videoIds: candidates.videoIds);
     final scanned = await _scanIsolate.thready(scanParams);
-    final groups = candidates.toGroups(scanned);
-    return ItemsCache._(groups, candidates.refs);
+    final cache = ItemsCache._(candidates.isSingle, candidates.videoIds, candidates.refs);
+    candidates.addScannedTo(cache, scanned);
+    cache._buildGroups();
+    return cache;
+  }
+
+  /// lists the whole video and audio cache folders, which can take seconds.
+  /// returns true if anything was added.
+  Future<bool> collectTempFiles() async {
+    if (_videoIds.isEmpty) return false;
+    final scanParams = _ScanParams.inAppDirs(paths: const [], videoIds: _videoIds);
+    final tempFiles = await _scanTempFilesIsolate.thready(scanParams);
+    if (tempFiles.isEmpty) return false;
+    for (final f in tempFiles) {
+      _addEntry(f.type, lang.deleteTempFiles, true, [f.path], f.size);
+    }
+    _buildGroups();
+    return true;
+  }
+
+  void _addEntry(ItemCacheType type, String title, bool isTemp, List<String> paths, int size) {
+    final shouldGroup = !_isSingle || isTemp;
+    final groupKey = shouldGroup ? '${type.index}_${isTemp}_$title' : null;
+    final grouped = groupKey == null ? null : _groupedEntries[groupKey];
+    if (grouped != null) {
+      grouped._merge(paths, size);
+      return;
+    }
+    final entry = ItemCacheEntry._(type, title, isTemp, paths, size);
+    if (groupKey != null) _groupedEntries[groupKey] = entry;
+    (_entriesByType[type] ??= []).add(entry);
+    _entries.add(entry);
+  }
+
+  void _buildGroups() {
+    _groups = [
+      for (final type in ItemCacheType.values)
+        if (_entriesByType[type] case final entries?) ItemCacheGroup._(type, entries),
+    ];
   }
 
   /// checked in chunks to stop early, files that need listing a directory are checked last for all at once.
@@ -63,50 +110,60 @@ class ItemsCache {
       final size = File(paths[i]).fileSizeSync();
       if (size != null) sizes[i] = size;
     }
+    final subtitleFiles = _listFiles(params, _loopSubtitleFiles);
+    return _ScanResult(sizes, subtitleFiles);
+  }
+
+  static List<_ListedFile> _scanTempFilesIsolate(_ScanParams params) => _listFiles(params, _loopTempFiles);
+
+  static List<_ListedFile> _listFiles(_ScanParams params, bool Function(_ScanParams params, _OnListedFile onFile) loopFiles) {
     final listedFiles = <_ListedFile>[];
-    _loopVideoIdsFiles(params, (type, isTemp, file) {
+    loopFiles(params, (type, file) {
       final size = file.fileSizeSync();
-      if (size != null) listedFiles.add(_ListedFile(type, isTemp, file.path, size));
+      if (size != null) listedFiles.add(_ListedFile(type, file.path, size));
       return false;
     });
-    return _ScanResult(sizes, listedFiles);
+    return listedFiles;
   }
 
   static bool _anyExistsIsolate(_ScanParams params) {
     for (final path in params.paths) {
       if (File(path).existsSync()) return true;
     }
-    bool hasListedFile = false;
-    _loopVideoIdsFiles(params, (type, isTemp, file) => hasListedFile = true);
-    return hasListedFile;
+    bool stopAtFirst(ItemCacheType type, File file) => true;
+    return _loopSubtitleFiles(params, stopAtFirst) || _loopTempFiles(params, stopAtFirst);
   }
 
-  /// [onFile] returns true to stop.
-  static void _loopVideoIdsFiles(_ScanParams params, bool Function(ItemCacheType type, bool isTemp, File file) onFile) {
+  /// subtitles folder is small, unlike the video and audio cache folders.
+  static bool _loopSubtitleFiles(_ScanParams params, _OnListedFile onFile) {
     final videoIds = params.videoIds;
-    if (videoIds.isEmpty) return;
+    if (videoIds.isEmpty) return false;
+    bool isSubtitleFile(String filename) => filename.length > _kVideoIdLength + 1 && filename.codeUnitAt(_kVideoIdLength) == 0x5F /* _ */ && filename.endsWith('.vtt');
+    return _loopVideoIdsFilesIn(params.subtitlesDirPath, videoIds, ItemCacheType.subtitles, isSubtitleFile, onFile);
+  }
 
-    bool loopDirectory(String dirPath, ItemCacheType type, bool isTemp, bool Function(String filename) isMatching) {
-      for (final e in Directory(dirPath).listSyncSafe()) {
-        if (e is! File) continue;
-        final filename = e.path.getFilename;
-        if (filename.length < _kVideoIdLength) continue;
-        final videoId = filename.substring(0, _kVideoIdLength);
-        if (!videoIds.contains(videoId)) continue;
-        if (!isMatching(filename)) continue;
-        if (onFile(type, isTemp, e)) return true;
-      }
-      return false;
-    }
-
+  static bool _loopTempFiles(_ScanParams params, _OnListedFile onFile) {
+    final videoIds = params.videoIds;
+    if (videoIds.isEmpty) return false;
     bool isAnyFile(String filename) => true;
     bool isPartFile(String filename) => filename.endsWith('.part');
-    bool isSubtitleFile(String filename) => filename.length > _kVideoIdLength + 1 && filename.codeUnitAt(_kVideoIdLength) == 0x5F /* _ */ && filename.endsWith('.vtt');
+    return _loopVideoIdsFilesIn(params.videosTempDirPath, videoIds, ItemCacheType.video, isAnyFile, onFile) ||
+        _loopVideoIdsFilesIn(params.videosDirPath, videoIds, ItemCacheType.video, isPartFile, onFile) ||
+        _loopVideoIdsFilesIn(params.audiosDirPath, videoIds, ItemCacheType.audio, isPartFile, onFile);
+  }
 
-    if (loopDirectory(params.videosTempDirPath, ItemCacheType.video, true, isAnyFile)) return;
-    if (loopDirectory(params.videosDirPath, ItemCacheType.video, true, isPartFile)) return;
-    if (loopDirectory(params.audiosDirPath, ItemCacheType.audio, true, isPartFile)) return;
-    loopDirectory(params.subtitlesDirPath, ItemCacheType.subtitles, false, isSubtitleFile);
+  /// [onFile] returns true to stop, the result is whether it stopped.
+  static bool _loopVideoIdsFilesIn(String dirPath, Set<String> videoIds, ItemCacheType type, bool Function(String filename) isMatching, _OnListedFile onFile) {
+    for (final e in Directory(dirPath).listSyncSafe()) {
+      if (e is! File) continue;
+      final filename = e.path.getFilename;
+      if (filename.length < _kVideoIdLength) continue;
+      final videoId = filename.substring(0, _kVideoIdLength);
+      if (!videoIds.contains(videoId)) continue;
+      if (!isMatching(filename)) continue;
+      if (onFile(type, e)) return true;
+    }
+    return false;
   }
 
   static const _kVideoIdLength = 11;
@@ -314,23 +371,7 @@ class _ItemsCacheCandidates {
     _candidates.add(_Candidate(type, title, isTemp, start, end));
   }
 
-  List<ItemCacheGroup> toGroups(_ScanResult scanned) {
-    final entriesByType = <ItemCacheType, List<ItemCacheEntry>>{};
-    final groupedEntries = <String, ItemCacheEntry>{};
-
-    void addEntry(ItemCacheType type, String title, bool isTemp, List<String> paths, int size) {
-      final shouldGroup = !isSingle || isTemp;
-      final groupKey = shouldGroup ? '${type.index}_${isTemp}_$title' : null;
-      final grouped = groupKey == null ? null : groupedEntries[groupKey];
-      if (grouped != null) {
-        grouped._merge(paths, size);
-        return;
-      }
-      final entry = ItemCacheEntry._(type, title, isTemp, paths, size);
-      if (groupKey != null) groupedEntries[groupKey] = entry;
-      (entriesByType[type] ??= []).add(entry);
-    }
-
+  void addScannedTo(ItemsCache cache, _ScanResult scanned) {
     final sizes = scanned.sizes;
     final artworkPaths = refs.artworkPaths;
     for (final c in _candidates) {
@@ -345,18 +386,13 @@ class _ItemsCacheCandidates {
         if (artworkPaths.contains(path)) refs.artworkSizeByPath[path] = size;
       }
       if (existingPaths.isEmpty) continue;
-      addEntry(c.type, c.title, c.isTemp, existingPaths, totalSize);
+      cache._addEntry(c.type, c.title, c.isTemp, existingPaths, totalSize);
     }
 
-    for (final f in scanned.listedFiles) {
-      final title = f.type == ItemCacheType.subtitles ? _subtitleTitleOf(f.path) : lang.deleteTempFiles;
-      addEntry(f.type, title, f.isTemp, [f.path], f.size);
+    for (final f in scanned.subtitleFiles) {
+      final title = _subtitleTitleOf(f.path);
+      cache._addEntry(f.type, title, false, [f.path], f.size);
     }
-
-    return [
-      for (final type in ItemCacheType.values)
-        if (entriesByType[type] case final entries?) ItemCacheGroup._(type, entries),
-    ];
   }
 
   /// subtitle files are named `{videoId}_{vssId}`, where vssId is like `.en` or `a.en` for auto generated ones.
@@ -465,16 +501,17 @@ class _ScanParams {
 
 class _ScanResult {
   final List<int> sizes;
-  final List<_ListedFile> listedFiles;
+  final List<_ListedFile> subtitleFiles;
 
-  const _ScanResult(this.sizes, this.listedFiles);
+  const _ScanResult(this.sizes, this.subtitleFiles);
 }
 
 class _ListedFile {
   final ItemCacheType type;
-  final bool isTemp;
   final String path;
   final int size;
 
-  const _ListedFile(this.type, this.isTemp, this.path, this.size);
+  const _ListedFile(this.type, this.path, this.size);
 }
+
+typedef _OnListedFile = bool Function(ItemCacheType type, File file);

@@ -109,8 +109,9 @@ class MiniPlayerController {
       screenWidth: mediaSize.width,
       screenHeight: mediaSizeHeight,
     );
-    final isWidescreen = miniplayerDetails.isWidescreen;
-    double maxWidth = miniplayerDetails.maxWidth;
+    final hasCurrentItem = Player.inst.currentItem.value != null;
+    final isWidescreen = hasCurrentItem && miniplayerDetails.isWidescreen;
+    double maxWidth = hasCurrentItem ? miniplayerDetails.maxWidth : 0.0;
     if (isWidescreen) maxWidth += newRightInset;
 
     // -- the player's own layout is laid out in a virtual box at least as big as the
@@ -179,6 +180,7 @@ class MiniPlayerController {
     Dimensions.inst.miniplayerMaxWidth = maxWidth;
     Dimensions.inst.availableAppContentWidth = mediaSize.width - (isWidescreen ? maxWidth : 0);
     Dimensions.inst.miniplayerIsWideScreen = isWidescreen;
+    Dimensions.inst.screenIsWide = miniplayerDetails.isWidescreen;
 
     Dimensions.inst.sideInfoMaxWidth = (mediaSize.width * 0.2).withMaximum(324.0);
     Dimensions.inst.showSubpageInfoAtSide = Dimensions.inst.availableAppContentWidth > 524.0;
@@ -206,10 +208,6 @@ class MiniPlayerController {
   }
 
   static ({double maxWidth, bool isWidescreen}) _getPlayerDetails({required double screenWidth, required double screenHeight}) {
-    if (Player.inst.currentItem.value == null) {
-      return (maxWidth: 0, isWidescreen: false);
-    }
-
     double maxWidth = screenWidth;
     bool isWidescreen = false;
     if (screenWidth / screenHeight > 1) {

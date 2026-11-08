@@ -100,7 +100,7 @@ class _QueueListBase extends StatefulWidget {
   final double Function(int index)? itemExtentOf;
   final bool addPageBottomPadding;
   final Widget Function(void Function() onSearchTap)? headerBuilder;
-  final Widget Function(Widget scrollQueueWidget)? utilsRowBuilder;
+  final Widget Function(QueueScrollFollower queueFollower)? utilsRowBuilder;
   final Widget Function(BuildContext context, int index, List<Playable> queue, QueueSearchResults? searchResults) itemBuilder;
 
   const _QueueListBase({
@@ -267,16 +267,7 @@ class _QueueListBaseState extends State<_QueueListBase> {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
-                      child: utilsRowBuilder(
-                        ObxO(
-                          rx: _queueFollower.arrowIcon,
-                          builder: (context, arrowIcon) => NamidaButton(
-                            tooltip: () => lang.jump,
-                            onTap: _queueFollower.animateToCurrentItem,
-                            icon: arrowIcon,
-                          ),
-                        ),
-                      ),
+                      child: utilsRowBuilder(_queueFollower),
                     ),
                   ),
                 ),
@@ -380,10 +371,10 @@ class _LocalQueueList extends StatelessWidget {
               )
             : null,
         utilsRowBuilder: showHeaderAndFooter
-            ? (scrollQueueWidget) => QueueUtilsRow(
+            ? (queueFollower) => QueueUtilsRow(
                 itemsKeyword: (number) => number.displayTrackKeyword,
                 onAddItemsTap: () => TracksAddOnTap().onAddTracksTap(context),
-                scrollQueueWidget: scrollQueueWidget,
+                queueFollower: queueFollower,
               )
             : null,
         itemBuilder: (context, i, queue, searchResults) => _localQueueItem(context, i, queue, properties, searchResults),
@@ -450,10 +441,10 @@ class _YoutubeQueueList extends StatelessWidget {
               )
             : null,
         utilsRowBuilder: showHeaderAndFooter
-            ? (scrollQueueWidget) => QueueUtilsRow(
+            ? (queueFollower) => QueueUtilsRow(
                 itemsKeyword: (number) => number.displayVideoKeyword,
                 onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
-                scrollQueueWidget: scrollQueueWidget,
+                queueFollower: queueFollower,
               )
             : null,
         itemBuilder: (context, i, queue, searchResults) => _youtubeQueueItem(context, i, queue, properties, searchResults),
@@ -526,10 +517,10 @@ class _MixedQueueList extends StatelessWidget {
                 )
               : null,
           utilsRowBuilder: showHeaderAndFooter
-              ? (scrollQueueWidget) => QueueUtilsRow(
+              ? (queueFollower) => QueueUtilsRow(
                   itemsKeyword: (number) => number.displayTrackKeyword,
                   onAddItemsTap: () => TracksAddOnTap().onAddTracksTap(context),
-                  scrollQueueWidget: scrollQueueWidget,
+                  queueFollower: queueFollower,
                 )
               : null,
           itemBuilder: (context, i, queue, searchResults) => queue[i] is Selectable

@@ -158,4 +158,6 @@ dependencies {
     implementation("com.android.support:support-v4:28.0.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.4")
+
+    testImplementation("junit:junit:4.13.2")
 }

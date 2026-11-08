@@ -116,6 +116,70 @@ void main() {
       final partial = videoPath('Artist - Other.mp4');
       expect(match([full, partial], filenameWOExt: 'Artist - Title', matchingType: LocalVideoMatchingType.filename), {full});
     });
+
+    test('parts split by symbols can come in any order', () {
+      final reordered = videoPath('Title (Official Video) - Artist.mp4');
+      final underscored = videoPath('Title_Artist_480p.mkv');
+      expect(match([reordered, underscored], filenameWOExt: 'Artist - Title', matchingType: LocalVideoMatchingType.filename), {reordered, underscored});
+    });
+
+    test('words inside a part have to stay next to each other', () {
+      final swapped = videoPath('Walker Alan - Faded.mp4');
+      final split = videoPath('Alan Someone Walker - Faded.mp4');
+      final kept = videoPath('Faded - Alan Walker (480p).mp4');
+      expect(match([swapped, split, kept], filenameWOExt: 'Alan Walker - Faded', matchingType: LocalVideoMatchingType.filename), {kept});
+    });
+
+    test('a part can not reuse the words of another part (#1375)', () {
+      final concert = videoPath('Black Tabby In Concert - Slay the Princess Three Year Anniversary Performance - 006 A World Without You There to Guide It [Axua30Da].m4a');
+      final same = videoPath('The Princess - Slay the Princess.mp4');
+      final reordered = videoPath('Slay the Princess - The Princess (480p).mp4');
+      final videos = [concert, same, reordered];
+      expect(match(videos, filenameWOExt: 'The Princess - Slay the Princess', matchingType: LocalVideoMatchingType.filename), {same, reordered});
+      expect(match(videos, filenameWOExt: 'The Princess - Slay the Princess', title: 'The Princess', artist: 'Slay the Princess'), {same, reordered});
+    });
+
+    test('a repeated part needs its own place in the name', () {
+      final once = videoPath('Princess.mp4');
+      final twice = videoPath('Princess - Princess (Live).mp4');
+      expect(match([once, twice], filenameWOExt: 'Princess - Princess', matchingType: LocalVideoMatchingType.filename), {twice});
+    });
+
+    test('cjk parts match inside longer cjk runs', () {
+      final video = videoPath('YOASOBI「夜に駆ける」Official Music Video.mp4');
+      expect(match([video], filenameWOExt: '駆ける', matchingType: LocalVideoMatchingType.filename), {video});
+      expect(match([video], filenameWOExt: 'YOASOBI - 夜に駆ける', matchingType: LocalVideoMatchingType.filename), {video});
+    });
+  });
+
+  group('sure track video', () {
+    bool isSure(String videoFilename, String trackFilenameWOExt, {String trackYTID = ''}) {
+      final videoPaths = [videoPath(videoFilename)];
+      final sureVideos = FilePathMatcher.getSureTrackVideos(videoPaths: videoPaths, trackFilenameWOExt: trackFilenameWOExt, trackYTID: trackYTID);
+      return sureVideos.isNotEmpty;
+    }
+
+    test('the same name is sure, symbols and case aside', () {
+      expect(isSure('Alan Walker - Faded.mp4', 'Alan Walker - Faded'), isTrue);
+      expect(isSure('alan walker – faded.webm', 'Alan Walker - Faded'), isTrue);
+    });
+
+    test('trailing bracket parts are allowed', () {
+      expect(isSure('Alan Walker - Faded (480p).mp4', 'Alan Walker - Faded'), isTrue);
+      expect(isSure('Alan Walker - Faded (Official Video) [1080p].mp4', 'Alan Walker - Faded'), isTrue);
+      expect(isSure('Song (Remix) (480p).mp4', 'Song (Remix)'), isTrue);
+    });
+
+    test('other words or other brackets are not sure', () {
+      expect(isSure('Alan Walker - Faded Extended.mp4', 'Alan Walker - Faded'), isFalse);
+      expect(isSure('Song (Live).mp4', 'Song (Remix)'), isFalse);
+      expect(isSure('Faded - Alan Walker.mp4', 'Alan Walker - Faded'), isFalse);
+    });
+
+    test('the track youtube id in the name is sure', () {
+      expect(isSure('Something Else [dQw4w9WgXcQ].mp4', 'Never Gonna Give You Up', trackYTID: 'dQw4w9WgXcQ'), isTrue);
+      expect(isSure('Something Else [lYBUbBu4W08].mp4', 'Never Gonna Give You Up', trackYTID: 'dQw4w9WgXcQ'), isFalse);
+    });
   });
 
   test('checking the same folder keeps only videos next to the track', () {

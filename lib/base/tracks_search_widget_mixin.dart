@@ -59,6 +59,9 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   /// used as is and never disposed, a new one is created otherwise.
   ScrollController? get providedScrollController => null;
 
+  /// less relevant matches are dropped, they would sit among the best ones.
+  bool get showsMatchesInOwnOrder => false;
+
   ScrollController get scrollController => _scrollController;
   TextEditingController get textEditingController => _textEditingController;
 
@@ -147,7 +150,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
     _currentSearch = value;
     if (value != null && value.isNotEmpty) {
       if (!isInitialized) await initialize();
-      await sendPort(value);
+      final dropLessRelevant = showsMatchesInOwnOrder && !settings.tracksSearchShowLessRelevant.value;
+      await sendPort((value, dropLessRelevant));
     } else {
       if (_searchResults != null) setState(() => _searchResults = null);
     }
@@ -168,8 +172,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
         streamSub?.cancel();
         return;
       }
-      final text = p as String;
-      final result = searchWrapper.filterIndicesAsList(text);
+      final (text, dropLessRelevant) = p as (String, bool);
+      final result = dropLessRelevant ? searchWrapper.filterRelevantIndicesAsList(text) : searchWrapper.filterIndicesAsList(text);
       sendPort.send((result, text));
     });
 

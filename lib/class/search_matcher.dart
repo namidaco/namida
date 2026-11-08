@@ -23,6 +23,10 @@ class FilePathMatcher extends SearchMatcher {
     return map;
   }
 
+  final _videosWordsTexts = <String, String>{};
+
+  String _getVideoWordsText(String videoPath) => _videosWordsTexts[videoPath] ??= _PhrasesQuery.toWordsText(videoPath.getFilenameWOExt);
+
   Set<String> matchTrackVideos({
     required String filenameWOExt,
     required String title,
@@ -34,19 +38,31 @@ class FilePathMatcher extends SearchMatcher {
   }) {
     final matched = <String>{};
 
-    void matchFilename() => matched.addAll(matchText(filenameWOExt));
+    void addPhrasesMatches(Set<String> candidates, List<String> texts) {
+      if (candidates.isEmpty) return;
+      final query = _PhrasesQuery.fromTexts(texts);
+      final phrasesMatches = candidates.where((vp) => query.isContainedIn(_getVideoWordsText(vp)));
+      matched.addAll(phrasesMatches);
+    }
+
+    void matchFilename() {
+      final filenameMatches = matchText(filenameWOExt);
+      addPhrasesMatches(filenameMatches, [filenameWOExt]);
+    }
 
     void matchTitleAndArtist() {
       if (title.isEmpty) return;
       final titleMatches = matchText(title);
       if (titleMatches.isEmpty) return;
       if (artist != null && artist.isNotEmpty) {
-        matched.addAll(titleMatches.intersection(matchText(artist)));
+        final artistMatches = titleMatches.intersection(matchText(artist));
+        addPhrasesMatches(artistMatches, [title, artist]);
       }
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
       if (genre != null && genre.isNotEmpty) {
-        matched.addAll(titleMatches.intersection(matchText(genre)));
+        final genreMatches = titleMatches.intersection(matchText(genre));
+        addPhrasesMatches(genreMatches, [title, genre]);
       }
     }
 
@@ -71,6 +87,31 @@ class FilePathMatcher extends SearchMatcher {
 
     if (onlyInDirectory != null) matched.retainWhere((vp) => vp.getDirectoryPath == onlyInDirectory);
     return matched;
+  }
+
+  static final _trailingBracketsRegex = RegExp(r'\s*[\(\[\{][^\(\)\[\]\{\}]*[\)\]\}]\s*$');
+
+  /// videos that surely belong to the track: the name is the track's filename (bracket parts like `(480p)` can follow), or it has the track's youtube id.
+  static Set<String> getSureTrackVideos({required Iterable<String> videoPaths, required String trackFilenameWOExt, required String trackYTID}) {
+    final hasYTID = trackYTID.length == 11;
+    final trackWordsText = _PhrasesQuery.toWordsText(trackFilenameWOExt);
+
+    bool isSureTrackVideo(String videoPath) {
+      var videoName = videoPath.getFilenameWOExt;
+      if (hasYTID) {
+        final ytIDMatches = _ytIDCandidateRegex.allMatches(videoName);
+        if (ytIDMatches.any((m) => m[1] == trackYTID)) return true;
+      }
+      while (true) {
+        final videoWordsText = _PhrasesQuery.toWordsText(videoName);
+        if (videoWordsText == trackWordsText) return true;
+        final trailingBrackets = _trailingBracketsRegex.firstMatch(videoName);
+        if (trailingBrackets == null) return false;
+        videoName = videoName.substring(0, trailingBrackets.start);
+      }
+    }
+
+    return videoPaths.where(isSureTrackVideo).toSet();
   }
 }
 
@@ -216,3 +257,96 @@ class ReverseSearchMatcher<T> {
     return mostSpecific;
   }
 }
+
+// by claude
+/// texts split at symbols into phrases. a name contains the query when every phrase is in it as consecutive words, in any order and without sharing words.
+class _PhrasesQuery {
+  final List<_Phrase> _phrases;
+  const _PhrasesQuery._(this._phrases);
+
+  static const _kUsedMark = '|';
+
+  factory _PhrasesQuery.fromTexts(List<String> texts) {
+    final phrases = <_Phrase>[];
+    final phraseBuffer = StringBuffer();
+
+    void addPhrase() {
+      if (phraseBuffer.isEmpty) return;
+      final words = phraseBuffer.toString();
+      phraseBuffer.clear();
+      final startCodeUnit = words.codeUnitAt(0);
+      final endCodeUnit = words.codeUnitAt(words.length - 1);
+      // -- cjk has no spaces between words, so a cjk edge can sit inside a longer run
+      final isStartCJK = SearchMatcher._isCJK(startCodeUnit);
+      final isEndCJK = SearchMatcher._isCJK(endCodeUnit);
+      final startPad = isStartCJK ? '' : ' ';
+      final endPad = isEndCJK ? '' : ' ';
+      phrases.add((text: '$startPad$words$endPad', usedMark: '$startPad$_kUsedMark$endPad'));
+    }
+
+    for (final text in texts) {
+      _loopWords(text, (word, isAfterSymbol) {
+        if (isAfterSymbol) addPhrase();
+        if (phraseBuffer.isNotEmpty) phraseBuffer.write(' ');
+        _writeWord(phraseBuffer, word);
+      });
+      addPhrase();
+    }
+    // -- longest first, so a short phrase can't take the words of a longer one containing it
+    phrases.sortByReverse((e) => e.text.length);
+    return _PhrasesQuery._(phrases);
+  }
+
+  bool isContainedIn(String wordsText) {
+    var unusedWordsText = wordsText;
+    for (final phrase in _phrases) {
+      final index = unusedWordsText.indexOf(phrase.text);
+      if (index == -1) return false;
+      final endIndex = index + phrase.text.length;
+      unusedWordsText = unusedWordsText.replaceRange(index, endIndex, phrase.usedMark);
+    }
+    return true;
+  }
+
+  /// words of [text] separated by single spaces with a space on both ends, cjk is split from other scripts too.
+  static String toWordsText(String text) {
+    final buffer = StringBuffer(' ');
+    _loopWords(text, (word, _) {
+      _writeWord(buffer, word);
+      buffer.write(' ');
+    });
+    return buffer.toString();
+  }
+
+  static void _loopWords(String text, void Function(String word, bool isAfterSymbol) onWord) {
+    final cleaned = text.normalizeAccents.toLowerCase();
+    int previousEnd = 0;
+    bool isAfterSymbol = false;
+    for (final match in SearchMatcher._wordRegex.allMatches(cleaned)) {
+      final gap = cleaned.substring(previousEnd, match.start);
+      previousEnd = match.end;
+      if (gap.trim().isNotEmpty) isAfterSymbol = true;
+      var word = match[0]!;
+      if (word.contains("'")) {
+        word = word.replaceAll("'", '');
+        if (word.isEmpty) continue;
+      }
+      onWord(word, isAfterSymbol);
+      isAfterSymbol = false;
+    }
+  }
+
+  static void _writeWord(StringBuffer buffer, String word) {
+    if (!SearchMatcher._hasCJK(word)) return buffer.write(word);
+    bool? wasCJK;
+    for (int i = 0; i < word.length; i++) {
+      final codeUnit = word.codeUnitAt(i);
+      final isCJK = SearchMatcher._isCJK(codeUnit);
+      if (wasCJK != null && isCJK != wasCJK) buffer.write(' ');
+      buffer.writeCharCode(codeUnit);
+      wasCJK = isCJK;
+    }
+  }
+}
+
+typedef _Phrase = ({String text, String usedMark});

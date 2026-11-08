@@ -30,7 +30,6 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -400,6 +399,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       boundNamesByPath: _getM3UPlaylistsNamesByPath(),
       tracksDbInfo: AppPaths.TRACKS_DB_INFO,
       backupDirPath: AppDirs.M3UBackup,
+      storageRoots: kStoragePaths,
     );
     final resBoth = await M3UFiles._parseFiles.thready(params);
     final infoMap = resBoth.infoMap;
@@ -441,7 +441,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
 
   Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true, Map<String, List<String>> tagsForPaths = const {}}) async {
     try {
-      final allm3uPaths = forPaths.isEmpty ? await _listAllM3UFiles() : forPaths;
+      final allm3uPaths = forPaths.isEmpty ? await _listKnownM3UFiles() : forPaths;
 
       _ParseM3UPlaylistFilesResult? resBoth;
       if (allm3uPaths.isNotEmpty) {
@@ -458,6 +458,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
           boundNamesByPath: boundNamesByPath,
           tracksDbInfo: AppPaths.TRACKS_DB_INFO,
           backupDirPath: AppDirs.M3UBackup,
+          storageRoots: kStoragePaths,
         );
         resBoth = await M3UFiles._parseFiles.thready(params);
       }
@@ -580,18 +581,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     return combined ?? tags;
   }
 
-  Future<Set<String>> _listAllM3UFiles() async {
+  /// new files in the library folders come from [importListedM3UFiles].
+  Future<Set<String>> _listKnownM3UFiles() async {
     final ownDir = AppDirs.M3UPlaylists;
     final allPaths = <String>{};
-    if (settings.enableM3USyncStartup.value) {
-      final dirsFilterer = DirsFileFilterSimple(
-        extensions: NamidaFileExtensionsWrapper.m3u,
-      );
-      final result = await dirsFilterer.filter();
-      for (final path in result.allPaths) {
-        if (!p.isWithin(ownDir, path)) allPaths.add(path);
-      }
-    }
     // -- m3u playlists have no json copy, own folder must load regardless of indexer folders/setting
     try {
       await for (final entity in Directory(ownDir).list(recursive: true)) {
@@ -599,13 +592,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
         if (entity is File && NamidaFileExtensionsWrapper.m3u.isPathValid(path)) allPaths.add(path);
       }
     } catch (_) {}
-    // -- linked files outside the scanned folders, their playlists would be removed otherwise
+    // -- linked files, their playlists would be removed otherwise
     final unlistedSavedPaths = _m3uProperties.getSavedPaths().where((path) => !allPaths.contains(path)).toFixedList();
     final unlistedSavedPathsExist = await Future.wait(unlistedSavedPaths.map((path) => File(path).exists()));
     for (int i = 0; i < unlistedSavedPaths.length; i++) {
       if (unlistedSavedPathsExist[i]) allPaths.add(unlistedSavedPaths[i]);
     }
     return allPaths;
+  }
+
+  /// [m3uPaths] found by a library folders listing, only the ones that aren't playlists yet are imported.
+  Future<void> importListedM3UFiles(Set<String> m3uPaths) async {
+    if (m3uPaths.isEmpty) return;
+    await waitForM3UPlaylistsLoad;
+    final knownNamesByPath = _getM3UPlaylistsNamesByPath();
+    final ownDir = AppDirs.M3UPlaylists;
+    final newPaths = m3uPaths.where((path) => !knownNamesByPath.containsKey(path) && !p.isWithin(ownDir, path)).toSet();
+    if (newPaths.isEmpty) return;
+    await prepareM3UPlaylists(forPaths: newPaths);
+  }
+
+  /// the listing imports new files through [importListedM3UFiles].
+  Future<void> refreshM3UPlaylists() async {
+    await prepareM3UPlaylists();
+    if (settings.enableM3USyncStartup.value) await Indexer.inst.getAudioFiles();
   }
 
   /// writes like [importSyncedPlaylists], so m3u files follow the sync rules and no permission gets asked.

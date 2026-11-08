@@ -26,6 +26,7 @@ import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -700,7 +701,7 @@ class CustomBlurryDialog extends StatelessWidget {
     final actionsTopPaddingAfterContent = (_kContentToActionsGap - contentBottomPadding).withMinimum(0.0);
     final actionsTopPadding = contentBottomPadding == 0.0 ? _kActionsTopPaddingWithoutContentPadding : actionsTopPaddingAfterContent;
     return Center(
-      child: SmoothSingleChildScrollView(
+      child: _DialogScrollView(
         child: Dialog(
           backgroundColor: ctxth.dialogTheme.backgroundColor,
           surfaceTintColor: Colors.transparent,
@@ -852,6 +853,55 @@ class CustomBlurryDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _DialogScrollView extends StatelessWidget {
+  final Widget child;
+
+  const _DialogScrollView({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return SmoothSingleChildScrollView(
+      child: _RevealAboveKeyboard(
+        child: child,
+      ),
+    );
+  }
+}
+
+// -- the dialog scroll view reaches under the keyboard, focused fields wouldn't scroll above it otherwise
+class _RevealAboveKeyboard extends SingleChildRenderObjectWidget {
+  const _RevealAboveKeyboard({required super.child});
+
+  @override
+  _RenderRevealAboveKeyboard createRenderObject(BuildContext context) {
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    return _RenderRevealAboveKeyboard(keyboardHeight);
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderRevealAboveKeyboard renderObject) {
+    renderObject.keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+  }
+}
+
+// by claude
+class _RenderRevealAboveKeyboard extends fr.RenderProxyBox {
+  double keyboardHeight;
+
+  _RenderRevealAboveKeyboard(this.keyboardHeight);
+
+  @override
+  void showOnScreen({fr.RenderObject? descendant, Rect? rect, Duration duration = Duration.zero, Curve curve = Curves.ease}) {
+    final keyboardHeight = this.keyboardHeight;
+    if (keyboardHeight > 0.0 && descendant != null) {
+      final descendantRect = rect ?? descendant.paintBounds;
+      final revealBottom = descendantRect.bottom + keyboardHeight;
+      rect = Rect.fromLTRB(descendantRect.left, descendantRect.top, descendantRect.right, revealBottom);
+    }
+    super.showOnScreen(descendant: descendant, rect: rect, duration: duration, curve: curve);
   }
 }
 
@@ -1027,6 +1077,7 @@ class NamidaButton extends StatelessWidget {
   final bool isMinimumSquared;
   final bool? tooltipPreferBelow;
   final bool isCentered;
+  final bool isGradient;
   final Axis direction;
   final CustomPainter Function(Color foregroundColor, double borderRadius)? foregroundPainterBuilder;
 
@@ -1057,11 +1108,13 @@ class NamidaButton extends StatelessWidget {
     this.isMinimumSquared = false,
     this.tooltipPreferBelow,
     this.isCentered = true,
+    this.isGradient = false,
     this.direction = Axis.horizontal,
     this.foregroundPainterBuilder,
   });
 
   static const double kDefaultMinHeight = 36.0;
+  static const _kGradientEndAccentOpacity = 0.2;
 
   static NamidaButtonPalette resolvePalette(NColorsData nColors, {required NamidaButtonColors colors, Color? colorScheme, bool opaqueBG = false}) {
     final (double colorSchemeOpacity, double bgOpacity, double borderOpacity, double foregroundOpacity) = switch (colors) {
@@ -1095,8 +1148,15 @@ class NamidaButton extends StatelessWidget {
     final palette = resolvePalette(nColors, colors: colors, colorScheme: this.colorScheme, opaqueBG: opaqueBG);
     final colorScheme = palette.colorScheme;
     final bgColor = palette.bg;
-    final borderColor = palette.border;
+    var borderColor = palette.border;
     final foregroundColor = palette.foreground;
+
+    LinearGradient? gradient;
+    if (isGradient) {
+      final accentColor = this.colorScheme ?? nColors.accent ?? CurrentColor.inst.color;
+      gradient = NamidaGradients.accentCard(scaffold: nColors.scaffold, accent: accentColor, isDarkMode: context.isDarkMode, endAccentOpacity: _kGradientEndAccentOpacity);
+      borderColor = accentColor.withOpacityExt(0.5);
+    }
 
     final text = this.text;
     final icon = this.icon;
@@ -1184,7 +1244,8 @@ class NamidaButton extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       decoration: BoxDecoration(
-        color: bgColor,
+        color: gradient == null ? bgColor : null,
+        gradient: gradient,
         border: Border.all(
           width: 0.5,
           color: borderColor,
@@ -4288,6 +4349,27 @@ class NoResultsWidget extends StatelessWidget {
   }
 }
 
+abstract class NamidaGradients {
+  /// the logo card look, a darker blend of [scaffold] at the top left fading into more [accent] at the bottom right.
+  static LinearGradient accentCard({
+    required Color scaffold,
+    required Color accent,
+    required bool isDarkMode,
+    double endAccentOpacity = 0.35,
+    double opacity = 1.0,
+  }) {
+    final scaffoldBgColor = Color.alphaBlend(scaffold.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
+    final endScaffoldOpacity = 1.0 - endAccentOpacity;
+    final beginColor = Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), accent).withOpacityExt(opacity);
+    final endColor = Color.alphaBlend(scaffoldBgColor.withOpacityExt(endScaffoldOpacity), accent).withOpacityExt(opacity);
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [beginColor, endColor],
+    );
+  }
+}
+
 class NamidaLogoContainer extends StatelessWidget {
   final double? width, height;
   final double iconSize;
@@ -4314,7 +4396,6 @@ class NamidaLogoContainer extends StatelessWidget {
     final nColors = NColorsData.targetOf(context);
     final isDarkMode = context.isDarkMode;
     final colorScheme = CurrentColor.inst.color;
-    final scaffoldBgColor = Color.alphaBlend(nColors.scaffold.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
     const foregroundColorOpacity = 0.8;
     final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), nColors.onSurface).withOpacityExt(foregroundColorOpacity);
     return NamidaInkWell(
@@ -4335,14 +4416,7 @@ class NamidaLogoContainer extends StatelessWidget {
         border: Border.all(
           color: colorScheme.withOpacityExt(0.5),
         ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(1.0),
-            Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(1.0),
-          ],
-        ),
+        gradient: NamidaGradients.accentCard(scaffold: nColors.scaffold, accent: colorScheme, isDarkMode: isDarkMode),
         boxShadow: [
           lighterShadow
               ? BoxShadow(
@@ -6679,13 +6753,13 @@ class _DelayedAnimatedShowState extends State<DelayedAnimatedShow> {
 class QueueUtilsRow extends StatelessWidget {
   final String Function(int number) itemsKeyword;
   final void Function() onAddItemsTap;
-  final Widget scrollQueueWidget;
+  final QueueScrollFollower queueFollower;
 
   const QueueUtilsRow({
     super.key,
     required this.itemsKeyword,
     required this.onAddItemsTap,
-    required this.scrollQueueWidget,
+    required this.queueFollower,
   });
 
   @override
@@ -6697,6 +6771,7 @@ class QueueUtilsRow extends StatelessWidget {
         NamidaButton(
           tooltip: () => lang.remove,
           icon: Broken.broom,
+          isGradient: true,
           onTap: () {
             void removedSnack(int removedCount) => snackyy(
               top: false,
@@ -6745,10 +6820,19 @@ class QueueUtilsRow extends StatelessWidget {
         NamidaButton(
           tooltip: () => lang.newTracksAdd,
           icon: Broken.add_circle,
+          isGradient: true,
           onTap: () => onAddItemsTap(),
         ),
         const SizedBox(width: 6.0),
-        scrollQueueWidget,
+        ObxO(
+          rx: queueFollower.arrowIcon,
+          builder: (context, arrowIcon) => NamidaButton(
+            tooltip: () => lang.jump,
+            icon: arrowIcon,
+            isGradient: true,
+            onTap: queueFollower.animateToCurrentItem,
+          ),
+        ),
         const SizedBox(width: 6.0),
         const _QueueShuffleButton(),
         const SizedBox(width: 12.0),
@@ -9283,6 +9367,7 @@ class _QueueShuffleButton extends StatelessWidget {
           text: lang.shuffle,
           icon: Broken.shuffle,
           colors: shuffleQueue ? NamidaButtonColors.selected : NamidaButtonColors.normal,
+          isGradient: !shuffleQueue,
           foregroundPainterBuilder: edgesPainterBuilder,
           onTap: () => _onTap(context),
           onLongPress: () => _showModesMenu(context),

@@ -42,7 +42,9 @@ class _TagsExtractorAndroid extends TagsExtractor {
 
     if (artwork == null || !artwork.hasArtwork) {
       // since normal artworks require data to build a filename, we here fallback to filename of original path.
-      final possibleFile = FileParts.join(AppDirs.ARTWORKS, '${path.getFilename}.png');
+      final filename = path.getFilename;
+      final artworkKey = TagsExtractor.defaultUniqueArtworkHash ? '${filename}_${path.toFastHashKey()}' : filename;
+      final possibleFile = FileParts.join(AppDirs.ARTWORKS, '$artworkKey.png');
       final bytesValue = info?['artwork'];
       final bytes = bytesValue is Uint8List ? bytesValue : null;
       artwork = FArtwork(file: possibleFile, bytes: bytes);

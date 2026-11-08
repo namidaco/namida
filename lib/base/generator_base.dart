@@ -30,6 +30,8 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     return items;
   }
 
+  static const _kDefaultMaxRandomItems = 500;
+
   static Iterable<R> getRandomItems<R>(List<R> list, {R? exclude, int? min, int? max, math.Random? random}) {
     final itemslist = list;
     final itemslistLength = itemslist.length;
@@ -41,8 +43,8 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
       max = null;
       min = null;
     }
-    min ??= itemslistLength ~/ 12;
-    max ??= itemslistLength ~/ 8;
+    max ??= (itemslistLength ~/ 8).withMaximum(_kDefaultMaxRandomItems);
+    min ??= max * 2 ~/ 3;
 
     // number of resulting tracks.
     final range = max - min;

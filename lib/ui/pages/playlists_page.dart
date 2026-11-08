@@ -398,7 +398,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         },
         onPointerUp: (event) => onRefresh(
           () => Future.wait([
-            PlaylistController.inst.prepareM3UPlaylists(),
+            PlaylistController.inst.refreshM3UPlaylists(),
             Indexer.inst.refreshServerPlaylists(),
           ]),
         ),
@@ -603,15 +603,19 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       child: NamidaHero(
                                         enabled: enableTopSectionHero,
                                         tag: 'DPC_queues',
-                                        child: Obx(
-                                          (context) => DefaultPlaylistCard(
-                                            colorScheme: Colors.blue,
-                                            icon: Broken.driver,
-                                            title: lang.queues,
-                                            displayLoadingIndicator: !QueueController.inst.isQueuesLoaded,
-                                            text: QueueController.inst.totalQueuesCount.valueR.formatDecimal(),
-                                            onTap: const QueuesPage().navigate,
-                                          ),
+                                        child: ObxO(
+                                          rx: QueueController.inst.totalQueuesCount,
+                                          builder: (context, queuesCount) {
+                                            final queuesCountText = queuesCount?.formatDecimal() ?? '';
+                                            return DefaultPlaylistCard(
+                                              colorScheme: Colors.blue,
+                                              icon: Broken.driver,
+                                              title: lang.queues,
+                                              displayLoadingIndicator: queuesCount == null,
+                                              text: queuesCountText,
+                                              onTap: const QueuesPage().navigate,
+                                            );
+                                          },
                                         ),
                                       ),
                                     ),
