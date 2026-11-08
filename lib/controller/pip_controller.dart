@@ -35,8 +35,6 @@ class PipController {
     _onContentsChanged();
   }
 
-  bool isLyricsEnabled() => settings.pipContents.value.contains(PipContent.lyrics);
-
   void onVideoInfoChanged() => _refresh();
 
   void _onContentsChanged() {
@@ -46,9 +44,11 @@ class PipController {
     if (shouldListenToLyrics != _isListeningToLyrics) {
       _isListeningToLyrics = shouldListenToLyrics;
       if (shouldListenToLyrics) {
+        settings.enableLyrics.addListener(_refresh);
         Lyrics.inst.currentLyricsLRC.addListener(_refresh);
         Lyrics.inst.isResolvingLyrics.addListener(_refresh);
       } else {
+        settings.enableLyrics.removeListener(_refresh);
         Lyrics.inst.currentLyricsLRC.removeListener(_refresh);
         Lyrics.inst.isResolvingLyrics.removeListener(_refresh);
       }
@@ -113,7 +113,7 @@ class PipController {
       if (videoRatio != null) return (PipContent.video, videoRatio);
       if (isLoadingItem) return null;
     }
-    if (contents.contains(PipContent.lyrics)) {
+    if (contents.contains(PipContent.lyrics) && settings.enableLyrics.value) {
       if (Lyrics.inst.currentLyricsLRC.value != null) return (PipContent.lyrics, _kLyricsRatio);
       if (isLoadingItem || Lyrics.inst.isResolvingLyrics.value) return null;
     }

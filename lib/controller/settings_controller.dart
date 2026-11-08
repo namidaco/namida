@@ -342,6 +342,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final stretchLyricsDuration = _key('stretchLyricsDuration', true);
   late final visualDelayMS = _key('visualDelayMS', 0);
   late final lyricsEditorLatencyMS = _key('lyricsEditorLatencyMS', 0, sync: false);
+  late final lyricsEditorFontScale = _key('lyricsEditorFontScale', 1.0, sync: false);
   late final timeCapsuleYears = _key<int?>('timeCapsuleYears', null);
 
   late final playlistAddTracksAtBeginning = _key('playlistAddTracksAtBeginning', false);

@@ -35,6 +35,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/font_scale_stepper.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 part 'lyrics_editor_page.dialogs.dart';
@@ -70,7 +71,10 @@ class LyricsEditorPage extends StatefulWidget {
 }
 
 class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerProviderStateMixin {
-  static const _kRowExtent = 50.0;
+  static const _kRowMinExtent = 50.0;
+
+  /// the row padding and the selection border.
+  static const _kRowChromeHeight = 7.0;
   static const _kWideLayoutMinWidth = 820.0;
   static const _kSeekStepMS = 2000;
   static const _kNudgeStepMS = 50;
@@ -144,7 +148,42 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     Player.inst.isPlaying.addListener(_onPlayingChanged);
     Player.inst.nowPlayingPosition.addListener(_onPlayerPositionChanged);
     FocusManager.instance.addListener(_onPrimaryFocusChanged);
+    settings.lyricsEditorFontScale.addListener(_onFontScaleChanged);
     _load();
+  }
+
+  /// fits two lines of text at the current font scale, rows keep a fixed height so scrolling to a line stays simple.
+  var _rowExtent = _kRowMinExtent;
+
+  /// the app text scale with [settings.lyricsEditorFontScale] on top, for the lines list.
+  var _linesTextScaler = TextScaler.noScaling;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshLinesTextScale();
+  }
+
+  void _onFontScaleChanged() => refreshState(_refreshLinesTextScale);
+
+  void _refreshLinesTextScale() {
+    final appTextScaler = MediaQuery.textScalerOf(context);
+    final fontScale = settings.lyricsEditorFontScale.value;
+    final textScaler = fontScale == 1.0 ? appTextScaler : _ScaledTextScaler(appTextScaler, fontScale);
+    _linesTextScaler = textScaler;
+    _rowExtent = _computeRowExtent(context, textScaler);
+  }
+
+  static double _computeRowExtent(BuildContext context, TextScaler textScaler) {
+    final painter = TextPainter(
+      text: TextSpan(text: 'A\nA', style: NText.medium.of(context)),
+      textDirection: TextDirection.ltr,
+      textScaler: textScaler,
+    )..layout();
+    final twoLinesHeight = painter.height;
+    painter.dispose();
+    final rowExtent = twoLinesHeight + _kRowChromeHeight;
+    return rowExtent.withMinimum(_kRowMinExtent);
   }
 
   @override
@@ -154,6 +193,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     Player.inst.isPlaying.removeListener(_onPlayingChanged);
     Player.inst.nowPlayingPosition.removeListener(_onPlayerPositionChanged);
     FocusManager.instance.removeListener(_onPrimaryFocusChanged);
+    settings.lyricsEditorFontScale.removeListener(_onFontScaleChanged);
     _ticker.dispose();
     _nudgeRepeatTimer?.cancel();
     if (_draftTimer != null) _writeDraft();
@@ -440,9 +480,10 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     final viewportHeight = position.viewportDimension;
-    final rowTop = index * _kRowExtent;
+    final rowExtent = _rowExtent;
+    final rowTop = index * rowExtent;
     final comfortTop = position.pixels + viewportHeight * 0.15;
-    final comfortBottom = position.pixels + viewportHeight * 0.65 - _kRowExtent;
+    final comfortBottom = position.pixels + viewportHeight * 0.65 - rowExtent;
     if (rowTop >= comfortTop && rowTop <= comfortBottom) return;
     final targetPre = rowTop - viewportHeight * 0.3;
     final target = targetPre.withMinimum(position.minScrollExtent).withMaximum(position.maxScrollExtent);
@@ -846,4 +887,25 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
       ),
     );
   }
+}
+
+/// [base] scaled by [factor] on top.
+class _ScaledTextScaler extends TextScaler {
+  final TextScaler base;
+  final double factor;
+
+  const _ScaledTextScaler(this.base, this.factor);
+
+  @override
+  double scale(double fontSize) => base.scale(fontSize) * factor;
+
+  @override
+  // ignore: deprecated_member_use
+  double get textScaleFactor => base.textScaleFactor * factor;
+
+  @override
+  bool operator ==(Object other) => other is _ScaledTextScaler && other.base == base && other.factor == factor;
+
+  @override
+  int get hashCode => Object.hash(base, factor);
 }

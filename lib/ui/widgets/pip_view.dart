@@ -93,6 +93,7 @@ class _PipLyrics extends StatelessWidget {
               softWrap: true,
               fitToWidth: true,
               maxSecondaryLines: 2,
+              wrapSecondaryLines: true,
               style: style,
             ),
           ),

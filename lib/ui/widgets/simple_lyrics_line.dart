@@ -28,6 +28,9 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   /// translations/romanizations sharing the line's timestamp, one smaller line each below it.
   final int maxSecondaryLines;
 
+  /// lets secondary lines wrap into the height left below the primary line, needs [fitToWidth].
+  final bool wrapSecondaryLines;
+
   /// word synced lines sweep word by word, others get a short reveal or a whole-line sweep. false keeps plain text.
   final bool karaoke;
 
@@ -42,8 +45,9 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     this.stretchToItemDuration = true,
     this.fitToWidth = false,
     this.maxSecondaryLines = _defaultMaxSecondaryLines,
+    this.wrapSecondaryLines = false,
     this.karaoke = true,
-  });
+  }) : assert(!wrapSecondaryLines || fitToWidth);
 
   static const shrinkFactor = 0.875;
   static const _lineHeightFactor = 1.3;
@@ -111,6 +115,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   Locale? _fitLocale;
   TextStyle? _fitResultStyle;
   int _fitResultMaxLines = 1;
+  double _fitResultHeight = double.infinity;
 
   void _resolveFit(LrcLine line, String text, double maxWidth, TextDirection direction, TextScaler scaler, Locale? locale) {
     final style = widget.style;
@@ -128,6 +133,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     if (!maxWidth.isFinite) {
       _fitResultStyle = fittedStyle;
       _fitResultMaxLines = maxLines;
+      _fitResultHeight = double.infinity;
       return;
     }
 
@@ -148,13 +154,28 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     if (fits(fittedStyle, maxLines)) {
       _fitResultStyle = fittedStyle;
       _fitResultMaxLines = maxLines;
+      _fitResultHeight = painter.height;
     } else {
       final fontSize = (fittedStyle.fontSize ?? 14.0) * SimpleLyricsLineWidget.shrinkFactor;
       final small = fittedStyle.copyWith(fontSize: fontSize);
       _fitResultStyle = small;
-      _fitResultMaxLines = fits(small, maxLines) ? maxLines : maxLines + 1;
+      if (fits(small, maxLines)) {
+        _fitResultMaxLines = maxLines;
+        _fitResultHeight = painter.height;
+      } else {
+        _fitResultMaxLines = maxLines + 1;
+        _fitResultHeight = scaler.scale(fontSize) * SimpleLyricsLineWidget._lineHeightFactor * _fitResultMaxLines;
+      }
     }
     painter.dispose();
+  }
+
+  int _getSecondaryLinesBudget(double maxHeight, TextScaler scaler) {
+    final fontSize = widget.style?.fontSize ?? 14.0;
+    final secondaryLineHeight = scaler.scale(fontSize * SimpleLyricsLineWidget._secondaryFontFactor) * SimpleLyricsLineWidget._lineHeightFactor;
+    final heightLeft = maxHeight - _fitResultHeight;
+    if (!heightLeft.isFinite) return 0;
+    return (heightLeft / secondaryLineHeight).floor();
   }
 
   @override
@@ -254,54 +275,49 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
           final direction = line.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
           final secondaryLines = _secondaryLinesOf(line);
           final lineEnd = _nextLineStartOf(line);
-          final primaryKey = secondaryLines.isEmpty ? key : null;
-          final primary = widget.fitToWidth
+          child = widget.fitToWidth
               ? LayoutBuilder(
-                  key: primaryKey,
+                  key: key,
                   builder: (context, constraints) {
                     final textScaler = MediaQuery.textScalerOf(context);
                     final locale = Localizations.maybeLocaleOf(context);
                     _resolveFit(line, text, constraints.maxWidth, direction, textScaler, locale);
                     final maxLines = _fitResultMaxLines;
-                    return _PrimaryLine(
-                      line: line,
-                      lineEnd: lineEnd,
-                      style: _fitResultStyle,
+                    final secondaryLinesBudget = widget.wrapSecondaryLines && secondaryLines.isNotEmpty ? _getSecondaryLinesBudget(constraints.maxHeight, textScaler) : 0;
+                    return _LinesBlock(
+                      primary: _PrimaryLine(
+                        line: line,
+                        lineEnd: lineEnd,
+                        style: _fitResultStyle,
+                        textAlign: widget.textAlign,
+                        textDirection: direction,
+                        maxLines: maxLines,
+                        softWrap: widget.softWrap || maxLines > widget.maxLines,
+                        karaoke: _karaokeEffects,
+                      ),
+                      secondaryLines: secondaryLines,
+                      secondaryLinesBudget: secondaryLinesBudget,
+                      baseStyle: widget.style,
                       textAlign: widget.textAlign,
-                      textDirection: direction,
-                      maxLines: maxLines,
-                      softWrap: widget.softWrap || maxLines > widget.maxLines,
-                      karaoke: _karaokeEffects,
                     );
                   },
                 )
-              : _PrimaryLine(
-                  key: primaryKey,
-                  line: line,
-                  lineEnd: lineEnd,
-                  style: widget.style,
-                  textAlign: widget.textAlign,
-                  textDirection: direction,
-                  maxLines: widget.maxLines,
-                  softWrap: widget.softWrap,
-                  karaoke: _karaokeEffects,
-                );
-          child = secondaryLines.isEmpty
-              ? primary
-              : Column(
+              : _LinesBlock(
                   key: key,
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    primary,
-                    ...secondaryLines.map(
-                      (e) => _SecondaryLine(
-                        line: e,
-                        baseStyle: widget.style,
-                        textAlign: widget.textAlign,
-                      ),
-                    ),
-                  ],
+                  primary: _PrimaryLine(
+                    line: line,
+                    lineEnd: lineEnd,
+                    style: widget.style,
+                    textAlign: widget.textAlign,
+                    textDirection: direction,
+                    maxLines: widget.maxLines,
+                    softWrap: widget.softWrap,
+                    karaoke: _karaokeEffects,
+                  ),
+                  secondaryLines: secondaryLines,
+                  secondaryLinesBudget: 0,
+                  baseStyle: widget.style,
+                  textAlign: widget.textAlign,
                 );
         }
         return AnimatedSwitcher(
@@ -324,7 +340,6 @@ class _PrimaryLine extends StatelessWidget {
   final LyricsEffects? karaoke;
 
   const _PrimaryLine({
-    super.key,
     required this.line,
     required this.lineEnd,
     required this.style,
@@ -368,15 +383,61 @@ class _PrimaryLine extends StatelessWidget {
   }
 }
 
+class _LinesBlock extends StatelessWidget {
+  final Widget primary;
+  final List<LrcLine> secondaryLines;
+  final int secondaryLinesBudget;
+  final TextStyle? baseStyle;
+  final TextAlign textAlign;
+
+  const _LinesBlock({
+    super.key,
+    required this.primary,
+    required this.secondaryLines,
+    required this.secondaryLinesBudget,
+    required this.baseStyle,
+    required this.textAlign,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (secondaryLines.isEmpty) return primary;
+    final secondaryCount = secondaryLines.length;
+    final linesPerSecondary = secondaryLinesBudget ~/ secondaryCount;
+    final extraLinesCount = secondaryLinesBudget % secondaryCount;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        primary,
+        ...secondaryLines.indexed.map(
+          (e) {
+            final (index, secondaryLine) = e;
+            final maxLines = index < extraLinesCount ? linesPerSecondary + 1 : linesPerSecondary;
+            return _SecondaryLine(
+              line: secondaryLine,
+              baseStyle: baseStyle,
+              textAlign: textAlign,
+              maxLines: maxLines.withMinimum(1),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class _SecondaryLine extends StatelessWidget {
   final LrcLine line;
   final TextStyle? baseStyle;
   final TextAlign textAlign;
+  final int maxLines;
 
   const _SecondaryLine({
     required this.line,
     required this.baseStyle,
     required this.textAlign,
+    required this.maxLines,
   });
 
   @override
@@ -395,8 +456,8 @@ class _SecondaryLine extends StatelessWidget {
       style: secondaryStyle,
       textAlign: textAlign,
       textDirection: line.isRTL == true ? TextDirection.rtl : TextDirection.ltr,
-      maxLines: 1,
-      softWrap: false,
+      maxLines: maxLines,
+      softWrap: maxLines > 1,
       overflow: TextOverflow.fade,
     );
   }

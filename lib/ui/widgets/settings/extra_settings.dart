@@ -14,7 +14,6 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
-import 'package:namida/controller/pip_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
@@ -2351,8 +2350,6 @@ class _PipContentsTile extends StatelessWidget {
     settings.pipContents.update((value) {
       if (!value.remove(content)) value.add(content);
     });
-    final isLyricsEnabled = PipController.inst.isLyricsEnabled();
-    if (content == PipContent.lyrics && isLyricsEnabled) ExtrasSettings._refreshCurrentLyrics();
   }
 
   static List<NamidaPopupItem> _items() {

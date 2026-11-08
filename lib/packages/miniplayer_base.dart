@@ -46,6 +46,7 @@ import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/focused_menu.dart';
+import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -384,6 +385,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   }
 
   static AnimationController get getsAnim => MiniPlayerController.inst.sAnim;
+
+  static LyricsLRCParsedViewState? get _visibleLyricsView => MiniPlayerController.inst.isMinimized ? null : Lyrics.inst.lrcViewKey.currentState;
 
   final leftOpacityAnim = Tween<double>(
     begin: 0.0,
@@ -904,7 +907,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               currentImage = TapDetector(
                 onTap: () {
                   // -- taps missing a lyrics line (gaps, mid-scroll, faded out) belong to the lyrics
-                  final isShowingLyricsView = Lyrics.inst.lrcViewKey.currentState != null;
+                  final isShowingLyricsView = _visibleLyricsView != null;
                   final hasLyrics = Lyrics.inst.currentLyricsLRC.value != null || Lyrics.inst.currentLyricsText.value.text.isNotEmpty;
                   if (isShowingLyricsView && hasLyrics) return;
                   settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI);
@@ -915,7 +918,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             currentImage = LongPressDetector(
               onLongPress: () {
-                final lrcState = Lyrics.inst.lrcViewKey.currentState;
+                final lrcState = _visibleLyricsView;
                 if (lrcState != null) {
                   lrcState.enterFullScreen();
                   return;

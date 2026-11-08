@@ -39,6 +39,19 @@ extension _LyricsEditorDialogs on _LyricsEditorPageState {
         title: '${lang.latency}: ${latencyMS}ms',
         onTap: _showLatencyDialog,
       ),
+      NamidaPopupItem(
+        icon: Broken.text,
+        title: lang.fontScale,
+        popOnTap: false,
+        onTap: () {},
+        trailing: FontScaleStepper(
+          readScaleR: () => settings.lyricsEditorFontScale.valueR,
+          onChanged: settings.lyricsEditorFontScale.save,
+          onReset: settings.lyricsEditorFontScale.reset,
+          minScale: LyricsLRCParsedView.minFontScale,
+          maxScale: LyricsLRCParsedView.maxFontScale,
+        ),
+      ),
       if (isDesktop)
         NamidaPopupItem(
           icon: Broken.keyboard,

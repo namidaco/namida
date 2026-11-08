@@ -61,7 +61,7 @@ class Lyrics {
   final isResolvingLyrics = false.obs;
 
   bool get _lyricsViewsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
-  bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive || PipController.inst.isLyricsEnabled();
+  bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive;
   EmbeddedLyricsPriority get _embeddedLyricsPriority => settings.embeddedLyricsPriority.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 

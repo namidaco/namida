@@ -56,6 +56,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final Widget? bottomPadding;
   final SettingsKey<double>? fontScaleKey;
   final bool insideMiniplayerCard;
+  final bool fadesWithMiniplayer;
   final bool fadeOnEmptyLine;
   final bool showJumpButton;
   final double? baseFontSize;
@@ -77,6 +78,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.blurColorMaskOpacity = 0.6,
     this.fontScaleKey,
     this.insideMiniplayerCard = false,
+    this.fadesWithMiniplayer = false,
     this.fadeOnEmptyLine = true,
     this.showJumpButton = false,
     this.baseFontSize,
@@ -627,7 +629,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     final bottomControlsChildren = fullscreen ? const [PlayerTransportControls()] : null;
 
     final pagePaddingHorizontal = fullscreen ? 0.0 : 24.0;
-    late final mpAnimation = NamidaMiniPlayerBase.clampedAnimationBCP;
+    late final mpAnimation = widget.fadesWithMiniplayer ? NamidaMiniPlayerBase.clampedAnimationBCP : kAlwaysCompleteAnimation;
 
     final videoOrImageChild = fullscreen
         ? Positioned.fill(

@@ -1092,6 +1092,7 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                           maxWidth: lyricsMaxSize.width,
                           maxHeight: lyricsMaxSize.height,
                           insideMiniplayerCard: true,
+                          fadesWithMiniplayer: true,
                           canHoldToCopyLine: false,
                           visibilityNotifier: Lyrics.inst.lrcOverlayVisibility,
                         ),

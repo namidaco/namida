@@ -364,6 +364,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     stretchLyricsDuration,
     visualDelayMS,
     lyricsEditorLatencyMS,
+    lyricsEditorFontScale,
     timeCapsuleYears,
     playlistAddTracksAtBeginning,
     playlistAddTracksAtBeginningYT,

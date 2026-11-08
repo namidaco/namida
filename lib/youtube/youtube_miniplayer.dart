@@ -325,6 +325,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                   blurColorMaskOpacity: 0.75,
                                   useSafeArea: false,
                                   isFullScreenView: true,
+                                  fadesWithMiniplayer: true,
                                   canShowToggleFullscreenButton: false,
                                   verticalPadding: 64.0,
                                   bottomPadding: const SizedBox(height: kYTQueueSheetMinHeight),
