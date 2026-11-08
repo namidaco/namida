@@ -151,6 +151,18 @@ class QueueController {
     await _saveQueueToStorage(queue);
   }
 
+  /// the returned function undoes the latest queue changes made after this call.
+  Future<void> Function() createLatestQueueRestorer() {
+    final previousDate = _latestAddedQueueDate;
+    final previousQueue = _latestQueueInMap;
+    return () async {
+      final latestQueue = _latestQueueInMap;
+      if (latestQueue != null && latestQueue.date != previousDate) await removeQueue(latestQueue);
+      if (previousQueue != null && queuesMap.value[previousQueue.date] != previousQueue) await reAddQueue(previousQueue);
+      _latestAddedQueueDate = previousDate;
+    };
+  }
+
   void _updateMap(Queue queue, [int? date]) {
     date ??= queue.date;
     queuesMap.value[date] = queue;

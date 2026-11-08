@@ -178,6 +178,9 @@ class _FakePlayer implements Player {
   bool get isBufferingR => false;
 
   @override
+  bool get isCurrentItemLive => false;
+
+  @override
   void updateNumberOfRepeats(int newNumber) {}
 
   @override

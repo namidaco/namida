@@ -65,6 +65,18 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
   // -- sort of a hack to prevent saving to db while restoring defaults
   bool _saveToDbForCurrentItemConfig = true;
 
+  Future<void> _restoreGlobalDefaults() async {
+    await _slidersWidgetGlobalKey.currentState?.applyConfig(_ConfigPresetsRow.globalDefaultConfig);
+  }
+
+  Future<void> _restoreItemDefaults(Playable item) async {
+    _saveToDbForCurrentItemConfig = false;
+    final globalConfig = Player.inst.getDefaultPlayerConfig(item);
+    await _slidersWidgetPerItemKey.currentState?.applyConfig(globalConfig);
+    await Player.audioConfigs.delete(item.key);
+    _saveToDbForCurrentItemConfig = true;
+  }
+
   @override
   Widget build(BuildContext context) {
     var initialIndex = settings.extra.audioConfigPageIndex.value ?? 0;
@@ -95,6 +107,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
             verticalInBetweenPadding: widget.verticalInBetweenPadding,
             tapToUpdate: widget.tapToUpdate,
             updateConfig: _SoundControlMainSlidersColumnUpdateConfig.global(),
+            onRestoreDefaults: _restoreGlobalDefaults,
           ),
         ),
         SplitPageInfo(
@@ -147,6 +160,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
                             speedRx: speedRx,
                             pitchRx: pitchRx,
                           ),
+                          onRestoreDefaults: () => _restoreItemDefaults(currentItem),
                           forceUseGlobalConfigResetWidget: Obx((context) {
                             final currentConfig = Player.audioConfigs.map.valueR[currentItem.key];
                             final canReset = currentConfig != null;
@@ -162,13 +176,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
                                   Broken.refresh,
                                   size: 20.0,
                                 ),
-                                onPressed: () async {
-                                  _saveToDbForCurrentItemConfig = false;
-                                  final globalConfig = Player.inst.getDefaultPlayerConfig(currentItem);
-                                  await _slidersWidgetPerItemKey.currentState?.applyConfig(globalConfig);
-                                  await Player.audioConfigs.delete(currentItem.key);
-                                  _saveToDbForCurrentItemConfig = true;
-                                },
+                                onPressed: () => _restoreItemDefaults(currentItem),
                               ),
                             );
                           }),
@@ -396,6 +404,7 @@ class _SoundControlMainSlidersColumnBase extends StatefulWidget {
   final double verticalInBetweenPadding;
   final bool tapToUpdate;
   final _SoundControlMainSlidersColumnUpdateConfig updateConfig;
+  final Future<void> Function() onRestoreDefaults;
 
   const _SoundControlMainSlidersColumnBase({
     required super.key,
@@ -406,6 +415,7 @@ class _SoundControlMainSlidersColumnBase extends StatefulWidget {
     required this.verticalInBetweenPadding,
     required this.tapToUpdate,
     required this.updateConfig,
+    required this.onRestoreDefaults,
   });
 
   @override
@@ -593,7 +603,9 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
               children: [
                 _ConfigPresetsRow(
                   config: widget.updateConfig,
+                  currentItem: widget.currentItem,
                   onApply: applyConfig,
+                  onRestoreDefaults: widget.onRestoreDefaults,
                 ),
                 const _ForcedOffBanner(),
                 if (NamidaFeaturesVisibility.skipSilenceAvailable)

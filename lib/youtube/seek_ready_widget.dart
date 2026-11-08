@@ -146,6 +146,8 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   void _onDragStartSimple({bool fromTap = false}) {
     widget.onDraggingChange?.call(true);
     _isPointerDown = true;
+    _frozenPositionMS = null;
+    _currentSeekStuckWord = '';
 
     if (fromTap) {
       // display stuff only if still touching.
@@ -166,6 +168,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
 
   void _onDragFinish({required bool allowMagnet}) {
     widget.onDraggingChange?.call(false);
+    _frozenPositionMS = Player.inst.nowPlayingPosition.value;
 
     if (allowMagnet) _seekPercentage.value = SeekMagnet.snapPercentage(_seekPercentage.value, _defaultSeekLeftMagnet);
 
@@ -174,7 +177,6 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     if (_dragUpToCancel < _dragUpToCancelMax) _onSeekEnd();
     _dragUpToCancel = 0.0;
 
-    _currentSeekStuckWord = '';
     _dragToSeek = true;
   }
 
@@ -187,6 +189,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   }
 
   bool _isPointerDown = false;
+  int? _frozenPositionMS;
 
   bool get _isMiniplayerExpanded => MiniPlayerController.inst.animation.value >= 0.95;
 
@@ -234,6 +237,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
 
   void onHorizontalDragCancel() {
     _isPointerDown = false;
+    _frozenPositionMS = Player.inst.nowPlayingPosition.value;
     _animation.animateTo(0);
     widget.onDraggingChange?.call(false);
   }
@@ -476,7 +480,8 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                         seekClamped = seekClamped.withMaximum(itemDurMS);
                         finalText = " ${seekClamped.milliSecondsLabel} ";
                       } else {
-                        final diffInMs = seek - Player.inst.nowPlayingPositionR;
+                        final positionMS = _frozenPositionMS ?? Player.inst.nowPlayingPositionR;
+                        final diffInMs = seek - positionMS;
                         final plusOrMinus = diffInMs < 0 ? '' : '+';
                         final seekText = diffInMs.milliSecondsLabel;
                         finalText = " $plusOrMinus$seekText ";

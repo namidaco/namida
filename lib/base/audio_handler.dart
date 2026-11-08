@@ -710,7 +710,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     await super.onQueueChanged();
     if (currentQueue.value.isEmpty) {
       CurrentColor.inst.resetCurrentPlayingTrack();
-      if (MiniPlayerController.inst.isInQueue) MiniPlayerController.inst.snapToMini();
+      // -- party clears etc dont snap the player back by themselves
+      final miniplayer = MiniPlayerController.inst;
+      miniplayer.snapToMini(haptic: miniplayer.isInQueue);
       // await pause();
       await [
         onDispose(),
@@ -797,10 +799,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     void Function(List<Q> finalizedQueue, List<int>? originalIndices)? onQueueDifferent,
     void Function(Q currentItem)? onAssigningCurrentItem,
     bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
-    void Function()? onRestructuringQueue,
+    void Function(QueueSnapshot<Q>? previousQueue)? onRestructuringQueue,
     Id Function(Q currentItem)? duplicateRemover,
   }) async {
     await beforeQueueAddOrInsert(queue);
+    final wasPlayWhenReady = playWhenReady.value;
     setPlayWhenReady(startPlaying);
     await super.assignNewQueue(
       playAtIndex: playAtIndex,
@@ -809,13 +812,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       shuffle: shuffle,
       shuffleKeepingItem: shuffleKeepingItem,
       originalIndices: originalIndices,
-      onIndexAndQueueSame: onIndexAndQueueSame,
+      onIndexAndQueueSame: () {
+        // -- nothing new started, the current item keeps its play state
+        setPlayWhenReady(wasPlayWhenReady);
+        onIndexAndQueueSame?.call();
+      },
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
       onAssigningCurrentItem: onAssigningCurrentItem,
-      onRestructuringQueue: () {
+      onRestructuringQueue: (previousQueue) {
+        if (!startPlaying) setPlayWhenReady(wasPlayWhenReady);
         if (playWhenReady.value && !isPlaying.value) play();
         VibratorController.light();
+        onRestructuringQueue?.call(previousQueue);
       },
       canRestructureQueueOnly:
           canRestructureQueueOnly ??

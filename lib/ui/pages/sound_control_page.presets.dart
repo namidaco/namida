@@ -3,12 +3,34 @@ part of 'sound_control_page.dart';
 
 class _ConfigPresetsRow extends StatelessWidget {
   final _SoundControlMainSlidersColumnUpdateConfig config;
+  final Playable? currentItem;
   final Future<void> Function(PlayerConfig config) onApply;
+  final Future<void> Function() onRestoreDefaults;
 
   const _ConfigPresetsRow({
     required this.config,
+    required this.currentItem,
     required this.onApply,
+    required this.onRestoreDefaults,
   });
+
+  static final globalDefaultConfig = PlayerConfig(
+    skipSilence: settings.player.skipSilenceEnabled.fallback,
+    loudnessEnhancerEnabled: settings.equalizer.loudnessEnhancerEnabled.fallback,
+    loudnessEnhancer: settings.equalizer.loudnessEnhancer.fallback,
+    equalizerEnabled: settings.equalizer.equalizerEnabled.fallback,
+    equalizer: settings.equalizer.equalizer.fallback,
+    preset: settings.equalizer.preset.fallback,
+    speed: settings.player.speed.fallback,
+    volume: settings.player.volume.fallback,
+    pitch: settings.player.pitch.fallback,
+  );
+
+  bool _isDefaultR(PlayerConfig current) {
+    final currentItem = this.currentItem;
+    if (currentItem == null) return current == globalDefaultConfig;
+    return Player.audioConfigs.map.valueR[currentItem.key] == null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,23 +39,30 @@ class _ConfigPresetsRow extends StatelessWidget {
         final presets = settings.equalizer.configPresets.valueR;
         if (presets.isEmpty) return const SizedBox();
         final current = config.getCurrentConfigR();
-        final activePreset = presets.firstWhereEff((p) => p.config == current);
+        final isDefaultActive = _isDefaultR(current);
+        final activePreset = isDefaultActive ? null : presets.firstWhereEff((p) => p.config == current);
         return Align(
           alignment: AlignmentDirectional.centerStart,
           child: SmoothSingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 10.0).add(const EdgeInsets.only(bottom: 8.0)),
             child: Row(
-              children: presets
-                  .map(
-                    (preset) => _ConfigPresetChip(
-                      preset: preset,
-                      isActive: preset == activePreset,
-                      config: config,
-                      onTap: onApply,
-                    ),
-                  )
-                  .toFixedList(),
+              children: [
+                _ConfigPresetChipBox(
+                  icon: Broken.refresh,
+                  title: lang.defaultLabel,
+                  isActive: isDefaultActive,
+                  onTap: onRestoreDefaults,
+                ),
+                ...presets.map(
+                  (preset) => _ConfigPresetChip(
+                    preset: preset,
+                    isActive: preset == activePreset,
+                    config: config,
+                    onTap: onApply,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -91,19 +120,47 @@ class _ConfigPresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      openOnTap: false,
+      childrenDefault: _getMenuItems,
+      child: _ConfigPresetChipBox(
+        icon: Broken.layer,
+        title: preset.name,
+        isActive: isActive,
+        onTap: () => onTap(preset.config),
+      ),
+    );
+  }
+}
+
+class _ConfigPresetChipBox extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ConfigPresetChipBox({
+    required this.icon,
+    required this.title,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final itemsColor = isActive ? const NColors(.secondary, opacity: 0.9) : const NColors(.secondary, opacity: 0.6);
     final bgColor = isActive ? const NColors(.secondary, opacity: 0.18) : const NColors(.secondary, opacity: 0.0);
     final contentWidget = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         NIcon(
-          Broken.layer,
+          icon,
           size: 14.0,
           color: itemsColor,
         ),
         const SizedBox(width: 6.0),
         NamidaText(
-          preset.name,
+          title,
           style: NText.medium,
           color: itemsColor,
         ),
@@ -120,26 +177,22 @@ class _ConfigPresetChip extends StatelessWidget {
         ),
       ],
     );
-    return NamidaPopupWrapper(
-      openOnTap: false,
-      childrenDefault: _getMenuItems,
-      child: NBuilder(
-        selfAnimated: true,
-        builder: (context, colors) => NamidaInkWell(
-          animationDurationMS: 200,
-          bgColor: bgColor,
-          borderRadius: 8.0,
-          onTap: () => onTap(preset.config),
-          margin: const EdgeInsets.symmetric(horizontal: 2.0),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: colors.secondary.withOpacityExt(isActive ? 0.7 : 0.3),
-              width: 1.5,
-            ),
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) => NamidaInkWell(
+        animationDurationMS: 200,
+        bgColor: bgColor,
+        borderRadius: 8.0,
+        onTap: onTap,
+        margin: const EdgeInsets.symmetric(horizontal: 2.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: colors.secondary.withOpacityExt(isActive ? 0.7 : 0.3),
+            width: 1.5,
           ),
-          child: contentWidget,
         ),
+        child: contentWidget,
       ),
     );
   }

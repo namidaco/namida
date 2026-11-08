@@ -510,49 +510,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       ),
     );
 
-    final seekPositionTextChild = ObxO(
-      rx: MiniPlayerController.inst.seekValue,
-      builder: (context, seekNull) => NamidaAnimatedSwitcher(
-        key: const ValueKey('seek_switcher'),
-        firstChild: Obx(
-          (context) {
-            final seek = seekNull ?? 0;
-            final liveWindow = Player.inst.currentLiveWindow.valueR;
-            if (liveWindow != null && liveWindow.isAtEdge(seek)) {
-              return const Icon(
-                Broken.radar_1,
-                size: 16.0,
-              );
-            }
-            String finalText;
-            if (liveWindow != null) {
-              final behindMS = liveWindow.behindEdgeMS(seek);
-              finalText = '-${behindMS.milliSecondsLabel}';
-            } else if (settings.player.displayActualPositionWhenSeeking.valueR) {
-              final itemDur = Player.inst.currentItemDuration.valueR?.inMilliseconds;
-              int seekClamped = seek;
-              seekClamped = seekClamped.withMinimum(0);
-              if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
-              finalText = seekClamped.milliSecondsLabel;
-            } else {
-              final diffInMs = seek - Player.inst.nowPlayingPositionR;
-              final plusOrMinus = diffInMs < 0 ? '' : '+';
-              final seekText = diffInMs.milliSecondsLabel;
-              finalText = "$plusOrMinus$seekText";
-            }
-            return NamidaText(
-              finalText,
-              style: const NText(.small, size: .s13),
-            );
-          },
-        ),
-        secondChild: const SizedBox(),
-        showFirst: seekNull != null,
-        durationMS: 700,
-        allCurves: Curves.easeInOutQuart,
-      ),
-    );
-
     final positionTextChild = SeekBackwardsDetectorWidget(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -1205,11 +1162,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                             child: _ScaleYIfNeeded(
                               alignment: Alignment.bottomCenter,
                               scale: waveformYScale,
-                              child: Align(
+                              child: const Align(
                                 alignment: Alignment.bottomCenter,
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                  child: seekPositionTextChild,
+                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: _SeekPositionText(),
                                 ),
                               ),
                             ),
@@ -2545,6 +2502,68 @@ class _QueueListChildWrapper extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _SeekPositionText extends StatefulWidget {
+  const _SeekPositionText();
+
+  @override
+  State<_SeekPositionText> createState() => _SeekPositionTextState();
+}
+
+class _SeekPositionTextState extends State<_SeekPositionText> {
+  Widget _frozenSeekChild = const SizedBox();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: MiniPlayerController.inst.seekValue,
+      builder: (context, seekMS) => NamidaAnimatedSwitcher(
+        key: const ValueKey('seek_switcher'),
+        firstChild: seekMS == null
+            ? _frozenSeekChild
+            : Obx(
+                (context) {
+                  final liveWindow = Player.inst.currentLiveWindow.valueR;
+                  final Widget child;
+                  if (liveWindow != null && liveWindow.isAtEdge(seekMS)) {
+                    child = const Icon(
+                      Broken.radar_1,
+                      size: 16.0,
+                    );
+                  } else {
+                    String finalText;
+                    if (liveWindow != null) {
+                      final behindMS = liveWindow.behindEdgeMS(seekMS);
+                      finalText = '-${behindMS.milliSecondsLabel}';
+                    } else if (settings.player.displayActualPositionWhenSeeking.valueR) {
+                      final itemDur = Player.inst.currentItemDuration.valueR?.inMilliseconds;
+                      int seekClamped = seekMS;
+                      seekClamped = seekClamped.withMinimum(0);
+                      if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
+                      finalText = seekClamped.milliSecondsLabel;
+                    } else {
+                      final diffInMs = seekMS - Player.inst.nowPlayingPositionR;
+                      final plusOrMinus = diffInMs < 0 ? '' : '+';
+                      final seekText = diffInMs.milliSecondsLabel;
+                      finalText = "$plusOrMinus$seekText";
+                    }
+                    child = NamidaText(
+                      finalText,
+                      style: const NText(.small, size: .s13),
+                    );
+                  }
+                  _frozenSeekChild = child;
+                  return child;
+                },
+              ),
+        secondChild: const SizedBox(),
+        showFirst: seekMS != null,
+        durationMS: 700,
+        allCurves: Curves.easeInOutQuart,
+      ),
     );
   }
 }

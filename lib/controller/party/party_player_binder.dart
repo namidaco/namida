@@ -145,8 +145,12 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
       await _player.partyClearQueue();
       return;
     }
+    final restoredItemKey = stash.queue[stash.index].key;
+    final isRestoredItemPlaying = _player.currentItem.value?.key == restoredItemKey;
     await _player.partyRestoreQueue(stash.queue, stash.index);
-    if (stash.positionMS > 0) await _player.partySeek(Duration(milliseconds: stash.positionMS));
+    // -- a kept item continues where it is, a live one starts at the edge
+    final shouldRestorePosition = stash.positionMS > 0 && !isRestoredItemPlaying && !_player.isCurrentItemLive;
+    if (shouldRestorePosition) await _player.partySeek(Duration(milliseconds: stash.positionMS));
   }
 
   void _clearQueueMirror() {
@@ -484,13 +488,16 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
       final isNaturalAdvance = localIndex == (index + 1) % _playables.length && durationMS > 0 && expected >= partyTransitionMS - _naturalAdvanceWindowMS;
       if (isNaturalAdvance && shouldPlay) return;
       await _player.partySkipTo(index, startPlaying: shouldPlay);
-      if (expected > _driftWhilePlayingMS) await _player.partySeek(Duration(milliseconds: expected));
+      final isSkippedToLive = _player.isCurrentItemLive;
+      if (!isSkippedToLive && expected > _driftWhilePlayingMS) await _player.partySeek(Duration(milliseconds: expected));
       return;
     }
 
+    // -- live positions differ per device, only the item & play state are synced
+    final isLive = _player.isCurrentItemLive;
     final isLocalSeekSettling = DateTime.now().millisecondsSinceEpoch - _lastLocalSeekMS < _localSeekSettleMS;
     final isWaitingOnPlayer = _player.isLoadingR || _player.isBufferingR;
-    if (!isLocalSeekSettling && !isWaitingOnPlayer) {
+    if (!isLive && !isLocalSeekSettling && !isWaitingOnPlayer) {
       final duration = _player.currentItemDuration.value?.inMilliseconds ?? 0;
       final localTransitionMS = duration - state.crossfadeMS;
       final nearEnd = duration > 0 && expected >= localTransitionMS - 500;
@@ -513,7 +520,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   void _onLocalDurationChanged() {
     if (!_listening) return;
     final duration = _player.currentItemDuration.value?.inMilliseconds ?? 0;
-    if (duration <= 0 || !_isPlayingAnchorItem()) return;
+    if (duration <= 0 || _player.isCurrentItemLive || !_isPlayingAnchorItem()) return;
     final entry = state.currentEntry;
     if (entry == null || entry.durationMS > 0) return;
     _delegate.sendCommand(PartyMsg.duration(entry.id, duration));
@@ -559,6 +566,8 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
 
   @override
   bool interceptSeek(Duration position) {
+    // -- live seeks stay local
+    if (_player.isCurrentItemLive) return false;
     if (!_can(state.canControl)) return true;
     _lastLocalSeekMS = DateTime.now().millisecondsSinceEpoch;
     _delegate.sendCommand(PartyMsg.seek(position.inMilliseconds));

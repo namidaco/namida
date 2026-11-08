@@ -62,6 +62,35 @@ extension _QueueReplaceConfirmation on Player {
     return false;
   }
 
+  void _showQueueRestructuredSnackbar(
+    QueueSnapshot<Playable> previousQueue,
+    QueueSourceBase previousSource,
+    Future<void> Function()? restoreLatestQueue,
+    QueueSourceBase source,
+  ) {
+    final itemsCount = currentQueue.value.length;
+    final isTracks = currentItem.value is Selectable;
+    final itemsCountText = isTracks ? itemsCount.displayTrackKeyword : itemsCount.displayVideoKeyword;
+
+    Future<void> undo() async {
+      await restoreLatestQueue?.call();
+      _audioHandler.latestQueueSource = previousSource;
+      await _audioHandler.restoreQueue(previousQueue);
+    }
+
+    _latestSnacky?.close();
+    _latestSnacky = snackyy(
+      icon: Broken.row_vertical,
+      title: lang.queue,
+      message: [itemsCountText, source.title].joinText(),
+      top: false,
+      button: SnackbarButton(
+        text: lang.undo,
+        function: undo,
+      ),
+    );
+  }
+
   String? _getQueueItemTitle(Playable item) {
     return item.execute<String?>(
       selectable: (finalItem) => [finalItem.track.artistsList.firstOrNull, finalItem.track.title].joinText(separator: ' - '),

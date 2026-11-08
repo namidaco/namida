@@ -172,6 +172,14 @@ class Player {
   RxBaseCore<LiveWindow?> get currentLiveWindow => _audioHandler.currentLiveWindow;
   Duration? get liveJoinPosition => _audioHandler.liveJoinPosition;
 
+  /// unlike [currentLiveWindow], known once the item's streams are, before playback starts.
+  bool get isCurrentItemLive {
+    final video = currentVideo;
+    if (video == null) return false;
+    final info = YoutubeInfoController.current.currentYTStreams.value?.info;
+    return info != null && info.isLiveNow == true && info.id == video.id;
+  }
+
   ProgressSpan getProgressSpan(int durationMS) {
     final window = currentLiveWindow.value;
     return window == null ? ProgressSpan.item(durationMS) : ProgressSpan.live(window);
@@ -430,19 +438,22 @@ class Player {
     await equalizerExtended?.apply(enabled, equalizer);
   }
 
-  double volumeUp() {
-    final val = settings.player.volume.value;
-    final newVal = (val + 0.05).withMaximum(1.0);
-    setVolume(newVal);
-    settings.player.volume.save(newVal);
-    return newVal;
-  }
+  double volumeUp() => _stepUserVolume(0.05);
 
-  double volumeDown() {
-    final val = settings.player.volume.value;
-    final newVal = (val - 0.05).withMinimum(0.0);
+  double volumeDown() => _stepUserVolume(-0.05);
+
+  /// steps the item's own volume when it has one, the global one wouldn't be heard.
+  double _stepUserVolume(double step) {
+    final val = userPlayerVolumeForItem;
+    final newVal = (val + step).withMinimum(0.0).withMaximum(1.0);
     setVolume(newVal);
-    settings.player.volume.save(newVal);
+    final itemKey = currentItem.value?.key;
+    final overrides = Player.audioConfigs.getForCurrentItem();
+    if (itemKey != null && overrides?.volume != null) {
+      Player.audioConfigs.updateProperty(itemKey, (current) => current.copyWith(volume: newVal));
+    } else {
+      settings.player.volume.save(newVal);
+    }
     return newVal;
   }
 
@@ -538,6 +549,10 @@ class Player {
   }
 
   Future<void> setVolume(double volume) async {
+    await _audioHandler.setUserVolumeForItem(volume);
+  }
+
+  Future<void> setTemporaryVolume(double volume) async {
     await _audioHandler.setVolumeWithMultiplier(volume);
   }
 
@@ -1172,15 +1187,19 @@ class Player {
       );
     }
 
+    var didAskBeforeReplacing = false;
     if (canAskBeforeReplacing && settings.askBeforeReplacingQueue.value && source != QueueSource.playerQueue && _audioHandler.partyGate == null && currentQueue.value.isNotEmpty) {
       final queueList = queue is List<Playable> ? queue : queue.toFixedList();
       queue = queueList;
       if (queueList.isNotEmpty && !_audioHandler.isSameAsOriginalQueue(queueList)) {
+        didAskBeforeReplacing = true;
         final shouldReplace = await _askBeforeReplacingQueue(queueList, index, source, shuffle: shuffle, startPlaying: startPlaying, startPosition: startPosition);
         if (!shouldReplace) return;
       }
     }
 
+    final previousSource = _audioHandler.latestQueueSource;
+    Future<void> Function()? restoreLatestQueue;
     _audioHandler.latestQueueSource = source;
     if (startPosition != null) _audioHandler.requestStartPosition(queue.elementAt(index), startPosition);
     await _audioHandler.assignNewQueue(
@@ -1189,6 +1208,7 @@ class Player {
       maximumItems: maximumItems,
       onIndexAndQueueSame: shouldToggleIfSame ? togglePlayPauseExclusive : null,
       onQueueDifferent: (finalizedQueue, originalIndices) {
+        restoreLatestQueue = QueueController.inst.createLatestQueueRestorer();
         if (updateQueue) {
           QueueController.inst.updateLatestQueue(
             finalizedQueue,
@@ -1198,6 +1218,11 @@ class Player {
           );
         }
       },
+      onRestructuringQueue: didAskBeforeReplacing
+          ? null
+          : (previousQueue) {
+              if (previousQueue != null) _showQueueRestructuredSnackbar(previousQueue, previousSource, restoreLatestQueue, source);
+            },
       onQueueEmpty: togglePlayPauseExclusive,
       startPlaying: startPlaying,
       shuffle: shuffle,
