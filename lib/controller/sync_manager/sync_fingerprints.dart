@@ -45,29 +45,34 @@ abstract final class SyncTrackFingerprint {
 abstract final class SyncPathResolver {
   static _LocalFingerprintIndex? _localIndex;
   static Future<_LocalFingerprintIndex>? _localIndexBuild;
+  static _LibraryVersion? _localIndexBuildVersion;
 
   static List<List<Object>>? _localEntriesCache;
+  static _LibraryVersion? _localEntriesCacheVersion;
   static Future<List<List<Object>>>? _localEntriesBuild;
-  static int _localEntriesCacheSourceId = 0;
-  static int _localEntriesCacheCount = -1;
+  static _LibraryVersion? _localEntriesBuildVersion;
 
-  /// `{senderDeviceId: {senderPath: localTrack}}`, only differing paths are kept.
-  static final _deviceMaps = <String, Map<String, Track>>{};
+  static _LibraryVersion _currentLibraryVersion() {
+    final indexer = Indexer.inst;
+    final sourceId = identityHashCode(indexer.allTracksMappedByPath);
+    return (sourceId: sourceId, revision: indexer.libraryRevision);
+  }
 
   static Future<_LocalFingerprintIndex> _ensureLocalIndex() {
-    final source = Indexer.inst.allTracksMappedByPath;
+    final version = _currentLibraryVersion();
     final current = _localIndex;
-    if (current != null && current.isBuiltFor(source)) return Future.value(current);
+    if (current != null && current.version == version) return Future.value(current);
 
     final building = _localIndexBuild;
-    if (building != null) return building;
-    final fields = _SyncFingerprintFields.ofLocalTracks(source);
-    final sourceId = identityHashCode(source);
-    final params = (fields: fields, sourceId: sourceId, sourceCount: source.length);
+    if (building != null && _localIndexBuildVersion == version) return building;
+    final fields = _SyncFingerprintFields.ofLocalTracks(Indexer.inst.allTracksMappedByPath);
+    final params = (fields: fields, version: version);
+    _localIndexBuildVersion = version;
     return _localIndexBuild = _buildLocalIndexSync.thready(params).then(
       (index) {
-        _localIndex = index;
-        _localIndexBuild = null;
+        final latest = _localIndex;
+        if (latest == null || latest.version.revision <= index.version.revision) _localIndex = index;
+        if (_localIndexBuildVersion == index.version) _localIndexBuild = null;
         return index;
       },
     );
@@ -76,7 +81,7 @@ abstract final class SyncPathResolver {
   /// `{coreFingerprint: localTrack}` of the local library.
   static Future<Map<int, Track>> localCoreIndex() => _ensureLocalIndex().then((index) => index.core);
 
-  static _LocalFingerprintIndex _buildLocalIndexSync(({_SyncFingerprintFields fields, int sourceId, int sourceCount}) params) {
+  static _LocalFingerprintIndex _buildLocalIndexSync(({_SyncFingerprintFields fields, _LibraryVersion version}) params) {
     final fields = params.fields;
     final full = <int, Track>{};
     final core = <int, Track>{};
@@ -107,28 +112,27 @@ abstract final class SyncPathResolver {
       core: core,
       uniqueByFileName: uniqueByFileName,
       duplicatesByFileName: duplicatesByFileName,
-      builtForSourceId: params.sourceId,
-      builtForCount: params.sourceCount,
+      version: params.version,
     );
   }
 
   /// entries of the local library to be sent to other devices, each as `[path, fullHash, coreHash]`.
   static Future<List<List<Object>>> buildLocalEntries() {
-    final source = Indexer.inst.allTracksMappedByPath;
+    final version = _currentLibraryVersion();
     final cached = _localEntriesCache;
-    final sourceId = identityHashCode(source);
-    final sourceCount = source.length;
-    if (cached != null && _localEntriesCacheSourceId == sourceId && _localEntriesCacheCount == sourceCount) return Future.value(cached);
+    if (cached != null && _localEntriesCacheVersion == version) return Future.value(cached);
 
     final building = _localEntriesBuild;
-    if (building != null) return building;
-    final fields = _SyncFingerprintFields.ofLocalTracks(source);
+    if (building != null && _localEntriesBuildVersion == version) return building;
+    final fields = _SyncFingerprintFields.ofLocalTracks(Indexer.inst.allTracksMappedByPath);
+    _localEntriesBuildVersion = version;
     return _localEntriesBuild = _buildLocalEntriesSync.thready(fields).then(
       (entries) {
-        _localEntriesCache = entries;
-        _localEntriesCacheSourceId = sourceId;
-        _localEntriesCacheCount = sourceCount;
-        _localEntriesBuild = null;
+        if (_localEntriesBuildVersion == version) {
+          _localEntriesCache = entries;
+          _localEntriesCacheVersion = version;
+          _localEntriesBuild = null;
+        }
         return entries;
       },
     );
@@ -173,22 +177,97 @@ abstract final class SyncPathResolver {
     return List<List<Object>>.generate(fields.length, (i) => [paths[i], fields.fullAt(i), fields.coreAt(i)], growable: false);
   }
 
-  /// builds & caches the senderPath -> localTrack map for [senderDeviceId],
-  /// then replays any messages that were stashed waiting for it.
-  static Future<void> buildForDevice(String senderDeviceId, List<dynamic> entries) async {
-    final index = await _ensureLocalIndex();
-    final map = <String, Track>{};
-    for (final entry in entries) {
-      final list = entry as List;
-      final senderPath = list[0] as String;
-      final local = index.full[list[1] as int] ?? index.core[list[2] as int] ?? index.byPathEnd(senderPath);
-      if (local != null && local.path != senderPath) map[senderPath] = local;
-    }
-    _deviceMaps[senderDeviceId] = map;
-    _unresolvedPathsByDevice.remove(senderDeviceId);
+  static final _tables = <String, _SenderPathsTable>{};
+  static final _tableBuilds = <String, Future<void>>{};
 
-    final pending = _pendingMessagesByDevice.remove(senderDeviceId);
-    if (pending != null) {
+  /// builds the paths table of [senderDeviceId] from its fingerprints [entries], heals the pending paths it can translate,
+  /// then replays the messages stashed waiting for it. builds of one device run in order, see [isReadyFor].
+  static Future<void> buildForDevice(String senderDeviceId, List<dynamic> entries) {
+    final previous = _tableBuilds[senderDeviceId];
+    final build = previous == null ? _buildTable(senderDeviceId, entries) : previous.then((_) => _buildTable(senderDeviceId, entries));
+    _tableBuilds[senderDeviceId] = build;
+    unawaited(
+      build.whenComplete(() {
+        if (identical(_tableBuilds[senderDeviceId], build)) _tableBuilds.remove(senderDeviceId);
+      }),
+    );
+    return build;
+  }
+
+  static Future<void> _buildTable(String senderDeviceId, List<dynamic> entries) async {
+    try {
+      await _SyncPendingPaths.ensureLoaded();
+      final index = await _ensureLocalIndex();
+      final resolved = <String, Track>{};
+      for (final entry in entries) {
+        final list = entry as List;
+        final senderPath = list[0] as String;
+        final local = index.full[list[1] as int] ?? index.core[list[2] as int] ?? index.byPathEnd(senderPath);
+        if (local != null && local.path != senderPath) resolved[senderPath] = local;
+      }
+      final table = _SenderPathsTable(entries: entries, resolved: resolved, index: index);
+      _tables[senderDeviceId] = table;
+      await _healPendingPaths(table);
+    } catch (e, st) {
+      logger.error('Error building sync paths table', e: e, st: st);
+    }
+    await _replayStashedMessages(senderDeviceId);
+  }
+
+  /// rewrites the stored sender paths that [table] now translates, before the stashed messages bring their copies again.
+  static Future<void> _healPendingPaths(_SenderPathsTable table) async {
+    final storesByPath = _SyncPendingPaths.storesByPath;
+    if (storesByPath.isEmpty) return;
+    final library = Indexer.inst.allTracksMappedByPath;
+    final settledPaths = <String>[];
+    final oldNewByStore = <SyncPathStore, Map<Track, Track>>{};
+    for (final e in storesByPath.entries) {
+      final path = e.key;
+      if (library.containsKey(path)) {
+        settledPaths.add(path);
+        continue;
+      }
+      final local = table.resolve(path);
+      if (local == null) continue;
+      settledPaths.add(path);
+      final oldTrack = Track.decide(path, local is Video);
+      final storesBits = e.value;
+      for (final store in SyncPathStore.values) {
+        if (storesBits & store.bit == 0) continue;
+        final oldNewTrack = oldNewByStore[store] ??= <Track, Track>{};
+        oldNewTrack[oldTrack] = local;
+      }
+    }
+    if (settledPaths.isEmpty) return;
+    _SyncPendingPaths.removeAll(settledPaths);
+    await Future.wait(oldNewByStore.entries.map((e) => _rewriteStore(e.key, e.value)));
+  }
+
+  static Future<void> _rewriteStore(SyncPathStore store, Map<Track, Track> oldNewTrack) async {
+    try {
+      await switch (store) {
+        SyncPathStore.history => HistoryController.inst.replaceTheseTracksInHistoryBulk(oldNewTrack),
+        SyncPathStore.playlists => PlaylistController.inst.replaceTracksInSyncedPlaylists(oldNewTrack),
+        SyncPathStore.favourites => PlaylistController.inst.replaceTracksInFavourites(oldNewTrack),
+        SyncPathStore.stats => Indexer.inst.moveStatsPath(oldNewTrack),
+        SyncPathStore.audioConfigs => Player.audioConfigs.movePaths(oldNewTrack),
+        SyncPathStore.queues => QueueController.inst.replaceTrackInAllQueues(oldNewTrack, keepModifiedTimes: true),
+        SyncPathStore.playerQueue => Future.wait([
+          Player.inst.replaceAllTracksInQueueBulk(oldNewTrack),
+          QueueController.inst.replaceTrackInAllQueues(oldNewTrack, keepModifiedTimes: true),
+        ]),
+        SyncPathStore.latestPlayed => QueueController.latestPlayedForSourceManager.movePaths(oldNewTrack),
+      };
+    } catch (e, st) {
+      logger.error('Error rewriting synced paths in ${store.name}', e: e, st: st);
+    }
+  }
+
+  static Future<void> _replayStashedMessages(String senderDeviceId) async {
+    // -- messages stashed while replaying go after the ones before them
+    while (true) {
+      final pending = _pendingMessagesByDevice.remove(senderDeviceId);
+      if (pending == null) return;
       for (final stashed in pending) {
         final msg = stashed.msg;
         try {
@@ -203,29 +282,43 @@ abstract final class SyncPathResolver {
   }
 
   static void clearForDevice(String deviceId) {
-    _deviceMaps.remove(deviceId);
-    _unresolvedPathsByDevice.remove(deviceId);
+    _tables.remove(deviceId);
     final pending = _pendingMessagesByDevice.remove(deviceId);
     pending?.loop((stashed) => stashed.completer.complete(0));
   }
 
-  static bool hasFingerprintsFor(String senderDeviceId) => _deviceMaps.containsKey(senderDeviceId);
+  /// whether messages carrying paths of [senderDeviceId] can run now: its table is built for the current library and no rebuild is running.
+  static bool isReadyFor(String senderDeviceId) {
+    if (_tableBuilds.containsKey(senderDeviceId)) return false;
+    final table = _tables[senderDeviceId];
+    return table != null && table.version == _currentLibraryVersion();
+  }
 
   /// `{senderPath: localTrack}` of [senderDeviceId], only paths that differ here.
-  static Map<String, Track> resolvedTracksFor(String senderDeviceId) => _deviceMaps[senderDeviceId] ?? const {};
+  static Map<String, Track> resolvedTracksFor(String senderDeviceId) => _tables[senderDeviceId]?.resolved ?? const {};
+
+  @visibleForTesting
+  static Map<String, int> get pendingStoresByPath => _SyncPendingPaths.storesByPath;
 
   static final _pendingMessagesByDevice = <String, List<_StashedMessage>>{};
 
-  /// completes with what [msg] changed once it gets executed, see [BaseMessage.executeOnReceived].
-  static Future<int> stashUntilFingerprints(BaseMessage msg) {
+  /// runs [msg] once [isReadyFor], completes with what it changed, see [BaseMessage.executeOnReceived].
+  static Future<int> stashUntilReady(BaseMessage msg) {
     final senderDeviceId = msg.messageInfo.senderDeviceId;
     final stashed = _StashedMessage(msg);
     final pending = _pendingMessagesByDevice[senderDeviceId];
     if (pending != null) {
       pending.add(stashed);
-    } else {
-      _pendingMessagesByDevice[senderDeviceId] = [stashed];
-      _requestFingerprints(senderDeviceId);
+      return stashed.completer.future;
+    }
+    _pendingMessagesByDevice[senderDeviceId] = [stashed];
+    if (!_tableBuilds.containsKey(senderDeviceId)) {
+      final table = _tables[senderDeviceId];
+      if (table == null) {
+        _requestFingerprints(senderDeviceId);
+      } else {
+        unawaited(buildForDevice(senderDeviceId, table.entries));
+      }
     }
     return stashed.completer.future;
   }
@@ -243,46 +336,73 @@ abstract final class SyncPathResolver {
     }
   }
 
-  static Track? resolveTrackByPath(String senderDeviceId, String senderPath) {
-    final map = _deviceMaps[senderDeviceId];
-    if (map == null) return null;
-    return map[senderPath] ?? _resolveByPathEnd(senderDeviceId, map, senderPath);
-  }
-
-  /// sender paths [_resolveByPathEnd] matched nothing for, so they aren't looked up again.
-  static final _unresolvedPathsByDevice = <String, Set<String>>{};
-
-  /// sender paths missing from its fingerprints (ex: listens of a file it no longer has), or that the fingerprints didn't match.
-
-  static Track? _resolveByPathEnd(String senderDeviceId, Map<String, Track> map, String senderPath) {
-    if (Indexer.inst.allTracksMappedByPath.containsKey(senderPath)) return null;
-    final unresolvedPaths = _unresolvedPathsByDevice[senderDeviceId] ??= <String>{};
-    if (unresolvedPaths.contains(senderPath)) return null;
-    final local = _localIndex?.byPathEnd(senderPath);
-    if (local == null) {
-      unresolvedPaths.add(senderPath);
-      return null;
-    }
-    map[senderPath] = local;
+  /// a sender path that matches nothing here gets stored as is under [store], and healed once it does, see [_healPendingPaths].
+  static Track? resolveTrackByPath(String senderDeviceId, String senderPath, SyncPathStore store) {
+    final local = _tables[senderDeviceId]?.resolve(senderPath);
+    if (local == null) _SyncPendingPaths.recordIfForeign(senderPath, store);
     return local;
   }
 
-  static String? resolvePath(String senderDeviceId, String senderPath) => resolveTrackByPath(senderDeviceId, senderPath)?.path;
+  static String? resolvePath(String senderDeviceId, String senderPath, SyncPathStore store) => resolveTrackByPath(senderDeviceId, senderPath, store)?.path;
 
-  static Track? resolveTrack(String senderDeviceId, Track track) {
+  static Track? resolveTrack(String senderDeviceId, Track track, SyncPathStore store) {
     if (track.isNetwork) return null;
-    return resolveTrackByPath(senderDeviceId, track.path);
+    return resolveTrackByPath(senderDeviceId, track.path, store);
   }
 
-  static TrackWithDate resolveTrackWithDate(String senderDeviceId, TrackWithDate twd) {
-    final local = resolveTrack(senderDeviceId, twd.track);
+  static TrackWithDate resolveTrackWithDate(String senderDeviceId, TrackWithDate twd, SyncPathStore store) {
+    final local = resolveTrack(senderDeviceId, twd.track, store);
     if (local == null) return twd;
-    return TrackWithDate(
-      dateAdded: twd.dateAdded,
-      track: local,
-      queueSource: twd.queueSource,
-      source: twd.sourceNull,
-    );
+    return twd.copyWithTrack(local);
+  }
+}
+
+/// sender paths stored as is since nothing here matched them yet, with the stores holding them.
+abstract final class _SyncPendingPaths {
+  static final storesByPath = <String, int>{};
+
+  static Future<void>? _loading;
+
+  static Future<void> ensureLoaded() => _loading ??= _load();
+
+  static Future<void> _load() async {
+    final json = await File(AppPaths.SYNC_PENDING_PATHS).readAsJson();
+    if (json is! Map) return;
+    for (final e in json.entries) {
+      try {
+        final path = e.key as String;
+        final storesBits = e.value as int;
+        storesByPath[path] = (storesByPath[path] ?? 0) | storesBits;
+      } catch (_) {}
+    }
+  }
+
+  static void recordIfForeign(String senderPath, SyncPathStore store) {
+    // -- not a file path, ex: a yt id key
+    if (!senderPath.contains('/') && !senderPath.contains(r'\')) return;
+    if (Indexer.inst.allTracksMappedByPath.containsKey(senderPath)) return;
+    final storesBits = storesByPath[senderPath] ?? 0;
+    final newStoresBits = storesBits | store.bit;
+    if (newStoresBits == storesBits) return;
+    storesByPath[senderPath] = newStoresBits;
+    _scheduleSave();
+  }
+
+  static void removeAll(List<String> paths) {
+    paths.loop(storesByPath.remove);
+    _scheduleSave();
+  }
+
+  static Timer? _saveTimer;
+
+  static void _scheduleSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 2), _save);
+  }
+
+  static Future<void> _save() async {
+    await ensureLoaded();
+    await File(AppPaths.SYNC_PENDING_PATHS).writeAsJsonAtomic(storesByPath);
   }
 }
 
@@ -373,16 +493,14 @@ class _LocalFingerprintIndex {
   final Map<String, Track> uniqueByFileName;
   final Map<String, List<Track>> duplicatesByFileName;
 
-  final int builtForSourceId;
-  final int builtForCount;
+  final _LibraryVersion version;
 
   const _LocalFingerprintIndex({
     required this.full,
     required this.core,
     required this.uniqueByFileName,
     required this.duplicatesByFileName,
-    required this.builtForSourceId,
-    required this.builtForCount,
+    required this.version,
   });
 
   /// file name + parent folder at least.
@@ -448,9 +566,41 @@ class _LocalFingerprintIndex {
   static bool _isSeparator(int char) => char == 0x2F || char == 0x5C;
 
   static int _toLowerAscii(int char) => char >= 0x41 && char <= 0x5A ? char + 0x20 : char;
+}
 
-  /// the library map gets replaced on a reload, a same sized one can still hold other tracks.
-  bool isBuiltFor(Map<String, TrackExtended> source) => builtForSourceId == identityHashCode(source) && builtForCount == source.length;
+class _SenderPathsTable {
+  final List<dynamic> entries;
+
+  /// `{senderPath: localTrack}`, only differing paths are kept.
+  final Map<String, Track> resolved;
+
+  final _LocalFingerprintIndex index;
+
+  /// sender paths [index] matched nothing for, so they aren't looked up again.
+  final _unresolvedPaths = <String>{};
+
+  _SenderPathsTable({
+    required this.entries,
+    required this.resolved,
+    required this.index,
+  });
+
+  _LibraryVersion get version => index.version;
+
+  /// sender paths missing from its fingerprints (ex: listens of a file it no longer has), or that the fingerprints didn't match, go by [_LocalFingerprintIndex.byPathEnd].
+  Track? resolve(String senderPath) {
+    final local = resolved[senderPath];
+    if (local != null) return local;
+    if (Indexer.inst.allTracksMappedByPath.containsKey(senderPath)) return null;
+    if (_unresolvedPaths.contains(senderPath)) return null;
+    final byPathEnd = index.byPathEnd(senderPath);
+    if (byPathEnd == null) {
+      _unresolvedPaths.add(senderPath);
+      return null;
+    }
+    resolved[senderPath] = byPathEnd;
+    return byPathEnd;
+  }
 }
 
 class _StashedMessage {
@@ -459,3 +609,25 @@ class _StashedMessage {
 
   _StashedMessage(this.msg);
 }
+
+/// where sync stored a sender path as is, see [SyncPathResolver.resolveTrackByPath].
+enum SyncPathStore {
+  history(bit: 1),
+  playlists(bit: 2),
+  favourites(bit: 4),
+  stats(bit: 8),
+  audioConfigs(bit: 16),
+  queues(bit: 32),
+
+  /// playing it saves it into [queues] too.
+  playerQueue(bit: 64),
+  latestPlayed(bit: 128),
+  ;
+
+  /// saved in [AppPaths.SYNC_PENDING_PATHS], never change one.
+  final int bit;
+
+  const SyncPathStore({required this.bit});
+}
+
+typedef _LibraryVersion = ({int sourceId, int revision});

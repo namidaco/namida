@@ -654,7 +654,7 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
       }
       final isQueue = subtype == AppPathsBackupEnum.QUEUES;
       final senderDeviceId = messageInfo.senderDeviceId;
-      final bytesToWrite = isQueue ? QueueController.resolveQueueFileBytes(bytes, (track) => SyncPathResolver.resolveTrack(senderDeviceId, track)) : bytes;
+      final bytesToWrite = isQueue ? QueueController.resolveQueueFileBytes(bytes, (track) => SyncPathResolver.resolveTrack(senderDeviceId, track, .queues)) : bytes;
       await file.create(recursive: true);
       await file.writeAsBytes(bytesToWrite);
       // -- keep the sender's mtime so future manifests compare correctly

@@ -285,7 +285,8 @@ class QueueController {
     }
   }
 
-  Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
+  /// [keepModifiedTimes] for rewrites that aren't edits, so sync doesn't see them as newer.
+  Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack, {bool keepModifiedTimes = false}) async {
     await loadAllQueues();
     final queuesToSave = <Queue>[];
     for (final q in queuesMap.value.values) {
@@ -302,7 +303,7 @@ class QueueController {
     }
     for (final q in queuesToSave) {
       _updateMap(q);
-      await _saveQueueToStorage(q);
+      await _saveQueueToStorage(q, keepModifiedTime: keepModifiedTimes);
     }
   }
 
@@ -477,7 +478,7 @@ class QueueController {
     if (latestQueue.isEmpty) return;
     Playable resolvePlayable(Playable item) {
       if (item is! Track) return item;
-      return SyncPathResolver.resolveTrack(senderDeviceId, item) ?? item;
+      return SyncPathResolver.resolveTrack(senderDeviceId, item, .playerQueue) ?? item;
     }
 
     final resolvedQueue = latestQueue.map(resolvePlayable).toList();
@@ -565,10 +566,12 @@ class QueueController {
   @visibleForTesting
   static (List<Playable>, List<int>?) debugReadLatestQueueFile(String filePath) => _prepareLatestQueueSync(filePath);
 
-  Future<void> _saveQueueToStorage(Queue queue) async {
+  Future<void> _saveQueueToStorage(Queue queue, {bool keepModifiedTime = false}) async {
     final bytes = _QueueSerializer.encode(queue.tracks, meta: queue.metaToJson());
     final file = FileParts.join(AppDirs.QUEUES, '${queue.date}.json');
+    final previousStat = keepModifiedTime ? await file.stat() : null;
     await file.writeAsBytesAtomic(bytes, flush: true);
+    if (previousStat != null && previousStat.type != FileSystemEntityType.notFound) await file.setLastModified(previousStat.modified);
   }
 
   final _queueFnLimiter = FunctionExecuteLimiter(
@@ -641,7 +644,7 @@ class QueueController {
       final map = (e as Map).cast<String, dynamic>();
       final type = _QueueSerializer.typeFromJsonKey(map['t']);
       if (type == null) continue;
-      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, map['p'], senderDeviceId);
+      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, map['p'], senderDeviceId, .playerQueue);
       resolvedItems.add(_QueueSerializer.build(resolvedType, payload));
       if (originalIndices != null) {
         final originalIndex = map[_QueueSerializer._kOriginalIndex];
@@ -830,6 +833,33 @@ class _LatestPlayedForSourceManager {
     await delete(oldSource);
   }
 
+  Future<void> movePaths(Map<Track, Track> oldNewTrack) async {
+    final map = _mapRx.value;
+    final newItems = <QueueSourceBase<dynamic>, Playable>{};
+    for (final e in map.entries) {
+      final item = e.value;
+      if (item is! Selectable) continue;
+      final newTrack = oldNewTrack[item.track];
+      if (newTrack == null) continue;
+      newItems[e.key] = item is TrackWithDate ? item.copyWithTrack(newTrack) : newTrack;
+    }
+    if (newItems.isEmpty) return;
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
+    for (final e in newItems.entries) {
+      final source = e.key;
+      final item = e.value;
+      map[source] = item;
+      final row = <String, dynamic>{
+        'p': item.toJson(),
+        't': item.playableType.jsonKey,
+        '_mt': _modifiedTimesMap[source] ?? 0,
+      };
+      dbEntries.add(MapEntry(source.toDbKey(), row));
+    }
+    _mapRx.refresh();
+    await _dBManager.putAll(dbEntries, (e) => e);
+  }
+
   Future<void> delete(QueueSourceBase source) async {
     _mapRx.remove(source);
     _modifiedTimesMap.remove(source);
@@ -872,7 +902,7 @@ class _LatestPlayedForSourceManager {
 
       final type = _QueueSerializer.typeFromJsonKey(incoming['t']);
       if (type == null) continue;
-      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, incoming['p'], senderDeviceId);
+      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, incoming['p'], senderDeviceId, .latestPlayed);
       final item = _QueueSerializer.build(resolvedType, payload);
 
       _mapRx.value[source] = item;
@@ -995,13 +1025,13 @@ class _QueueSerializer {
   }
 
   /// resolves sender paths into local ones
-  static (PlayableType, dynamic) resolveSyncPayload(PlayableType type, dynamic payload, String senderDeviceId) {
+  static (PlayableType, dynamic) resolveSyncPayload(PlayableType type, dynamic payload, String senderDeviceId, SyncPathStore store) {
     switch (type) {
       case PlayableType.track || PlayableType.video:
-        final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
+        final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String, store);
         if (resolved != null) return (resolved.playableType, resolved.path);
       case PlayableType.trackWithDate:
-        payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
+        payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload), store).toJson();
       case PlayableType.ytVideo:
         break;
     }

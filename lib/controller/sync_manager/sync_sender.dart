@@ -112,7 +112,9 @@ class SyncSender extends RxNotifier {
   static final inst = SyncSender._();
   SyncSender._();
 
-  final _fingerprintsSentTo = <String>{};
+  /// `{deviceId: Indexer.libraryRevision}` our fingerprints were last sent for.
+  final _fingerprintsSentRevisions = <String, int>{};
+  final _fingerprintsSendings = <String, Future<void>>{};
   final _sendingToDeviceIds = <String>{};
 
   bool isSendingTo(String deviceId) => _sendingToDeviceIds.contains(deviceId);
@@ -121,7 +123,7 @@ class SyncSender extends RxNotifier {
   void _refresh() => super.refresh();
 
   void onDeviceDisconnected(String deviceId) {
-    _fingerprintsSentTo.remove(deviceId);
+    _fingerprintsSentRevisions.remove(deviceId);
     SyncPathResolver.clearForDevice(deviceId);
     SyncActionsLog.inst.onDeviceDisconnected(deviceId);
 
@@ -131,22 +133,29 @@ class SyncSender extends RxNotifier {
     SyncIncomingSummary.inst.clearForDevice(deviceId);
   }
 
-  /// sends local tracks db fingerprints once per connection, so the receiver
-  /// can translate our paths into theirs. see [SyncPathResolver].
-  Future<void> ensureFingerprintsSent(String deviceId) async {
-    if (_fingerprintsSentTo.contains(deviceId)) return;
-    await resendFingerprints(deviceId);
+  /// sends local tracks db fingerprints once per connection and again after our library changed,
+  /// so the receiver can translate our paths into theirs. see [SyncPathResolver].
+  Future<void> ensureFingerprintsSent(String deviceId) {
+    final sending = _fingerprintsSendings[deviceId];
+    if (sending != null) return sending;
+    final sentRevision = _fingerprintsSentRevisions[deviceId];
+    if (sentRevision == Indexer.inst.libraryRevision) return Future.value();
+    return resendFingerprints(deviceId);
   }
 
-  Future<void> resendFingerprints(String deviceId) async {
-    _fingerprintsSentTo.add(deviceId);
-    try {
-      final msg = await TracksDbFingerprintsMessage.createForCurrentDevice();
-      await SyncDiscovery.sendMessage(msg, deviceId);
-    } catch (_) {
-      _fingerprintsSentTo.remove(deviceId);
-      rethrow;
-    }
+  Future<void> resendFingerprints(String deviceId) {
+    final sending = _fingerprintsSendings[deviceId];
+    if (sending != null) return sending;
+    final newSending = _sendFingerprints(deviceId).whenComplete(() => _fingerprintsSendings.remove(deviceId));
+    _fingerprintsSendings[deviceId] = newSending;
+    return newSending;
+  }
+
+  Future<void> _sendFingerprints(String deviceId) async {
+    final revision = Indexer.inst.libraryRevision;
+    final msg = await TracksDbFingerprintsMessage.createForCurrentDevice();
+    await SyncDiscovery.sendMessage(msg, deviceId);
+    _fingerprintsSentRevisions[deviceId] = revision;
   }
 
   Future<void> sendItemsToAllConnected(List<SyncDataItem> items, {required bool isManual}) async {

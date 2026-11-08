@@ -58,14 +58,11 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
       },
       (old) {
         final normalized = normalizedPathCache[old.track.path] ?? replaceFunctionNormalizePath(old.track.path);
-        return TrackWithDate(
-          dateAdded: old.dateAdded,
-          track: Track.fromTypeParameter(
-            old.track.runtimeType,
-            replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir),
-          ),
-          source: old.source,
+        final newTrack = Track.fromTypeParameter(
+          old.track.runtimeType,
+          replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir),
         );
+        return old.copyWithTrack(newTrack);
       },
     );
   }
@@ -73,22 +70,14 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   Future<void> replaceAllTracksInsideHistory(Selectable oldTrack, Track newTrack) async {
     await replaceTheseTracksInHistory(
       (e) => e.track == oldTrack.track,
-      (old) => TrackWithDate(
-        dateAdded: old.dateAdded,
-        track: newTrack,
-        source: old.source,
-      ),
+      (old) => old.copyWithTrack(newTrack),
     );
   }
 
   Future<void> replaceTheseTracksInHistoryBulk(Map<Track, Track> oldNewTrack) async {
     await replaceTheseTracksInHistory(
       (e) => oldNewTrack.containsKey(e.track),
-      (old) => TrackWithDate(
-        dateAdded: old.dateAdded,
-        track: oldNewTrack[old.track]!,
-        source: old.source,
-      ),
+      (old) => old.copyWithTrack(oldNewTrack[old.track]!),
     );
   }
 

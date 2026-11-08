@@ -859,6 +859,7 @@ class AppPaths {
   static final SETTINGS_YOUTUBE = _join(_USER_DATA, 'namida_settings_youtube.json');
   static final SETTINGS_EXTRA = _join(_USER_DATA, 'namida_settings_extra.json');
   static final SETTINGS_SYNC = _join(_USER_DATA, 'namida_settings_sync.json');
+  static final SYNC_PENDING_PATHS = _join(_USER_DATA, 'sync_pending_paths.json');
   static final SETTINGS_PARTY = _join(_USER_DATA, 'namida_settings_party.json');
   static final SETTINGS_TUTORIAL = _join(_USER_DATA, 'namida_settings_tutorial.json');
   static final SETTINGS_SHORTCUTS = _join(_USER_DATA, 'namida_settings_shortcuts.json');

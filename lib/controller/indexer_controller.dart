@@ -143,6 +143,10 @@ class Indexer<T extends Track> {
 
   /// tracks map used for lookup
   var allTracksMappedByPath = <String, TrackExtended>{};
+
+  /// goes up when [allTracksMappedByPath] gets tracks added, removed or re-tagged, lyrics edits excluded.
+  int libraryRevision = 0;
+
   var externalTracksMappedByPath = <String, TrackExtended>{};
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
@@ -273,6 +277,7 @@ class Indexer<T extends Track> {
   Future<void> _rederiveAllTracks() async {
     final splitConfig = _createSplitConfig();
     allTracksMappedByPath.updateAll((_, trExt) => trExt.rederive(splitConfig));
+    libraryRevision++;
     externalTracksMappedByPath.updateAll((_, trExt) => trExt.rederive(splitConfig));
     await _afterIndexing();
     tracksInfoList.refresh();
@@ -722,6 +727,7 @@ class Indexer<T extends Track> {
     final tr = trackExt.asTrack() as T;
     final oldTrackExt = allTracksMappedByPath[tr.path];
     allTracksMappedByPath[tr.path] = trackExt;
+    libraryRevision++;
     unawaited(_tracksDBManager.put(tr.path, trackExt.toJsonWithoutPath()));
     _updateYTIDMap(tr, oldTrackExt, trackExt);
 
@@ -816,6 +822,7 @@ class Indexer<T extends Track> {
       TrackTileManager.rebuildTrackInfo(tr);
       if (tr.isPhysical) physicalPathsToScan.add(tr.path);
     }
+    libraryRevision++;
     NamidaChannel.inst.scanMediaFilesTry(physicalPathsToScan);
     if (isFromDelete) _onFilesDeleted(physicalPathsToScan);
 
@@ -940,6 +947,7 @@ class Indexer<T extends Track> {
         final oldTrackExt = ot.toTrackExtOrNull();
         finalNewOldTracks[e.value] = oldTrackExt;
         allTracksMappedByPath[ot.path] = e.value;
+        libraryRevision++;
         unawaited(_tracksDBManager.put(ot.path, e.value.toJsonWithoutPath()));
         _updateYTIDMap(ot, oldTrackExt, e.value);
       }
@@ -1108,6 +1116,7 @@ class Indexer<T extends Track> {
     tracksInfoList.clear();
     networkTracksCount.value = 0;
     allTracksMappedByPath.clear();
+    libraryRevision++;
     allTracksMappedByYTID.clear();
     await _clearTracksDBAndReOpen();
 
@@ -1203,6 +1212,7 @@ class Indexer<T extends Track> {
         }
         return remove;
       });
+      libraryRevision++;
     }
 
     final minDur = settings.indexMinDurationInSec.value; // Seconds
@@ -1221,6 +1231,7 @@ class Indexer<T extends Track> {
       tracksInfoList.clear();
       networkTracksCount.value = 0;
       allTracksMappedByPath.clear();
+      libraryRevision++;
       _clearTracksDBAndReOpen();
       allTracksMappedByYTID.clear();
       for (var e in trs) {
@@ -1327,6 +1338,7 @@ class Indexer<T extends Track> {
       }
       return remove;
     });
+    libraryRevision++;
 
     networkTracksCount.value -= networkTracksRemoved;
 
@@ -1604,6 +1616,7 @@ class Indexer<T extends Track> {
       if (trx != null) {
         final newTrExt = trx.copyWith(durationMS: durInMS, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
         allTracksMappedByPath[track.path] = newTrExt;
+        libraryRevision++;
         unawaited(_tracksDBManager.put(track.path, newTrExt.toJsonWithoutPath()));
         tracksInfoList.refresh();
         SearchSortController.inst.trackSearchList.refresh();
@@ -1700,19 +1713,8 @@ class Indexer<T extends Track> {
   Future<int> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId, {bool incomingWins = false}) async {
     final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final incoming in incomingStats) {
-      final resolvedTrack = SyncPathResolver.resolveTrackByPath(senderDeviceId, incoming.track.path);
-      final effective = resolvedTrack == null
-          ? incoming
-          : TrackStats(
-              track: resolvedTrack,
-              rating: incoming.rating,
-              tags: incoming.tags,
-              moods: incoming.moods,
-              lastPositionInMs: incoming.lastPositionInMs,
-              audioTrackId: incoming.audioTrackId,
-              bookmarks: incoming.bookmarks,
-              modifiedDate: incoming.modifiedDate,
-            );
+      final resolvedTrack = SyncPathResolver.resolveTrackByPath(senderDeviceId, incoming.track.path, .stats);
+      final effective = resolvedTrack == null ? incoming : incoming.copyWithTrack(resolvedTrack);
       final track = effective.track;
       final local = trackStatsMap.value[track];
       if (!incomingWins && local != null && local.modifiedDate >= effective.modifiedDate) continue;
@@ -1733,17 +1735,27 @@ class Indexer<T extends Track> {
     return _IndexerIsolateExecuter._readTrackStatsDataSync.thready((dbInfo: dbInfo, oldJsonFilePath: oldJsonFilePath));
   }
 
+  /// newer stats already under a new path are kept.
   Future<void> moveStatsPath(Map<Track, Track> oldNewTrack) async {
+    final statsMap = trackStatsMap.value;
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final oldNew in oldNewTrack.entries) {
-      final oldValue = trackStatsMap[oldNew.key];
-      if (oldValue != null) {
-        trackStatsMap.value[oldNew.value] = oldValue;
-        trackStatsMap.refresh();
-      }
-      final oldValueDB = await _trackStatsDBManager.get(oldNew.key.path);
-      await _trackStatsDBManager.put(oldNew.value.path, oldValueDB);
-      // await _trackStatsDBManager.delete(oldNew.key.path); // not so important ig, preserve just in case
+      final oldStats = statsMap[oldNew.key];
+      if (oldStats == null) continue;
+      final newTrack = oldNew.value;
+      final existing = statsMap[newTrack];
+      if (existing != null && existing.modifiedDate >= oldStats.modifiedDate) continue;
+      final moved = oldStats.copyWithTrack(newTrack);
+      final json = moved.toJsonWithoutTrack();
+      if (json == null) continue;
+      // -- old path stays, not so important ig, preserve just in case
+      statsMap[newTrack] = moved;
+      if (newTrack is Video) json['v'] = true;
+      dbEntries.add(MapEntry(newTrack.path, json));
     }
+    if (dbEntries.isEmpty) return;
+    trackStatsMap.refresh();
+    await _trackStatsDBManager.putAll(dbEntries, (e) => e);
   }
 
   Future<void> moveStatsDirectory(
@@ -1941,6 +1953,7 @@ class Indexer<T extends Track> {
           .then(
             (value) async {
               allTracksMappedByPath = value.allTracksMappedByPath;
+              libraryRevision++;
               externalTracksMappedByPath = value.externalTracksMappedByPath;
               allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
               tracksInfoList.value = value.tracksInfoList as List<T>;

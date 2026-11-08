@@ -816,10 +816,10 @@ class _FrameDispatcher {
 
   void _execute(BaseMessage msg, String errorMessage) {
     final Future<int> applying;
-    if (msg.carriesSenderPaths && !SyncPathResolver.hasFingerprintsFor(msg.messageInfo.senderDeviceId)) {
+    if (msg.carriesSenderPaths && !SyncPathResolver.isReadyFor(msg.messageInfo.senderDeviceId)) {
       // -- we can't translate their paths yet (ex: we restarted while they
       // -- still think we have their fingerprints), request & defer execution
-      applying = SyncPathResolver.stashUntilFingerprints(msg);
+      applying = SyncPathResolver.stashUntilReady(msg);
     } else {
       applying = msg.executeOnReceivedWithQueue().catchError((e, st) {
         logger.error(errorMessage, e: e, st: st);

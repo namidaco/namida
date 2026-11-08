@@ -111,9 +111,9 @@ class SyncTrackListens {
     };
   }
 
-  List<TrackWithDate> resolveItems(String senderDeviceId) {
+  List<TrackWithDate> resolveItems(String senderDeviceId, SyncPathStore store) {
     final tracks = _tracks;
-    final resolved = List<Track>.generate(tracks.length, (i) => SyncPathResolver.resolveTrack(senderDeviceId, tracks[i]) ?? tracks[i], growable: false);
+    final resolved = List<Track>.generate(tracks.length, (i) => SyncPathResolver.resolveTrack(senderDeviceId, tracks[i], store) ?? tracks[i], growable: false);
     final trackIndices = _trackIndices;
     final dates = _dates;
     final sources = _sources;

@@ -4,11 +4,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:history_manager/history_manager.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 void main() {
@@ -43,5 +42,30 @@ void main() {
     expect(history.historyTracks.map((e) => e.track).toList(), [newTrack, newTrack]);
     final saved = File('${AppDirs.HISTORY_PLAYLIST}$day.json').readAsJsonSync() as List;
     expect(saved.map((e) => e['track']).toList(), [newTrack.path, newTrack.path]);
+  });
+
+  test('a path replace keeps the source and queue source, and drops a listen that became equal to another one', () async {
+    final history = HistoryController.inst;
+    await history.prepareHistoryFile();
+    final missingTrack = Track.explicit('/storage/emulated/0/Music/song.flac');
+    final localTrack = Track.explicit('${dir.path}${Platform.pathSeparator}song.flac');
+    final dateMS = DateTime(2026, 4, 2, 18).millisecondsSinceEpoch;
+    final otherDateMS = dateMS + 60000;
+    const queueSource = QueueSource.allTracks;
+    await history.addTracksToHistory([
+      TrackWithDate(dateAdded: dateMS, track: missingTrack),
+      TrackWithDate(dateAdded: dateMS, track: localTrack),
+      TrackWithDate(dateAdded: otherDateMS, track: missingTrack, queueSource: queueSource),
+    ]);
+    final countBefore = history.totalHistoryItemsCount.value;
+
+    await history.replaceTheseTracksInHistoryBulk({missingTrack: localTrack});
+
+    final listens = history.historyTracks.where((e) => e.dateAdded == dateMS || e.dateAdded == otherDateMS).toList();
+    expect(listens.map((e) => (e.dateAdded, e.track, e.sourceNull, e.queueSource)), [
+      (otherDateMS, localTrack, null, queueSource),
+      (dateMS, localTrack, null, null),
+    ]);
+    expect(history.totalHistoryItemsCount.value, countBefore - 1);
   });
 }

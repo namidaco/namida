@@ -145,7 +145,7 @@ class _BackupMerger {
     final res = await controller.prepareAllHistoryFilesFunction(historyDirPath);
     if (res.totalItemsCount == 0) return;
     final listens = res.historyMap.values.expand((dayListens) => dayListens);
-    final resolvedListens = listens.map((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd));
+    final resolvedListens = listens.map((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd, .history));
     await controller.addTracksToHistoryImportPreventDuplicates(resolvedListens);
     await Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared();
   }
@@ -166,7 +166,7 @@ class _BackupMerger {
     final missingPlaylists = <LocalPlaylist>[];
     final edits = <String, PlaylistMetadataEdit>{};
     for (final incoming in incomingPlaylists.values) {
-      final resolved = incoming.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd));
+      final resolved = incoming.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd, .playlists));
       final local = controller.playlistsMap.value[resolved.name];
       if (local == null) {
         missingPlaylists.add(resolved);
@@ -187,7 +187,7 @@ class _BackupMerger {
 
     final favourites = await controller.readFavouritesFile(pathOf(AppPaths.FAVOURITES_PLAYLIST));
     if (favourites != null) {
-      final resolvedFavourites = favourites.tracks.map((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd));
+      final resolvedFavourites = favourites.tracks.map((twd) => SyncPathResolver.resolveTrackWithDate(_kSenderId, twd, .favourites));
       await controller.importTracksToPlaylist(controller.favouritesPlaylist.value, resolvedFavourites);
     }
   }

@@ -796,8 +796,16 @@ class Player {
     await _audioHandler.replaceAllItemsInQueue(oldTrack, newTrack);
   }
 
-  Future<void> replaceAllTracksInQueueBulk(Map<Playable, Playable> oldNewTrack) async {
-    await _audioHandler.replaceAllItemsInQueueBulk(oldNewTrack);
+  Future<void> replaceAllTracksInQueueBulk(Map<Track, Track> oldNewTrack) async {
+    if (oldNewTrack.isEmpty) return;
+    await _audioHandler.replaceWhereInQueue(
+      (e) => e is Selectable && oldNewTrack.containsKey(e.track),
+      (old) {
+        old as Selectable;
+        final newTrack = oldNewTrack[old.track]!;
+        return old is TrackWithDate ? old.copyWithTrack(newTrack) : newTrack;
+      },
+    );
   }
 
   Future<void> replaceTracksDirectoryInQueue(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
@@ -816,11 +824,7 @@ class Player {
           final normalized = normalizedPathCache[old.track.path] ?? replaceFunctionNormalizePath(old.track.path);
           final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir));
           if (old is TrackWithDate) {
-            return TrackWithDate(
-              dateAdded: old.dateAdded,
-              track: newtr,
-              source: old.source,
-            );
+            return old.copyWithTrack(newtr);
           } else {
             return newtr;
           }
@@ -1368,7 +1372,7 @@ class _AudioConfigsManager {
     final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final e in incomingConfigs) {
       final incoming = e.value;
-      final key = SyncPathResolver.resolvePath(senderDeviceId, e.key) ?? e.key;
+      final key = SyncPathResolver.resolvePath(senderDeviceId, e.key, .audioConfigs) ?? e.key;
       final local = _mapRx.value[key];
       if (!incomingWins && local != null && local.modifiedDate >= incoming.modifiedDate) continue;
       _mapRx.value[key] = incoming;
@@ -1424,19 +1428,25 @@ class _AudioConfigsManager {
     await _dBManager.deleteBulk(keys);
   }
 
+  /// newer configs already under a new path are kept.
   Future<void> movePaths(Map<Track, Track> oldNewMap) async {
+    final map = _mapRx.value;
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final entry in oldNewMap.entries) {
       final k = entry.key.path;
       final v = entry.value.path;
-      final oldValue = _mapRx.value.remove(k);
-      if (oldValue != null) {
-        _mapRx.value[v] = oldValue;
-        _mapRx.refresh();
-      }
-      final oldValueDB = await _dBManager.get(k);
-      await _dBManager.put(v, oldValueDB);
+      final oldValue = await get(k);
+      if (oldValue == null) continue;
+      final existing = await get(v);
+      if (existing != null && existing.modifiedDate >= oldValue.modifiedDate) continue;
+      map.remove(k);
+      map[v] = oldValue;
+      dbEntries.add(MapEntry(v, oldValue.toMap()));
       // await _dBManager.delete(k); // not so important ig, preserve just in case
     }
+    if (dbEntries.isEmpty) return;
+    _mapRx.refresh();
+    await _dBManager.putAll(dbEntries, (e) => e);
   }
 
   Future<void> moveDirectory(

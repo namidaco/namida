@@ -108,6 +108,27 @@ void main() {
     expect(stats.lastPositionInMs, 5000);
   });
 
+  test('moving stats to a new path keeps newer stats already there and leaves paths without stats alone', () async {
+    final statsMap = Indexer.inst.trackStatsMap.value;
+    final oldTrack = trackOf('moved_old');
+    final newTrack = trackOf('moved_new');
+    final olderTrack = trackOf('moved_older');
+    final newerTrack = trackOf('moved_newer');
+    final noStatsTrack = trackOf('moved_no_stats');
+    final ratedTrack = trackOf('moved_rated');
+    statsMap[oldTrack] = statsOf(oldTrack, rating: 40, modifiedDate: 1000);
+    statsMap[olderTrack] = statsOf(olderTrack, rating: 20, modifiedDate: 1000);
+    statsMap[newerTrack] = statsOf(newerTrack, rating: 90, modifiedDate: 5000);
+    statsMap[ratedTrack] = statsOf(ratedTrack, rating: 70, modifiedDate: 1000);
+
+    await Indexer.inst.moveStatsPath({oldTrack: newTrack, olderTrack: newerTrack, noStatsTrack: ratedTrack});
+
+    final moved = statsMap[newTrack]!;
+    expect((moved.track, moved.rating, moved.modifiedDate), (newTrack, 40, 1000));
+    expect(statsMap[newerTrack]!.rating, 90);
+    expect(statsMap[ratedTrack]!.rating, 70);
+  });
+
   test('comma lists skip blank items and duplicates', () {
     expect(Indexer.splitByCommaList('a,  , b,a,'), ['a', 'b']);
     expect(Indexer.splitByCommaList(' '), isEmpty);

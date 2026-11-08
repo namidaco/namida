@@ -271,11 +271,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       },
       (old) {
         final normalized = normalizedPathCache[old.track.path] ?? replaceFunctionNormalizePath(old.track.path);
-        return TrackWithDate(
-          dateAdded: old.dateAdded,
-          track: Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir)),
-          source: old.source,
-        );
+        final newTrack = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir));
+        return old.copyWithTrack(newTrack);
       },
     );
   }
@@ -283,29 +280,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
   Future<void> replaceTrackInAllPlaylists(Track oldTrack, Track newTrack) async {
     await replaceTheseTracksInPlaylists(
       (e) => e.track == oldTrack,
-      (old) => TrackWithDate(
-        dateAdded: old.dateAdded,
-        track: newTrack,
-        source: old.source,
-      ),
+      (old) => old.copyWithTrack(newTrack),
     );
   }
 
   Future<void> replaceTrackInAllPlaylistsBulk(Map<Track, Track> oldNewTrack) async {
-    final fnList = <MapEntry<bool Function(TrackWithDate e), TrackWithDate Function(TrackWithDate old)>>[];
-    for (final entry in oldNewTrack.entries) {
-      fnList.add(
-        MapEntry(
-          (e) => e.track == entry.key,
-          (old) => TrackWithDate(
-            dateAdded: old.dateAdded,
-            track: entry.value,
-            source: old.source,
-          ),
-        ),
-      );
-    }
-    await replaceTheseTracksInPlaylistsBulk(fnList);
+    await replaceTheseTracksInPlaylists(
+      (e) => oldNewTrack.containsKey(e.track),
+      (old) => old.copyWithTrack(oldNewTrack[old.track]!),
+    );
   }
 
   @override
@@ -622,6 +605,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       if (unlistedSavedPathsExist[i]) allPaths.add(unlistedSavedPaths[i]);
     }
     return allPaths;
+  }
+
+  /// writes like [importSyncedPlaylists], so m3u files follow the sync rules and no permission gets asked.
+  Future<void> replaceTracksInSyncedPlaylists(Map<Track, Track> oldNewTrack) async {
+    TrackWithDate convert(TrackWithDate twd) {
+      final newTrack = oldNewTrack[twd.track];
+      return newTrack == null ? twd : twd.copyWithTrack(newTrack);
+    }
+
+    final converted = <LocalPlaylist>[];
+    for (final pl in playlistsMap.value.values) {
+      if (pl.isReadOnly) continue;
+      final hasOldTrack = pl.tracks.any((e) => oldNewTrack.containsKey(e.track));
+      if (hasOldTrack) converted.add(pl.copyWithConvertedTracks(convert));
+    }
+    if (converted.isEmpty) return;
+    await importSyncedPlaylists(converted);
+  }
+
+  Future<void> replaceTracksInFavourites(Map<Track, Track> oldNewTrack) {
+    return replaceTheseTracksInFavourites(
+      (e) => oldNewTrack.containsKey(e.track),
+      (old) => old.copyWithTrack(oldNewTrack[old.track]!),
+    );
   }
 
   /// [playlists] tracks must be already resolved for this device, their m3uPath is only checked for existence.

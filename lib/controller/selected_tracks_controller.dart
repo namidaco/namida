@@ -256,11 +256,7 @@ class SelectedTracksController {
       (old) {
         final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(old.track.path, normalizedOldDir, normalizedNewDir));
         if (old is TrackWithDate) {
-          return TrackWithDate(
-            dateAdded: old.dateAdded,
-            track: newtr,
-            source: old.source,
-          );
+          return old.copyWithTrack(newtr);
         } else {
           return newtr;
         }

@@ -23,7 +23,7 @@ class HistoryListensMessage extends BaseMessage {
 
   @override
   FutureOr<int> executeOnReceived() {
-    final resolved = listens.resolveItems(messageInfo.senderDeviceId);
+    final resolved = listens.resolveItems(messageInfo.senderDeviceId, .history);
     if (SyncUtils.kAllowModification) {
       return HistoryController.inst.addTracksToHistoryImportPreventDuplicates(resolved);
     } else {
@@ -298,7 +298,7 @@ class FavouritesMessage extends BaseMessage {
 
   @override
   FutureOr<int> executeOnReceived() async {
-    final resolved = tracks.resolveItems(messageInfo.senderDeviceId);
+    final resolved = tracks.resolveItems(messageInfo.senderDeviceId, .favourites);
     if (SyncUtils.kAllowModification) {
       return PlaylistController.inst.importTracksToPlaylist(
         PlaylistController.inst.favouritesPlaylist.value,
@@ -540,7 +540,7 @@ class PlaylistsMessage extends BaseMessage {
   FutureOr<int> executeOnReceived() async {
     final senderDeviceId = messageInfo.senderDeviceId;
     final resolved = playlists.map(
-      (pl) => pl.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(senderDeviceId, twd)),
+      (pl) => pl.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(senderDeviceId, twd, .playlists)),
     );
     if (SyncUtils.kAllowModification) {
       return PlaylistController.inst.importSyncedPlaylists(resolved);
