@@ -367,7 +367,12 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       didUpdate = true;
       snackyy(title: lang.note, message: "${lang.done}: ${newPaths.length.displayTrackKeyword}", top: false);
     } catch (e) {
-      snackyy(title: lang.error, message: '$e', top: false, isError: true);
+      snackyy(
+        title: lang.error,
+        message: '$e',
+        top: false,
+        isError: true,
+      );
     }
 
     if (didUpdate) {
@@ -591,7 +596,12 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                                       bottomLeft: Radius.circular(6.0.multipliedRadius),
                                                       topRight: Radius.circular(6.0.multipliedRadius),
                                                     ),
-                                                    padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
+                                                    padding: const EdgeInsets.only(
+                                                      top: 2.0,
+                                                      right: 8.0,
+                                                      left: 6.0,
+                                                      bottom: 2.0,
+                                                    ),
                                                     child: NamidaText(
                                                       "${index + 1}",
                                                       style: NText.small,

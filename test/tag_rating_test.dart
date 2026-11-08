@@ -335,7 +335,13 @@ void main() {
     }
 
     String? write(String path, double? ratingPercentage, {Map<String, List<String>>? newProperties}) {
-      return TagLibRes.writeSync(path, newPropertiesMap: newProperties ?? {}, ratingPercentage: ratingPercentage, artwork: null, chapters: null);
+      return TagLibRes.writeSync(
+        path,
+        newPropertiesMap: newProperties ?? {},
+        ratingPercentage: ratingPercentage,
+        artwork: null,
+        chapters: null,
+      );
     }
 
     Future<TagLibPropertiesWrapper> read(String path) async {

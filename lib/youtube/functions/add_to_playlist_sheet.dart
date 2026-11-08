@@ -149,7 +149,12 @@ void showAddToPlaylistSheet({
                               return NamidaIconButton(
                                 tooltip: () => watchLater,
                                 icon: Broken.clock,
-                                child: idExist ? const StackedIcon(baseIcon: Broken.clock, secondaryIcon: Broken.tick_circle) : null,
+                                child: idExist
+                                    ? const StackedIcon(
+                                        baseIcon: Broken.clock,
+                                        secondaryIcon: Broken.tick_circle,
+                                      )
+                                    : null,
                                 onPressed: () {
                                   final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
                                   if (pl == null) {

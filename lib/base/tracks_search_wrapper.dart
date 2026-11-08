@@ -844,7 +844,13 @@ class _ScoreCalculator {
     score = 0;
 
     scoreProperty(key.title, multiplier: 6, allowFuzzy: true, preferPrefix: true);
-    scoreProperty(key.subtitle, multiplier: 2, exactMultiplier: 6, allowFuzzy: true, preferPrefix: true);
+    scoreProperty(
+      key.subtitle,
+      multiplier: 2,
+      exactMultiplier: 6,
+      allowFuzzy: true,
+      preferPrefix: true,
+    );
     if (score > 0) return score;
     final extras = key.extras;
     if (extras != null) {

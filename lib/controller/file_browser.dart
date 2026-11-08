@@ -1130,7 +1130,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                   visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
                                   trailing: Padding(
                                     padding: const EdgeInsets.only(right: 4.0),
-                                    child: Icon(icon, size: 20.0),
+                                    child: Icon(
+                                      icon,
+                                      size: 20.0,
+                                    ),
                                   ),
                                   title: title,
                                   active: currentSort == sort,

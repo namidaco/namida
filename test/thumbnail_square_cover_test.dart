@@ -44,22 +44,48 @@ void main() {
   }
 
   test('square cover between black bars', () {
-    final pixels = buildImage(width: 128, height: 72, barColor: const [0, 0, 0], contentLeft: 28, contentWidth: 72);
+    final pixels = buildImage(
+      width: 128,
+      height: 72,
+      barColor: const [0, 0, 0],
+      contentLeft: 28,
+      contentWidth: 72,
+    );
     expect(ThumbnailSquareCover.findSquareCoverRows(pixels, 128, 72), (top: 0.0, bottom: 1.0));
   });
 
   test('colored and noisy bars', () {
-    final pixels = buildImage(width: 128, height: 72, barColor: const [40, 90, 30], contentLeft: 28, contentWidth: 72, barNoise: 8);
+    final pixels = buildImage(
+      width: 128,
+      height: 72,
+      barColor: const [40, 90, 30],
+      contentLeft: 28,
+      contentWidth: 72,
+      barNoise: 8,
+    );
     expect(ThumbnailSquareCover.findSquareCoverRows(pixels, 128, 72), (top: 0.0, bottom: 1.0));
   });
 
   test('round cover a bit narrower than the square', () {
-    final pixels = buildImage(width: 128, height: 72, barColor: const [0, 0, 0], contentLeft: 32, contentWidth: 64);
+    final pixels = buildImage(
+      width: 128,
+      height: 72,
+      barColor: const [0, 0, 0],
+      contentLeft: 32,
+      contentWidth: 64,
+    );
     expect(ThumbnailSquareCover.findSquareCoverRows(pixels, 128, 72), (top: 0.0, bottom: 1.0));
   });
 
   test('letterboxed 4:3 thumbnail', () {
-    final pixels = buildImage(width: 128, height: 96, barColor: const [0, 0, 0], contentLeft: 28, contentWidth: 72, letterboxRows: 12);
+    final pixels = buildImage(
+      width: 128,
+      height: 96,
+      barColor: const [0, 0, 0],
+      contentLeft: 28,
+      contentWidth: 72,
+      letterboxRows: 12,
+    );
     expect(ThumbnailSquareCover.findSquareCoverRows(pixels, 128, 96), (top: 12 / 96, bottom: 84 / 96));
   });
 

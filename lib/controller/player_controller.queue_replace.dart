@@ -17,7 +17,12 @@ extension _QueueReplaceConfirmation on Player {
     final canKeepSingle = !shuffle && itemsCount > 1;
     final keepSingleSubtitle = canKeepSingle ? _getQueueItemTitle(queueList[index]) : null;
     final keepSubtitle = canKeepSingle ? itemsCountText : null;
-    final action = await _pickQueueReplaceAction(subtitle: subtitle, keepSubtitle: keepSubtitle, keepSingleSubtitle: keepSingleSubtitle, canShowMore: isTracks);
+    final action = await _pickQueueReplaceAction(
+      subtitle: subtitle,
+      keepSubtitle: keepSubtitle,
+      keepSingleSubtitle: keepSingleSubtitle,
+      canShowMore: isTracks,
+    );
 
     Iterable<Playable> getItems() {
       if (!shuffle) return queueList.skip(index);

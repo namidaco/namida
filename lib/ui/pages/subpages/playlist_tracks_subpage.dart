@@ -713,7 +713,12 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
     final index = tracksWithDate.indexWhere((e) => focusTracksSet.contains(e.track));
     if (index < 0) return;
     JumpHighlight.showBriefly(tracksWithDate[index], index, inQueue: false);
-    MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, widget.route, position: position);
+    MainPageFABResumeButton.jumpToItem(
+      index,
+      Dimensions.inst.trackTileItemExtent,
+      widget.route,
+      position: position,
+    );
   }
 
   @override

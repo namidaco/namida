@@ -57,7 +57,15 @@ void main() {
 
   testWidgets('NamidaText color interpolates on dark/light switch and ends on the theme style', (tester) async {
     final theme = ValueNotifier(themeBlue);
-    await tester.pumpWidget(app(theme, const NamidaText('a', style: NText.medium)));
+    await tester.pumpWidget(
+      app(
+        theme,
+        const NamidaText(
+          'a',
+          style: NText.medium,
+        ),
+      ),
+    );
     Color? textColor() => tester.widget<Text>(find.byType(Text)).style?.color;
     expect(textColor(), themeBlue.textTheme.displayMedium!.color);
 

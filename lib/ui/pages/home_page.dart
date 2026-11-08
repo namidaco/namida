@@ -2348,7 +2348,10 @@ class _MixesCardState extends State<_MixesCard> {
                 bgColor: const NColors(.card, opacity: 0.94),
                 child: Row(
                   children: [
-                    const Icon(Broken.play_cricle, size: 16.0),
+                    const Icon(
+                      Broken.play_cricle,
+                      size: 16.0,
+                    ),
                     const SizedBox(width: 4.0),
                     NamidaText(
                       "${widget.tracks.length}",
@@ -2672,7 +2675,10 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                 bgColor: const NColors(.card, opacity: 0.94),
                 child: Row(
                   children: [
-                    const Icon(Broken.play_cricle, size: 16.0),
+                    const Icon(
+                      Broken.play_cricle,
+                      size: 16.0,
+                    ),
                     const SizedBox(width: 4.0),
                     NamidaText(
                       "${widget.videoIds.length}",
@@ -3052,7 +3058,10 @@ class _YourYearBanner extends StatelessWidget {
         onTap: () => YourYearPage(year: year).navigate(),
         child: Row(
           children: [
-            NIcon(Broken.magic_star, color: NColors.defaultIcon()),
+            NIcon(
+              Broken.magic_star,
+              color: NColors.defaultIcon(),
+            ),
             const SizedBox(width: 12.0),
             Expanded(
               child: Column(
@@ -3072,7 +3081,10 @@ class _YourYearBanner extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Broken.arrow_right_3, size: 18.0),
+            const Icon(
+              Broken.arrow_right_3,
+              size: 18.0,
+            ),
           ],
         ),
       ),

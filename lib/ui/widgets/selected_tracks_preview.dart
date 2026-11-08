@@ -306,7 +306,10 @@ class SelectedTracksRow extends StatelessWidget {
             );
           },
           tooltip: lang.more,
-          icon: const RotatedBox(quarterTurns: 1, child: Icon(Broken.more)),
+          icon: const RotatedBox(
+            quarterTurns: 1,
+            child: Icon(Broken.more),
+          ),
         ),
         IconButton(
           onPressed: () => SelectedTracksController.inst.selectAllTracks(),

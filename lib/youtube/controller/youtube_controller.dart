@@ -896,7 +896,12 @@ class YoutubeController {
     Future<void> Function(File? downloadedFile)? onOldFileDeleted,
     Future<void> Function(File? deletedFile)? onFileDownloaded,
   }) async {
-    await cancelDownloadTask(itemsConfig: [oldConfig], groupName: groupName, keepInList: newGroupName == groupName, delete: true);
+    await cancelDownloadTask(
+      itemsConfig: [oldConfig],
+      groupName: groupName,
+      keepInList: newGroupName == groupName,
+      delete: true,
+    );
     await downloadYoutubeVideos(
       useCachedVersionsIfAvailable: true,
       itemsConfig: [newConfig],

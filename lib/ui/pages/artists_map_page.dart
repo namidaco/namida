@@ -110,7 +110,12 @@ class _ArtistsMapPageState extends State<ArtistsMapPage> {
     if (input == null) return;
 
     final layouts = await _computeArtistsMapLayouts.thready(input);
-    final data = _ArtistsMapData(signature: signature, names: names, grid: layouts.grid, graph: layouts.graph);
+    final data = _ArtistsMapData(
+      signature: signature,
+      names: names,
+      grid: layouts.grid,
+      graph: layouts.graph,
+    );
     _cached = data;
     if (mounted) setState(() => _data = data);
   }

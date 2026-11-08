@@ -585,7 +585,14 @@ const _kSubsonicMainLyricsKind = 'main';
 TrackExtended debugSubsonicMediaToTrack(MediaModel media, {AlbumModel? album, required SplitArtistGenreConfigsWrapper splitConfig, required String server}) {
   final serverUriParsed = Uri.parse(server);
   final path = _serverTrackPath(serverUriParsed, media.id);
-  return _SubsonicWebServer._mediaModelToTrackExtended(media, album: album, path: path, lyrics: '', splitConfig: splitConfig, server: server);
+  return _SubsonicWebServer._mediaModelToTrackExtended(
+    media,
+    album: album,
+    path: path,
+    lyrics: '',
+    splitConfig: splitConfig,
+    server: server,
+  );
 }
 
 @visibleForTesting

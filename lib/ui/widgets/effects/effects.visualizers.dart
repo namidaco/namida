@@ -439,7 +439,13 @@ class _VisualizerCanvas extends StatelessWidget {
     final artworkScale = view.artworkScale;
     final artworkRadius = view.artworkRadius;
     final painter = switch (kind) {
-      _VisualizerKind.particles => _ParticlesPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.particles => _ParticlesPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+      ),
       _VisualizerKind.bars => _BarsPainter(
         driver: driver,
         colors: colors,
@@ -581,7 +587,14 @@ class _ParticlesPainter extends _VisualizerPainter {
     canvas.translate(size.width / 2, size.height / 2);
     canvas.scale(scale);
     canvas.translate(-size.width / 2, -size.height / 2);
-    field.paint(canvas, size, tint: rgb, ink: rgb, isDark: true, opacity: opacity * presence);
+    field.paint(
+      canvas,
+      size,
+      tint: rgb,
+      ink: rgb,
+      isDark: true,
+      opacity: opacity * presence,
+    );
     canvas.restore();
   }
 }

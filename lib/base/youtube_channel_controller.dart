@@ -137,7 +137,12 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     final details = forceRequest ? ExecuteDetails.kForceRequest : null;
     final currentTab = channelVideoTab;
     final keepSort = currentTab?.channelId == channelID ? currentTab?.customSort : null; // keep the server sort the user picked
-    final newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: ChannelTab.videos, sort: keepSort, details: details);
+    final newResult = await YoutubeInfoController.channel.fetchChannelTab(
+      channelId: channelID,
+      tab: ChannelTab.videos,
+      sort: keepSort,
+      details: details,
+    );
     if (newResult != null) {
       // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
       // -- but data like viewsCount will not be updated sadly.

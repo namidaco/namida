@@ -290,7 +290,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         title: lang.configure,
         titleWidgetInPadding: Row(
           children: [
-            const Icon(Broken.setting_3, size: 28.0),
+            const Icon(
+              Broken.setting_3,
+              size: 28.0,
+            ),
             const SizedBox(width: 8.0),
             Expanded(
               child: NamidaText(
@@ -660,7 +663,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         bottomLeft: Radius.circular(6.0.multipliedRadius),
                                         topRight: Radius.circular(cardBorderRadiusRaw.multipliedRadius),
                                       ),
-                                      padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
+                                      padding: const EdgeInsets.only(
+                                        top: 2.0,
+                                        right: 8.0,
+                                        left: 6.0,
+                                        bottom: 2.0,
+                                      ),
                                       child: NamidaText(
                                         '${originalIndex + 1}',
                                         style: NText.small,

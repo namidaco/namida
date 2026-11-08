@@ -28,7 +28,12 @@ class _MissingInfoController {
 
   Future<File?> fetchMissingThumbnail(String videoId, {bool forceRequest = false}) async {
     VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-    final thumbFile = ThumbnailManager.inst.imageUrlToCacheFile(id: videoId, url: null, type: ThumbnailType.video, isTemp: false);
+    final thumbFile = ThumbnailManager.inst.imageUrlToCacheFile(
+      id: videoId,
+      url: null,
+      type: ThumbnailType.video,
+      isTemp: false,
+    );
     if (thumbFile == null) return null; // shouldn't happen
     if (forceRequest == false && await thumbFile.exists()) return thumbFile;
 

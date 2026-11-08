@@ -242,7 +242,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           kEnableFancyAnimations
-                              ? CAKineticTypeTextHover(text: lang.discoverPage, style: NText.large.of(context))
+                              ? CAKineticTypeTextHover(
+                                  text: lang.discoverPage,
+                                  style: NText.large.of(context),
+                                )
                               : NamidaText(
                                   lang.discoverPage,
                                   style: NText.large,

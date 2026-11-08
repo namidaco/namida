@@ -66,7 +66,11 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18.0, color: color),
+              Icon(
+                icon,
+                size: 18.0,
+                color: color,
+              ),
               const SizedBox(width: 4.0),
               NamidaText(
                 title,

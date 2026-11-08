@@ -25,7 +25,12 @@ class _ChannelInfoController {
   }
 
   Future<YoutiPieChannelTabResult?> fetchChannelTab({required String channelId, required ChannelTab tab, YoutiPieItemsSort? sort, ExecuteDetails? details}) {
-    return YoutiPie.channel.fetchChannelTab(channelId: channelId, tab: tab, sort: sort, details: details);
+    return YoutiPie.channel.fetchChannelTab(
+      channelId: channelId,
+      tab: tab,
+      sort: sort,
+      details: details,
+    );
   }
 
   Future<YoutiPieChannelTabResult?> fetchChannelTabCache({required String channelId, required ChannelTab tab}) {

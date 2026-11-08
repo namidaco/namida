@@ -31,7 +31,16 @@ class _Room implements PartyHostDelegate {
   final legacyMembers = <int>{};
 
   _Room() {
-    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, repeat: PartyRepeat.initial, crossfadeMS: 0, delegate: this);
+    host = PartyHost.create(
+      state: hostState,
+      selfN: 1,
+      selfName: 'host',
+      roomName: 'room',
+      listening: true,
+      repeat: PartyRepeat.initial,
+      crossfadeMS: 0,
+      delegate: this,
+    );
   }
 
   PartyState join(int n) {

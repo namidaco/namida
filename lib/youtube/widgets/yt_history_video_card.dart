@@ -54,15 +54,27 @@ class VideoTilePropertiesProvider extends StatelessWidget {
       if (configs.reorderableRx != null) {
         threeLines = ObxO(
           rx: configs.reorderableRx!,
-          builder: (context, value) => ThreeLineSmallContainers(enabled: value, color: null),
+          builder: (context, value) => ThreeLineSmallContainers(
+            enabled: value,
+            color: null,
+          ),
         );
         threeLinesPlaying = ObxO(
           rx: configs.reorderableRx!,
-          builder: (context, value) => ThreeLineSmallContainers(enabled: value, color: itemsColor5),
+          builder: (context, value) => ThreeLineSmallContainers(
+            enabled: value,
+            color: itemsColor5,
+          ),
         );
       } else {
-        threeLines = ThreeLineSmallContainers(enabled: configs.draggingEnabled, color: null);
-        threeLinesPlaying = ThreeLineSmallContainers(enabled: configs.draggingEnabled, color: itemsColor5);
+        threeLines = ThreeLineSmallContainers(
+          enabled: configs.draggingEnabled,
+          color: null,
+        );
+        threeLinesPlaying = ThreeLineSmallContainers(
+          enabled: configs.draggingEnabled,
+          color: itemsColor5,
+        );
       }
     }
 

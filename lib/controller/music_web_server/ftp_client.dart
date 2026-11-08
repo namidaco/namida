@@ -427,7 +427,12 @@ class _FtpClient {
     final month = match.group(3)!;
     final day = match.group(4)!;
     final timeOrYear = match.group(5)!;
-    final modifiedMS = _parseUnixListTimeMS(month: month, day: day, timeOrYear: timeOrYear, now: now);
+    final modifiedMS = _parseUnixListTimeMS(
+      month: month,
+      day: day,
+      timeOrYear: timeOrYear,
+      now: now,
+    );
     final path = p.posix.join(dirPath, name);
     return _RemoteEntry(
       path: path,

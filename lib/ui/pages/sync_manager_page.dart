@@ -1059,7 +1059,10 @@ class SyncStatusIconWrapper extends StatelessWidget {
                           width: 1.0,
                         ),
                       ),
-                      child: const SizedBox(width: 7.0, height: 7.0),
+                      child: const SizedBox(
+                        width: 7.0,
+                        height: 7.0,
+                      ),
                     ),
                   ),
               ],
@@ -1083,7 +1086,10 @@ class _StatusDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: active ? Colors.green.withOpacityExt(0.8) : colors.onSurface.withOpacityExt(0.3),
       ),
-      child: const SizedBox(width: 8.0, height: 8.0),
+      child: const SizedBox(
+        width: 8.0,
+        height: 8.0,
+      ),
     );
   }
 }

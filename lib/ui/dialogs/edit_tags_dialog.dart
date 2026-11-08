@@ -143,7 +143,12 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
         canEditComment.value = true;
       }
     } catch (e) {
-      snackyy(title: lang.error, message: e.toString(), isError: true, top: false);
+      snackyy(
+        title: lang.error,
+        message: e.toString(),
+        isError: true,
+        top: false,
+      );
     } finally {
       isDetectingOffset.value = false;
     }
@@ -429,7 +434,12 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       controller.text = analyzedText;
       onTagChanged(tag, analyzedText);
     } catch (e) {
-      snackyy(title: lang.error, message: e.toString(), isError: true, top: false);
+      snackyy(
+        title: lang.error,
+        message: e.toString(),
+        isError: true,
+        top: false,
+      );
     }
   }
 
@@ -475,7 +485,12 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
     return imageFile.readAsBytes();
   }
 
-  final artworkSearchQuery = _ArtworkEditMenu.buildSearchQuery(artist: tags.artist, album: tags.album, title: tags.title, filenameWOExt: track.filenameWOExt);
+  final artworkSearchQuery = _ArtworkEditMenu.buildSearchQuery(
+    artist: tags.artist,
+    album: tags.album,
+    title: tags.title,
+    filenameWOExt: track.filenameWOExt,
+  );
   final youtubeId = track.youtubeID.nullifyEmpty();
   final folderCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
 
@@ -688,7 +703,10 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                         builder: (context, didAutoExtractFromFilenameValue) => Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Broken.magicpen, size: 14.0),
+                            const Icon(
+                              Broken.magicpen,
+                              size: 14.0,
+                            ),
                             const SizedBox(width: 4.0),
                             Text(
                               "${lang.autoExtractTagsFromFilename} ${didAutoExtractFromFilenameValue ? '✓' : ''}",
@@ -1547,7 +1565,14 @@ class _MultiTracksEditPlan {
         (editedTagsPerTrack[selectedTracks[i]] ??= {})[tag] = newValue;
         changedCount++;
       }
-      summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: replaceRule.description, tracksCount: changedCount));
+      summary.add(
+        _MultiTracksEditSummaryEntry(
+          icon: tag.toIcon(),
+          title: tag.toText(),
+          subtitle: replaceRule.description,
+          tracksCount: changedCount,
+        ),
+      );
     }
 
     if (autoTrackNumbers) {
@@ -1586,7 +1611,14 @@ class _MultiTracksEditPlan {
     ]) {
       if (changesText == null) continue;
       final changedCount = editedTagsPerTrack.values.where((e) => e.containsKey(tag)).length;
-      summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: changesText, tracksCount: changedCount));
+      summary.add(
+        _MultiTracksEditSummaryEntry(
+          icon: tag.toIcon(),
+          title: tag.toText(),
+          subtitle: changesText,
+          tracksCount: changedCount,
+        ),
+      );
     }
 
     final hasEditsForAll = editedTags.isNotEmpty || imagePath.isNotEmpty || removeArtwork;
@@ -1849,7 +1881,12 @@ class _FillEmptyRule extends _ValuesRule {
 
 @visibleForTesting
 String debugApplyFindReplace(String value, {required SmartPlaylistRuleFilterText filter, required String find, required String replaceWith, required bool matchCase}) {
-  final rule = _FindReplaceRule(filter: filter, find: find, replaceWith: replaceWith, matchCase: matchCase);
+  final rule = _FindReplaceRule(
+    filter: filter,
+    find: find,
+    replaceWith: replaceWith,
+    matchCase: matchCase,
+  );
   return rule.apply(value);
 }
 
@@ -2786,7 +2823,14 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final suffixIconConstraints = isDense ? BoxConstraints(minWidth: 34.0, minHeight: height) : null;
     final icon = widget.icon;
     final hasIconSlot = icon != null || isDense; // -- dense fields take their height from the slot
-    final suffixIcon = widget.suffixIcon ?? (hasIconSlot ? Icon(icon, size: 18.0) : null);
+    final suffixIcon =
+        widget.suffixIcon ??
+        (hasIconSlot
+            ? Icon(
+                icon,
+                size: 18.0,
+              )
+            : null);
     return NBuilder(
       builder: (context, colors) => TextFormField(
         obscureText: widget.obscureText,

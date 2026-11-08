@@ -288,14 +288,20 @@ class StorageCacheManager {
         onTap: () => sortBy(sort),
         child: Row(
           children: [
-            Icon(icon, size: 18.0),
+            Icon(
+              icon,
+              size: 18.0,
+            ),
             const SizedBox(width: 4.0),
             NamidaText(
               title,
               style: NText.medium,
             ),
             const SizedBox(width: 4.0),
-            const Icon(Broken.arrow_down_2, size: 14.0),
+            const Icon(
+              Broken.arrow_down_2,
+              size: 14.0,
+            ),
           ],
         ),
       );

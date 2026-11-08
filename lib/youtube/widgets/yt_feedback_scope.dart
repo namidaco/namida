@@ -36,7 +36,10 @@ class YTFeedbackScope extends StatefulWidget {
     return NamidaPopupItem(
       icon: Broken.more_square,
       title: lang.more,
-      trailing: const Icon(Broken.arrow_right_3, size: 18.0),
+      trailing: const Icon(
+        Broken.arrow_right_3,
+        size: 18.0,
+      ),
       onTap: () => scopeState._showActionsMenu(context, list, item, actions, itemTitle),
     );
   }

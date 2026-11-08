@@ -170,7 +170,13 @@ Link to image:
     test('playlist index and count use the original index and the total length over the playlist info', () {
       final videoItem = item(indexInPlaylist: 2);
       final playlistInfo = playlist(videosCount: 9);
-      final rebuilt = rebuild('%(playlist_index)s|%(playlist_autonumber)s|%(playlist_count)s', videoItem: videoItem, playlistInfo: playlistInfo, index: 5, total: 120);
+      final rebuilt = rebuild(
+        '%(playlist_index)s|%(playlist_autonumber)s|%(playlist_count)s',
+        videoItem: videoItem,
+        playlistInfo: playlistInfo,
+        index: 5,
+        total: 120,
+      );
       expect(rebuilt, '005|006|120');
     });
 

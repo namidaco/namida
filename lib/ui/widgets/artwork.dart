@@ -732,7 +732,12 @@ class MultiArtworks extends StatelessWidget {
       images.add(
         NamidaFullscreenImage(
           imageFile: () => File(imagePath),
-          fetchImage: () => Indexer.inst.getArtwork(imagePath: imagePath, track: tr, compressed: false, checkFileFirst: false),
+          fetchImage: () => Indexer.inst.getArtwork(
+            imagePath: imagePath,
+            track: tr,
+            compressed: false,
+            checkFileFirst: false,
+          ),
           onSave: (_, _) => EditDeleteController.inst.saveTrackArtworkToStorage(tr),
           placeholder: placeholder,
         ),

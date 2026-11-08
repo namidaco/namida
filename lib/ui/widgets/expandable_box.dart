@@ -341,7 +341,12 @@ class SortByMenu extends StatelessWidget {
             NamidaInkWell(
               decoration: BoxDecoration(borderRadius: sortBorderRadius),
               height: _kHeight,
-              padding: const EdgeInsets.only(left: 13.0, right: 8.0, top: 7.0, bottom: 7.0),
+              padding: const EdgeInsets.only(
+                left: 13.0,
+                right: 8.0,
+                top: 7.0,
+                bottom: 7.0,
+              ),
               onTap: onSortTap,
               child: Center(
                 child: FittedBox(
@@ -401,7 +406,14 @@ class ExpandableBoxChip extends StatelessWidget {
     return NamidaInkWell(
       bgColor: const NColors(.secondary, opacity: 0.08),
       borderRadius: 10.0,
-      padding: showArrow ? const EdgeInsets.only(left: 8.0, right: 6.0, top: 7.0, bottom: 7.0) : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 7.0),
+      padding: showArrow
+          ? const EdgeInsets.only(
+              left: 8.0,
+              right: 6.0,
+              top: 7.0,
+              bottom: 7.0,
+            )
+          : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 7.0),
       onTap: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -580,7 +580,11 @@ class MainPageFABResumeButton extends StatelessWidget {
     final targetItem = tracks[index];
     void jumpFn() {
       JumpHighlight.showBriefly(targetItem, index, inQueue: false);
-      MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, routeType!);
+      MainPageFABResumeButton.jumpToItem(
+        index,
+        Dimensions.inst.trackTileItemExtent,
+        routeType!,
+      );
     }
 
     if (openTracksPage) {

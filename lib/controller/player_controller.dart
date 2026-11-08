@@ -314,7 +314,14 @@ class Player {
         final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => showClearCacheDialog(videoIds: [itemId])) : null;
         final details = e.details.toString();
         final detailsTrimmed = details.length > 600 ? details.substring(0, 600) : details;
-        snackyy(message: detailsTrimmed, title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
+        snackyy(
+          message: detailsTrimmed,
+          title: '${lang.error}: ${e.message}',
+          isError: true,
+          top: false,
+          button: button,
+          maxLinesMessage: 8,
+        );
       }
     };
 

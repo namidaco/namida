@@ -311,7 +311,10 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                               const SizedBox(width: 6.0),
                               if (_cachedSearchResults == true) ...[
                                 const SizedBox(width: 6.0),
-                                const Icon(Broken.global_refresh, size: 20.0),
+                                const Icon(
+                                  Broken.global_refresh,
+                                  size: 20.0,
+                                ),
                                 const SizedBox(width: 6.0),
                               ],
                               ObxO(
@@ -1013,7 +1016,11 @@ class _YTSearchFilterChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16.0, color: color),
+          Icon(
+            icon,
+            size: 16.0,
+            color: color,
+          ),
           const SizedBox(width: 6.0),
           NamidaText(
             title,

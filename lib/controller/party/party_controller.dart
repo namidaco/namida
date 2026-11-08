@@ -222,7 +222,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   Future<void> rejoin(PartyRoomMemory room, {required bool listening}) async {
     await _startSession(() async {
       _seedWithPlayerQueue = false;
-      await _connect(server: room.server, code: room.code, token: room.token, password: null, listening: listening, isNewRoom: false);
+      await _connect(
+        server: room.server,
+        code: room.code,
+        token: room.token,
+        password: null,
+        listening: listening,
+        isNewRoom: false,
+      );
       return null;
     });
   }
@@ -297,7 +304,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
       _seedWithPlayerQueue = seedWithPlayerQueue;
       _pendingPublic = isPublic;
-      await _connect(server: relayServer, code: code, token: token, password: null, listening: listening, isNewRoom: true);
+      await _connect(
+        server: relayServer,
+        code: code,
+        token: token,
+        password: null,
+        listening: listening,
+        isNewRoom: true,
+      );
       return null;
     });
   }
@@ -324,7 +338,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
         logger.error('party lan relay failed to start', e: e, st: st);
         return 'unreachable';
       }
-      final created = relay.createRoom(name: _displayName(name), did: deviceId, pv: kPartyVersion, approval: approval, password: password, public: isPublic);
+      final created = relay.createRoom(
+        name: _displayName(name),
+        did: deviceId,
+        pv: kPartyVersion,
+        approval: approval,
+        password: password,
+        public: isPublic,
+      );
       final lanAddress = (await SyncUtils.getPreferredInterface())?.addresses.firstOrNull?.address;
 
       _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
@@ -348,7 +369,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     await _startSession(() async {
       _seedWithPlayerQueue = false;
       final relayServer = server ?? defaultServer;
-      await _connect(server: relayServer, code: code.toUpperCase(), token: null, password: password, listening: listening, isNewRoom: false);
+      await _connect(
+        server: relayServer,
+        code: code.toUpperCase(),
+        token: null,
+        password: password,
+        listening: listening,
+        isNewRoom: false,
+      );
       return null;
     });
   }
@@ -731,7 +759,13 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   void setRoomOpts({bool? approval, bool? locked, bool? isPublic, String? password, bool clearPassword = false}) {
-    _connection?.setOpts(approval: approval, locked: locked, isPublic: isPublic, password: password, clearPassword: clearPassword);
+    _connection?.setOpts(
+      approval: approval,
+      locked: locked,
+      isPublic: isPublic,
+      password: password,
+      clearPassword: clearPassword,
+    );
   }
 
   void answerJoinRequest(String requestId, bool accept) {
@@ -860,9 +894,20 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       }
       if (_seedWithPlayerQueue) _seedQueueFromPlayer();
     } else {
-      _host = PartyHost.takeOver(state: _state, selfN: _myN, connected: Map.of(_relayMembers), crossfadeMS: crossfadeMS, delegate: this);
+      _host = PartyHost.takeOver(
+        state: _state,
+        selfN: _myN,
+        connected: Map.of(_relayMembers),
+        crossfadeMS: crossfadeMS,
+        delegate: this,
+      );
       if (!isFirstWelcome) {
-        snackyy(icon: Broken.crown_1, title: lang.partyListeningParty, message: lang.partyYouAreHostNow, top: false);
+        snackyy(
+          icon: Broken.crown_1,
+          title: lang.partyListeningParty,
+          message: lang.partyYouAreHostNow,
+          top: false,
+        );
       }
     }
   }

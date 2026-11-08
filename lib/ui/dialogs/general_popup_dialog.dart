@@ -1511,7 +1511,12 @@ Future<void> showGeneralPopupDialog(
                                   icon: Broken.chart_2,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    showTracksStatsCardDialog(tracks: tracks, title: title, subtitle: subtitle, isCircle: isCircle);
+                                    showTracksStatsCardDialog(
+                                      tracks: tracks,
+                                      title: title,
+                                      subtitle: subtitle,
+                                      isCircle: isCircle,
+                                    );
                                   },
                                 ),
 

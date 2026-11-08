@@ -348,7 +348,14 @@ class _ItemsCacheCandidates {
     final extractedThumbnailPath = FileParts.joinPath(AppDirs.YT_THUMBNAILS, '$extractedThumbnailFilenameWOExt.png');
     final extractedPalettePath = FileParts.joinPath(AppDirs.YT_PALETTES, '$extractedThumbnailFilenameWOExt.palette');
     _add(ItemCacheType.artwork, '${lang.thumbnails} (${lang.video})', [extractedThumbnailPath, extractedPalettePath]);
-    final tempThumbnailPath = ThumbnailManager.inst.imageUrlToCacheFile(id: videoId, url: null, type: ThumbnailType.video, isTemp: true)?.path;
+    final tempThumbnailPath = ThumbnailManager.inst
+        .imageUrlToCacheFile(
+          id: videoId,
+          url: null,
+          type: ThumbnailType.video,
+          isTemp: true,
+        )
+        ?.path;
     if (tempThumbnailPath != null) _add(ItemCacheType.artwork, lang.deleteTempFiles, [tempThumbnailPath], isTemp: true);
 
     final video = YoutubeID(id: videoId, playlistID: null);

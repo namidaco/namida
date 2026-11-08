@@ -34,7 +34,13 @@ class SyncBatchRef {
   void markDone() => batch?.markItemDone(item);
 
   void setProgress({required int count, required int totalCount, int bytes = 0, int totalBytes = 0}) {
-    batch?._setItemProgress(item, count: count, totalCount: totalCount, bytes: bytes, totalBytes: totalBytes);
+    batch?._setItemProgress(
+      item,
+      count: count,
+      totalCount: totalCount,
+      bytes: bytes,
+      totalBytes: totalBytes,
+    );
   }
 }
 

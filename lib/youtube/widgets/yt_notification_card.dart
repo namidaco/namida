@@ -201,7 +201,10 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
         NamidaPopupItem(
           icon: Broken.more_square,
           title: lang.more,
-          trailing: const Icon(Broken.arrow_right_3, size: 18.0),
+          trailing: const Icon(
+            Broken.arrow_right_3,
+            size: 18.0,
+          ),
           onTap: () => _showMenuActionsMenu(mainList),
         ),
     ];

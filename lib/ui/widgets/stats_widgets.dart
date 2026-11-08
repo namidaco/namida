@@ -79,7 +79,11 @@ class StatsPeriodChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
-          Icon(icon, size: 16.0, color: textColor),
+          Icon(
+            icon,
+            size: 16.0,
+            color: textColor,
+          ),
           if (text.isNotEmpty) const SizedBox(width: 4.0),
         ],
         if (text.isNotEmpty)
@@ -302,7 +306,12 @@ class StatsMiniTile extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          leading ?? NIcon(icon, size: 16.0, color: NColors.defaultIcon()),
+          leading ??
+              NIcon(
+                icon,
+                size: 16.0,
+                color: NColors.defaultIcon(),
+              ),
           const SizedBox(width: 8.0),
           if (valueWidget != null) ...[
             DefaultTextStyle(
@@ -501,7 +510,10 @@ class StatsPlaylistMenu extends StatelessWidget {
           iconQuarterTurns: 1,
           title: lang.more,
           hasDividerAbove: true,
-          trailing: const Icon(Broken.arrow_right_3, size: 18.0),
+          trailing: const Icon(
+            Broken.arrow_right_3,
+            size: 18.0,
+          ),
           onTap: () => _openFullMenu(context),
         ),
       ],
@@ -539,7 +551,11 @@ class StatsEmptyHint extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const NIcon(Broken.chart_2, size: 36.0, color: NColors(.onSurface, opacity: 0.4)),
+            const NIcon(
+              Broken.chart_2,
+              size: 36.0,
+              color: NColors(.onSurface, opacity: 0.4),
+            ),
             const SizedBox(height: 8.0),
             NamidaText(
               lang.history,
@@ -620,9 +636,21 @@ void showTracksStatsCardDialog({
                 Expanded(
                   child: Wrap(
                     children: [
-                      StatsMiniTile(icon: Broken.music_playlist, label: lang.totalListens, value: totalListens.formatDecimal()),
-                      StatsMiniTile(icon: Broken.timer_1, label: lang.totalListenTime, value: '≈ ${estimatedSeconds.secondsFormatted}'),
-                      StatsMiniTile(icon: Broken.music_circle, label: lang.tracks, value: '$playedTracks / ${tracks.length}'),
+                      StatsMiniTile(
+                        icon: Broken.music_playlist,
+                        label: lang.totalListens,
+                        value: totalListens.formatDecimal(),
+                      ),
+                      StatsMiniTile(
+                        icon: Broken.timer_1,
+                        label: lang.totalListenTime,
+                        value: '≈ ${estimatedSeconds.secondsFormatted}',
+                      ),
+                      StatsMiniTile(
+                        icon: Broken.music_circle,
+                        label: lang.tracks,
+                        value: '$playedTracks / ${tracks.length}',
+                      ),
                     ],
                   ),
                 ),
@@ -632,8 +660,16 @@ void showTracksStatsCardDialog({
               const SizedBox(height: 4.0),
               Wrap(
                 children: [
-                  StatsMiniTile(icon: Broken.calendar_1, label: lang.firstListen, value: firstMS.dateFormattedOriginal),
-                  StatsMiniTile(icon: Broken.calendar, label: lang.lastListen, value: lastMS.dateFormattedOriginal),
+                  StatsMiniTile(
+                    icon: Broken.calendar_1,
+                    label: lang.firstListen,
+                    value: firstMS.dateFormattedOriginal,
+                  ),
+                  StatsMiniTile(
+                    icon: Broken.calendar,
+                    label: lang.lastListen,
+                    value: lastMS.dateFormattedOriginal,
+                  ),
                 ],
               ),
             ],

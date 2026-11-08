@@ -168,7 +168,10 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Broken.cloud_change, size: 20.0),
+                const Icon(
+                  Broken.cloud_change,
+                  size: 20.0,
+                ),
                 const SizedBox(width: 6.0),
                 NamidaText(
                   s.title,

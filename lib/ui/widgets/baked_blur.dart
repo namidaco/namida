@@ -302,7 +302,12 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glow.blur);
       canvas.drawRRect(shape, paint);
     } else {
-      final bake = _obtainBake(isGlow: true, blur: glow.blur, isCircle: glow.isCircle, borderRadius: glow.borderRadius);
+      final bake = _obtainBake(
+        isGlow: true,
+        blur: glow.blur,
+        isCircle: glow.isCircle,
+        borderRadius: glow.borderRadius,
+      );
       var paint = _bakePaint;
       if (opacity < 1.0) paint = _fadedBakePaint..color = Color.fromRGBO(0, 0, 0, opacity);
       bake?.paint(canvas, boxRect, paint);
@@ -332,7 +337,12 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
       final oldestKey = bakes.keys.first;
       bakes.remove(oldestKey)?.dispose();
     }
-    final bake = _createBake(image: image, imageScale: _imageScale, boxSize: boxSize, key: key);
+    final bake = _createBake(
+      image: image,
+      imageScale: _imageScale,
+      boxSize: boxSize,
+      key: key,
+    );
     bakes[key] = bake;
     return bake;
   }
@@ -547,7 +557,12 @@ class _RenderArtworkBackdropBlur extends RenderProxyBox {
     final canvas = context.canvas;
     final clipRect = offset & size;
     for (final artwork in _sources._artworks) {
-      final bake = artwork._obtainBake(isGlow: false, blur: _blur, isCircle: false, borderRadius: null);
+      final bake = artwork._obtainBake(
+        isGlow: false,
+        blur: _blur,
+        isCircle: false,
+        borderRadius: null,
+      );
       if (bake == null) continue;
       final artworkToThis = artwork.getTransformTo(this);
       final artworkRect = Offset.zero & artwork.size;

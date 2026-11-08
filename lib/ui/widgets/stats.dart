@@ -117,13 +117,43 @@ class StatsSection extends StatelessWidget {
             return Wrap(
               alignment: WrapAlignment.start,
               children: [
-                StatsMiniTile(icon: MediaType.track.toIcon(), label: lang.tracks, value: allTracks.length.formatDecimal()),
-                StatsMiniTile(icon: MediaType.album.toIcon(), label: lang.albums, value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal()),
-                StatsMiniTile(icon: MediaType.artist.toIcon(), label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
-                StatsMiniTile(icon: MediaType.genre.toIcon(), label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
-                if (stylesLength != null) StatsMiniTile(icon: MediaType.style.toIcon(), label: lang.styles, value: stylesLength.formatDecimal()),
-                if (languagesLength > 1) StatsMiniTile(icon: MediaType.language.toIcon(), label: lang.languages, value: languagesLength.formatDecimal()),
-                StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
+                StatsMiniTile(
+                  icon: MediaType.track.toIcon(),
+                  label: lang.tracks,
+                  value: allTracks.length.formatDecimal(),
+                ),
+                StatsMiniTile(
+                  icon: MediaType.album.toIcon(),
+                  label: lang.albums,
+                  value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal(),
+                ),
+                StatsMiniTile(
+                  icon: MediaType.artist.toIcon(),
+                  label: lang.artists,
+                  value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal(),
+                ),
+                StatsMiniTile(
+                  icon: MediaType.genre.toIcon(),
+                  label: lang.genres,
+                  value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal(),
+                ),
+                if (stylesLength != null)
+                  StatsMiniTile(
+                    icon: MediaType.style.toIcon(),
+                    label: lang.styles,
+                    value: stylesLength.formatDecimal(),
+                  ),
+                if (languagesLength > 1)
+                  StatsMiniTile(
+                    icon: MediaType.language.toIcon(),
+                    label: lang.languages,
+                    value: languagesLength.formatDecimal(),
+                  ),
+                StatsMiniTile(
+                  icon: Broken.music_library_2,
+                  label: lang.totalTracksDuration,
+                  value: allTracks.totalDurationFormatted,
+                ),
                 Obx(
                   (context) {
                     final map = Player.inst.totalListenedTimeInSec;
@@ -435,7 +465,11 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               children: [
-                NIcon(Broken.chart_2, size: 22.0, color: NColors.defaultIcon()),
+                NIcon(
+                  Broken.chart_2,
+                  size: 22.0,
+                  color: NColors.defaultIcon(),
+                ),
                 const SizedBox(width: 10.0),
                 Expanded(
                   child: NamidaText(
@@ -469,7 +503,11 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        NIcon(Broken.magic_star, size: 16.0, color: NColors.defaultIcon()),
+                        NIcon(
+                          Broken.magic_star,
+                          size: 16.0,
+                          color: NColors.defaultIcon(),
+                        ),
                         const SizedBox(width: 6.0),
                         NamidaText(
                           lang.yourYear(year: years.first.toString()),
@@ -554,31 +592,56 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   icon: Broken.music_playlist,
                   label: lang.totalListens,
                   value: s.totalListens.formatDecimal(),
-                  trailing: hasPrev ? StatsDelta(now: s.totalListens, previous: prev.totalListens) : null,
+                  trailing: hasPrev
+                      ? StatsDelta(
+                          now: s.totalListens,
+                          previous: prev.totalListens,
+                        )
+                      : null,
                 ),
                 StatsMiniTile(
                   icon: Broken.timer_1,
                   label: lang.totalListenTime,
                   value: StatsFormat.listenTime(s),
-                  trailing: hasPrev ? StatsDelta(now: s.listenSeconds, previous: prev.listenSeconds) : null,
+                  trailing: hasPrev
+                      ? StatsDelta(
+                          now: s.listenSeconds,
+                          previous: prev.listenSeconds,
+                        )
+                      : null,
                 ),
                 StatsMiniTile(
                   icon: isYoutube ? Broken.video_square : Broken.music_circle,
                   label: itemsLabel,
                   value: s.uniqueItems.formatDecimal(),
-                  trailing: hasPrev ? StatsDelta(now: s.uniqueItems, previous: prev.uniqueItems) : null,
+                  trailing: hasPrev
+                      ? StatsDelta(
+                          now: s.uniqueItems,
+                          previous: prev.uniqueItems,
+                        )
+                      : null,
                 ),
                 StatsMiniTile(
                   icon: isYoutube ? Broken.profile_2user : Broken.microphone,
                   label: artistsLabel,
                   value: s.uniqueArtists.formatDecimal(),
-                  trailing: hasPrev ? StatsDelta(now: s.uniqueArtists, previous: prev.uniqueArtists) : null,
+                  trailing: hasPrev
+                      ? StatsDelta(
+                          now: s.uniqueArtists,
+                          previous: prev.uniqueArtists,
+                        )
+                      : null,
                 ),
                 StatsMiniTile(
                   icon: Broken.calendar_1,
                   label: lang.days,
                   value: '${s.daysWithListens.formatDecimal()} / ${s.totalDays.formatDecimal()}',
-                  trailing: hasPrev ? StatsDelta(now: s.daysWithListens, previous: prev.daysWithListens) : null,
+                  trailing: hasPrev
+                      ? StatsDelta(
+                          now: s.daysWithListens,
+                          previous: prev.daysWithListens,
+                        )
+                      : null,
                 ),
                 StatsMiniTile(
                   icon: Broken.flash,
@@ -712,8 +775,14 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
           child: LayoutWidthProvider(
             builder: (context, maxWidth) {
               final wide = maxWidth > 420;
-              final clock = ListeningClockChart(hours: s.hours, size: wide ? 200.0 : (maxWidth * 0.62).clamp(160.0, 220.0));
-              final bars = VerticalBarsChart(data: weekdays, height: 90.0);
+              final clock = ListeningClockChart(
+                hours: s.hours,
+                size: wide ? 200.0 : (maxWidth * 0.62).clamp(160.0, 220.0),
+              );
+              final bars = VerticalBarsChart(
+                data: weekdays,
+                height: 90.0,
+              );
               final grid = GridHeatmapChart(
                 values: s.weekHours,
                 rows: 7,
@@ -784,17 +853,45 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             children: [
               Wrap(
                 children: [
-                  StatsMiniTile(icon: Broken.repeat, label: lang.repeatRate, value: '$repeatPct%'),
-                  StatsMiniTile(icon: Broken.music_square, label: '${lang.totalListens} = 1', value: '${s.oneTimeItems.formatDecimal()} $itemsLabel'),
+                  StatsMiniTile(
+                    icon: Broken.repeat,
+                    label: lang.repeatRate,
+                    value: '$repeatPct%',
+                  ),
+                  StatsMiniTile(
+                    icon: Broken.music_square,
+                    label: '${lang.totalListens} = 1',
+                    value: '${s.oneTimeItems.formatDecimal()} $itemsLabel',
+                  ),
                   StatsMiniTile(
                     icon: Broken.flash,
                     label: '${lang.totalListens} ≥ ${HistoryStatsSnapshot.heavyRotationCount}',
                     value: '${s.heavyRotationItems.formatDecimal()} $itemsLabel',
                   ),
-                  if (libraryCount > 0) StatsMiniTile(icon: Broken.music_library_2, label: lang.libraryReach, value: '$reachPct%'),
-                  if (libraryCount > 0) StatsMiniTile(icon: Broken.eye, label: '${lang.never} • ${lang.tracks}', value: neverPlayed.formatDecimal()),
-                  if (s.avgFirstMinute >= 0) StatsMiniTile(icon: Broken.sun_1, label: lang.firstListen, value: statsMinuteOfDay(s.avgFirstMinute)),
-                  if (s.avgLastMinute >= 0) StatsMiniTile(icon: Broken.moon, label: lang.lastListen, value: statsMinuteOfDay(s.avgLastMinute)),
+                  if (libraryCount > 0)
+                    StatsMiniTile(
+                      icon: Broken.music_library_2,
+                      label: lang.libraryReach,
+                      value: '$reachPct%',
+                    ),
+                  if (libraryCount > 0)
+                    StatsMiniTile(
+                      icon: Broken.eye,
+                      label: '${lang.never} • ${lang.tracks}',
+                      value: neverPlayed.formatDecimal(),
+                    ),
+                  if (s.avgFirstMinute >= 0)
+                    StatsMiniTile(
+                      icon: Broken.sun_1,
+                      label: lang.firstListen,
+                      value: statsMinuteOfDay(s.avgFirstMinute),
+                    ),
+                  if (s.avgLastMinute >= 0)
+                    StatsMiniTile(
+                      icon: Broken.moon,
+                      label: lang.lastListen,
+                      value: statsMinuteOfDay(s.avgLastMinute),
+                    ),
                 ],
               ),
               if (streak != null) ...[
@@ -916,8 +1013,16 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             children: [
               Wrap(
                 children: [
-                  StatsMiniTile(icon: isYoutube ? Broken.video_square : Broken.music_circle, label: itemsLabel, value: s.newItems.formatDecimal()),
-                  StatsMiniTile(icon: isYoutube ? Broken.profile_2user : Broken.microphone, label: artistsLabel, value: s.newArtists.formatDecimal()),
+                  StatsMiniTile(
+                    icon: isYoutube ? Broken.video_square : Broken.music_circle,
+                    label: itemsLabel,
+                    value: s.newItems.formatDecimal(),
+                  ),
+                  StatsMiniTile(
+                    icon: isYoutube ? Broken.profile_2user : Broken.microphone,
+                    label: artistsLabel,
+                    value: s.newArtists.formatDecimal(),
+                  ),
                 ],
               ),
               if (newItems.isNotEmpty) ...[
@@ -939,7 +1044,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                 const SizedBox(height: 8.0),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(6.0, 0.0, 6.0, 6.0),
-                  child: Text('${lang.top} $artistsLabel • ${lang.firstListen}', style: captionStyle),
+                  child: Text(
+                    '${lang.top} $artistsLabel • ${lang.firstListen}',
+                    style: captionStyle,
+                  ),
                 ),
                 Wrap(
                   children: s.newArtistsTop
@@ -958,7 +1066,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                 const SizedBox(height: 8.0),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(6.0, 0.0, 6.0, 6.0),
-                  child: Text('${lang.oldestFavorite} • ${oldest.firstListenMS.dateFormattedOriginal}', style: captionStyle),
+                  child: Text(
+                    '${lang.oldestFavorite} • ${oldest.firstListenMS.dateFormattedOriginal}',
+                    style: captionStyle,
+                  ),
                 ),
                 _buildSingleItem(context, s, oldest.item, oldest.count, listensRangeMS: rangeMS),
               ],
@@ -1049,7 +1160,11 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                               },
                         child: Row(
                           children: [
-                            NIcon(r.$1, size: 18.0, color: NColors.defaultIcon()),
+                            NIcon(
+                              r.$1,
+                              size: 18.0,
+                              color: NColors.defaultIcon(),
+                            ),
                             const SizedBox(width: 10.0),
                             SizedBox(
                               width: 64.0,
@@ -1155,7 +1270,11 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                     onTap: () => NamidaOnTaps.inst.onAlbumTap(e.key as AlbumIdentifierWrapper),
                     child: Row(
                       children: [
-                        NIcon(Broken.music_dashboard, size: 18.0, color: NColors.defaultIcon()),
+                        NIcon(
+                          Broken.music_dashboard,
+                          size: 18.0,
+                          color: NColors.defaultIcon(),
+                        ),
                         const SizedBox(width: 10.0),
                         Expanded(
                           child: NamidaText(
@@ -1276,13 +1395,25 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (buckets.isNotEmpty) DonutChart(data: buckets, centerLabel: lang.bitrate),
+                if (buckets.isNotEmpty)
+                  DonutChart(
+                    data: buckets,
+                    centerLabel: lang.bitrate,
+                  ),
                 if (total > 0) ...[
                   const SizedBox(height: 8.0),
                   Wrap(
                     children: [
-                      StatsMiniTile(icon: Broken.musicnote, label: lang.lossless, value: s.losslessListens.formatDecimal()),
-                      StatsMiniTile(icon: Broken.music, label: lang.others, value: s.lossyListens.formatDecimal()),
+                      StatsMiniTile(
+                        icon: Broken.musicnote,
+                        label: lang.lossless,
+                        value: s.losslessListens.formatDecimal(),
+                      ),
+                      StatsMiniTile(
+                        icon: Broken.music,
+                        label: lang.others,
+                        value: s.lossyListens.formatDecimal(),
+                      ),
                     ],
                   ),
                 ],
@@ -1353,7 +1484,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             title: lang.year,
             icon: Broken.cake,
             copyText: () => data.map((e) => '${e.label} • ${e.value}').join('\n'),
-            child: VerticalBarsChart(data: data, height: 110.0),
+            child: VerticalBarsChart(
+              data: data,
+              height: 110.0,
+            ),
           );
         },
       );
@@ -1364,7 +1498,14 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
 
   Widget _buildSingleItem(BuildContext context, HistoryStatsSnapshot s, Object item, int count, {(int, int)? listensRangeMS}) {
     if (item is Track) {
-      return StatsTopTrackTile(track: item, index: 0, count: count, queue: [item], showIndex: false, listensRangeMS: listensRangeMS);
+      return StatsTopTrackTile(
+        track: item,
+        index: 0,
+        count: count,
+        queue: [item],
+        showIndex: false,
+        listensRangeMS: listensRangeMS,
+      );
     }
     if (item is String) {
       return StatsTopVideosRow(items: [StatsRankEntry(item, count)]);
@@ -1475,7 +1616,10 @@ class _ShowMoreButton extends StatelessWidget {
               ),
               const SizedBox(width: 4.0),
             ],
-            Icon(isFullyShown ? Broken.arrow_up_3 : Broken.arrow_down_2, size: 14.0),
+            Icon(
+              isFullyShown ? Broken.arrow_up_3 : Broken.arrow_down_2,
+              size: 14.0,
+            ),
           ],
         ),
       ),

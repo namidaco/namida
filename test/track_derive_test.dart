@@ -309,7 +309,15 @@ void main() {
     });
 
     test('disc total is read when the disc number has none', () async {
-      final fresh = await index(pathOf('disc.mp3'), editTags(title: 'T', artist: 'Ar', discNumber: '1', discTotal: '2'));
+      final fresh = await index(
+        pathOf('disc.mp3'),
+        editTags(
+          title: 'T',
+          artist: 'Ar',
+          discNumber: '1',
+          discTotal: '2',
+        ),
+      );
       expect(fresh.discNo, 1);
       expect(fresh.discTo, 2);
     });
@@ -385,7 +393,12 @@ void main() {
   });
 
   group('missing embedded artwork', () {
-    FTags tagsWith(FArtwork artwork) => FTags.edit(path: '', artwork: artwork, title: 'T', artist: 'Ar');
+    FTags tagsWith(FArtwork artwork) => FTags.edit(
+      path: '',
+      artwork: artwork,
+      title: 'T',
+      artist: 'Ar',
+    );
 
     test('is known only when indexing extracted the artwork and found none', () async {
       final none = await index(pathOf('none.mp3'), tagsWith(FArtwork()), didExtractArtwork: true);

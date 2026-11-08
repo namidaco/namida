@@ -941,7 +941,15 @@ void main() {
       final library = writeLibrary([libraryTrack('Song', 'Artist', 'Album', 200000)]);
       final hourMS = utcMS(2024, 9, 3, 10, 0);
       List<String> row(int minute, int from, int to, [String reason = 'PLAYBACK_MANUALLY_PAUSED']) {
-        return playRow('Song', 'Album', hourMS + minute * 60000, from: from, to: to, durationMS: 200000, reason: reason);
+        return playRow(
+          'Song',
+          'Album',
+          hourMS + minute * 60000,
+          from: from,
+          to: to,
+          durationMS: 200000,
+          reason: reason,
+        );
       }
 
       final rows = [
@@ -980,7 +988,15 @@ void main() {
       );
       final hourMS = utcMS(2024, 9, 3, 10, 0);
       List<String> fullPlay(String title, String album, int minute, int durationMS) {
-        return playRow(title, album, hourMS + minute * 60000, from: 0, to: durationMS, durationMS: durationMS, reason: 'NATURAL_END_OF_TRACK');
+        return playRow(
+          title,
+          album,
+          hourMS + minute * 60000,
+          from: 0,
+          to: durationMS,
+          durationMS: durationMS,
+          reason: 'NATURAL_END_OF_TRACK',
+        );
       }
 
       final file = writeCsv(playActivityHeader, [

@@ -244,7 +244,10 @@ class CustomSwitchListTile extends StatelessWidget {
               width: 12.0,
             ),
             IgnorePointer(
-              child: CustomSwitch(active: value, passedColor: passedColor),
+              child: CustomSwitch(
+                active: value,
+                passedColor: passedColor,
+              ),
             ),
           ],
         ),
@@ -799,7 +802,12 @@ class CustomBlurryDialog extends StatelessWidget {
                         /// Actions.
                         if (actions != null)
                           Padding(
-                            padding: EdgeInsets.only(left: 16.0, right: 16.0, top: actionsTopPadding, bottom: 12.0),
+                            padding: EdgeInsets.only(
+                              left: 16.0,
+                              right: 16.0,
+                              top: actionsTopPadding,
+                              bottom: 12.0,
+                            ),
                             child: LayoutWidthProvider(
                               builder: (context, maxWidth) {
                                 final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
@@ -901,7 +909,12 @@ class _RenderRevealAboveKeyboard extends fr.RenderProxyBox {
       final revealBottom = descendantRect.bottom + keyboardHeight;
       rect = Rect.fromLTRB(descendantRect.left, descendantRect.top, descendantRect.right, revealBottom);
     }
-    super.showOnScreen(descendant: descendant, rect: rect, duration: duration, curve: curve);
+    super.showOnScreen(
+      descendant: descendant,
+      rect: rect,
+      duration: duration,
+      curve: curve,
+    );
   }
 }
 
@@ -1154,7 +1167,12 @@ class NamidaButton extends StatelessWidget {
     LinearGradient? gradient;
     if (isGradient) {
       final accentColor = this.colorScheme ?? nColors.accent ?? CurrentColor.inst.color;
-      gradient = NamidaGradients.accentCard(scaffold: nColors.scaffold, accent: accentColor, isDarkMode: context.isDarkMode, endAccentOpacity: _kGradientEndAccentOpacity);
+      gradient = NamidaGradients.accentCard(
+        scaffold: nColors.scaffold,
+        accent: accentColor,
+        isDarkMode: context.isDarkMode,
+        endAccentOpacity: _kGradientEndAccentOpacity,
+      );
       borderColor = accentColor.withOpacityExt(0.5);
     }
 
@@ -3217,7 +3235,14 @@ class SubpageInfoContainer extends StatelessWidget {
         final isSingleArtworkType = subpageInfoType == MediaType.album || subpageInfoType == MediaType.artist;
         final isOverlay = style == SubpageInfoStyle.overlay;
         final isBlurBackdrop = style == SubpageInfoStyle.blurBackdrop;
-        final contentPadding = layout.isEdgeToEdge ? EdgeInsets.zero : const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 4.0);
+        final contentPadding = layout.isEdgeToEdge
+            ? EdgeInsets.zero
+            : const EdgeInsets.only(
+                top: 12.0,
+                left: 12.0,
+                right: 12.0,
+                bottom: 4.0,
+              );
         final topMargin = style == SubpageInfoStyle.compact ? topPadding : 0.0;
 
         Widget content = Padding(
@@ -4256,7 +4281,12 @@ class SearchPageTitleRow extends StatelessWidget {
     final onTap = this.onTap;
     if (onTap == null) {
       return Padding(
-        padding: EdgeInsets.only(left: 16.0, right: 8.0, top: verticalPadding, bottom: verticalPadding),
+        padding: EdgeInsets.only(
+          left: 16.0,
+          right: 8.0,
+          top: verticalPadding,
+          bottom: verticalPadding,
+        ),
         child: content,
       );
     }
@@ -6395,7 +6425,11 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
               ?.map(
                 (e) => Padding(
                   padding: itemsPadding,
-                  child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    e,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               )
               .toList() ??
@@ -6404,7 +6438,11 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
               .map(
                 (e) => Padding(
                   padding: itemsPadding,
-                  child: Text(e.toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    e.toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               )
               .toList(),
@@ -8790,7 +8828,12 @@ class ObxPrefer<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return enabled ? ObxO(rx: rx, builder: builder) : builder(context, null);
+    return enabled
+        ? ObxO(
+            rx: rx,
+            builder: builder,
+          )
+        : builder(context, null);
   }
 }
 
@@ -8801,7 +8844,12 @@ class ObxOrNull<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return rx != null ? ObxO(rx: rx!, builder: builder) : builder(context, null);
+    return rx != null
+        ? ObxO(
+            rx: rx!,
+            builder: builder,
+          )
+        : builder(context, null);
   }
 }
 

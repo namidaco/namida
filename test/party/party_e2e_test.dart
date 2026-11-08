@@ -59,7 +59,16 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
       ..addAll(welcome.members);
     if (isHost) {
       synced = true;
-      host ??= PartyHost.create(state: state, selfN: myN, selfName: name, roomName: 'room', listening: true, repeat: PartyRepeat.initial, crossfadeMS: 0, delegate: this);
+      host ??= PartyHost.create(
+        state: state,
+        selfN: myN,
+        selfName: name,
+        roomName: 'room',
+        listening: true,
+        repeat: PartyRepeat.initial,
+        crossfadeMS: 0,
+        delegate: this,
+      );
     } else {
       connection.sendData(PartyRoute.toHost, PartyMsg.hello(listening: true).encode());
     }
@@ -102,7 +111,13 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
     hostN = n;
     if (isHost && !wasHost) {
       synced = true;
-      host = PartyHost.takeOver(state: state, selfN: myN, connected: Map.of(relayMembers), crossfadeMS: 0, delegate: this);
+      host = PartyHost.takeOver(
+        state: state,
+        selfN: myN,
+        connected: Map.of(relayMembers),
+        crossfadeMS: 0,
+        delegate: this,
+      );
     }
   }
 
@@ -191,7 +206,12 @@ void main() {
     await hiddenHost.connect(relay.port, unlisted.code, token: unlisted.token);
     hiddenHost.connection.sendSummary(name: 'hidden room', title: 'nope', artist: 'nope');
 
-    final room = relay.createRoom(name: 'host', did: 'did-host', pv: kPartyVersion, public: true);
+    final room = relay.createRoom(
+      name: 'host',
+      did: 'did-host',
+      pv: kPartyVersion,
+      public: true,
+    );
     final host = _Peer('host');
     await host.connect(relay.port, room.code, token: room.token);
     host.connection.sendSummary(name: 'my room', title: 'a song', artist: 'an artist');
@@ -233,12 +253,22 @@ void main() {
   test('public rooms on another party version are not listed', () async {
     final server = Uri(scheme: 'http', host: '127.0.0.1', port: relay.port);
     const olderPartyVersion = kPartyVersion - 1;
-    final olderRoom = relay.createRoom(name: 'older host', did: 'did-older-host', pv: olderPartyVersion, public: true);
+    final olderRoom = relay.createRoom(
+      name: 'older host',
+      did: 'did-older-host',
+      pv: olderPartyVersion,
+      public: true,
+    );
     final olderHost = _Peer('older host');
     await olderHost.connect(relay.port, olderRoom.code, token: olderRoom.token, partyVersion: olderPartyVersion);
     olderHost.connection.sendSummary(name: 'older room', title: 'a song', artist: 'an artist');
 
-    final room = relay.createRoom(name: 'host', did: 'did-host', pv: kPartyVersion, public: true);
+    final room = relay.createRoom(
+      name: 'host',
+      did: 'did-host',
+      pv: kPartyVersion,
+      public: true,
+    );
     final host = _Peer('host');
     await host.connect(relay.port, room.code, token: room.token);
     host.connection.sendSummary(name: 'my room', title: 'a song', artist: 'an artist');

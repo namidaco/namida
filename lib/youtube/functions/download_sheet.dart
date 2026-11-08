@@ -321,7 +321,10 @@ Future<void> showDownloadVideoBottomSheet({
             ),
           ),
           const SizedBox(width: 6.0),
-          Icon(cacheExists ? Broken.tick_circle : Broken.import, size: 18.0),
+          Icon(
+            cacheExists ? Broken.tick_circle : Broken.import,
+            size: 18.0,
+          ),
           SizedBox(width: horizontalPadding),
         ],
       ),

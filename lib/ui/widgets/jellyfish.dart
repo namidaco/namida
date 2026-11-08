@@ -544,7 +544,10 @@ class FloatingJelly extends StatelessWidget {
       ),
     );
     if (mirrored) {
-      image = Transform.flip(flipX: true, child: image);
+      image = Transform.flip(
+        flipX: true,
+        child: image,
+      );
     }
     return FloatingImage(
       amplitude: amplitude,

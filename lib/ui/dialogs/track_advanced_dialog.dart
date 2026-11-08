@@ -867,7 +867,10 @@ void _showTrackColorPaletteDialog({
   final finalColorToBeUsed = initialColor.obs;
 
   Widget getText(String text, {TextStyle? style}) {
-    return Text(text, style: style ?? namida.textTheme.displaySmall);
+    return Text(
+      text,
+      style: style ?? namida.textTheme.displaySmall,
+    );
   }
 
   Widget getColorWidget(Color? color, [Widget? child]) => CircleAvatar(

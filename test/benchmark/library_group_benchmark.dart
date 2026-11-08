@@ -112,7 +112,13 @@ TrackExtended _extendedOf(SyntheticTrack s) {
   final albumArtists = _splitOrFallback(s.albumArtist, UnknownTags.ALBUMARTIST);
   final genres = _splitOrFallback(s.genre, UnknownTags.GENRE);
   final composers = _splitOrFallback(s.composer, UnknownTags.COMPOSER);
-  final albumsWrappers = AlbumIdentifierWrapper.fromAlbums(albums: albums, albumArtist: albumArtist, year: yearText, mbAlbumId: '', mbAlbumArtistId: '');
+  final albumsWrappers = AlbumIdentifierWrapper.fromAlbums(
+    albums: albums,
+    albumArtist: albumArtist,
+    year: yearText,
+    mbAlbumId: '',
+    mbAlbumArtistId: '',
+  );
   return kDummyExtendedTrack.copyWith(
     path: s.path,
     title: title,

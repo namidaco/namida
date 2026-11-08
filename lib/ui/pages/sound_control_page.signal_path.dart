@@ -101,7 +101,14 @@ abstract final class _SignalPathSteps {
     final decoderName = path.decoderName;
     if (decoderName != null) {
       final decodedText = _SignalPathFormat.of(path.decoded, withChannels: false);
-      steps.add(_SignalPathStep(icon: Broken.code, title: lang.decoder, detail: '$decoderName → $decodedText', changesAudio: false));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.code,
+          title: lang.decoder,
+          detail: '$decoderName → $decodedText',
+          changesAudio: false,
+        ),
+      );
     }
     if (path.isBitPerfect) {
       steps.add(_untouchedStep(path));
@@ -111,7 +118,14 @@ abstract final class _SignalPathSteps {
     final outputStep = _outputStep(path);
     if (outputStep != null) steps.add(outputStep);
     final deviceName = path.outputDeviceName ?? lang.systemDefault;
-    steps.add(_SignalPathStep(icon: Broken.speaker, title: deviceName, detail: null, changesAudio: false));
+    steps.add(
+      _SignalPathStep(
+        icon: Broken.speaker,
+        title: deviceName,
+        detail: null,
+        changesAudio: false,
+      ),
+    );
     return steps;
   }
 
@@ -121,7 +135,12 @@ abstract final class _SignalPathSteps {
     final formatText = _SignalPathFormat.of(path.source, withChannels: true);
     final bitrateKbps = (path.sourceBitrate / 1000).round();
     final detail = bitrateKbps > 0 ? '$formatText · $bitrateKbps kbps' : formatText;
-    return _SignalPathStep(icon: Broken.music, title: title, detail: detail, changesAudio: false);
+    return _SignalPathStep(
+      icon: Broken.music,
+      title: title,
+      detail: detail,
+      changesAudio: false,
+    );
   }
 
   /// integer samples widened into a bigger container keep every bit.
@@ -130,7 +149,12 @@ abstract final class _SignalPathSteps {
     final outputBits = path.output.bitDepth;
     final isPadded = decodedBits > 0 && outputBits > decodedBits;
     final detail = isPadded ? '$decodedBits-bit → $outputBits-bit' : null;
-    return _SignalPathStep(icon: Broken.flash, title: lang.bitPerfect, detail: detail, changesAudio: false);
+    return _SignalPathStep(
+      icon: Broken.flash,
+      title: lang.bitPerfect,
+      detail: detail,
+      changesAudio: false,
+    );
   }
 
   static List<_SignalPathStep> _processingStepsR(AudioSignalPath path) {
@@ -146,40 +170,96 @@ abstract final class _SignalPathSteps {
 
     final steps = <_SignalPathStep>[];
     if (Platform.isAndroid && !path.decoded.isFloat) {
-      steps.add(const _SignalPathStep(icon: Broken.convert, title: '32-bit float', detail: null, changesAudio: false));
+      steps.add(
+        const _SignalPathStep(
+          icon: Broken.convert,
+          title: '32-bit float',
+          detail: null,
+          changesAudio: false,
+        ),
+      );
     }
     if (config.skipSilence) {
-      steps.add(_SignalPathStep(icon: Broken.forward, title: lang.skipSilence, detail: null, changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.forward,
+          title: lang.skipSilence,
+          detail: null,
+          changesAudio: true,
+        ),
+      );
     }
     if (config.speed != 1.0) {
       final speedText = config.speed.roundDecimals(2);
-      steps.add(_SignalPathStep(icon: Broken.forward, title: lang.speed, detail: '$speedText×', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.forward,
+          title: lang.speed,
+          detail: '$speedText×',
+          changesAudio: true,
+        ),
+      );
     }
     if (config.pitch != 1.0) {
       final pitchPercentage = (config.pitch * 100).roundDecimals(1);
-      steps.add(_SignalPathStep(icon: Broken.airpods, title: lang.pitch, detail: '$pitchPercentage%', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.airpods,
+          title: lang.pitch,
+          detail: '$pitchPercentage%',
+          changesAudio: true,
+        ),
+      );
     }
     final equalizer = config.equalizer;
     if (config.equalizerEnabled && equalizer.getActiveBands().isNotEmpty) {
       final preamp = equalizer.computeEffectivePreamp();
       final preampText = _EqualizerFormat.gain(preamp);
-      steps.add(_SignalPathStep(icon: Broken.chart_3, title: lang.equalizer, detail: '${lang.preamp} $preampText', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.chart_3,
+          title: lang.equalizer,
+          detail: '${lang.preamp} $preampText',
+          changesAudio: true,
+        ),
+      );
     }
     final soundEffects = settings.equalizer.soundEffects.valueR;
     if (Platform.isAndroid && soundEffects.isNotEmpty) {
       final effectNames = soundEffects.map((e) => e.toText()).joinText(separator: ', ');
-      steps.add(_SignalPathStep(icon: Broken.magic_star, title: lang.soundEffects, detail: effectNames, changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.magic_star,
+          title: lang.soundEffects,
+          detail: effectNames,
+          changesAudio: true,
+        ),
+      );
     }
     final isLoudnessEnhancerAudible = !isUsbDirect && config.loudnessEnhancerEnabled && config.loudnessEnhancer != 0.0;
     if (isLoudnessEnhancerAudible) {
       final gainText = _EqualizerFormat.gain(config.loudnessEnhancer);
-      steps.add(_SignalPathStep(icon: Broken.volume_high, title: lang.loudnessEnhancer, detail: gainText, changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.volume_high,
+          title: lang.loudnessEnhancer,
+          detail: gainText,
+          changesAudio: true,
+        ),
+      );
     }
     final volume = config.volume * replayGainLinear;
     final isVolumeInHardware = isUsbDirect && path.hasOutputHardwareVolume;
     if (volume != 1.0 && !isVolumeInHardware) {
       final volumePercentage = (volume * 100).round();
-      steps.add(_SignalPathStep(icon: Broken.volume_up, title: lang.volume, detail: '$volumePercentage%', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.volume_up,
+          title: lang.volume,
+          detail: '$volumePercentage%',
+          changesAudio: true,
+        ),
+      );
     }
     final decodedRate = path.decoded.sampleRate;
     final outputRate = path.output.sampleRate;
@@ -187,15 +267,36 @@ abstract final class _SignalPathSteps {
       final decodedRateText = _SignalPathFormat.rate(decodedRate);
       final outputRateText = _SignalPathFormat.rate(outputRate);
       final detail = '$decodedRateText → $outputRateText';
-      steps.add(_SignalPathStep(icon: Broken.convert, title: lang.resample, detail: detail, changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.convert,
+          title: lang.resample,
+          detail: detail,
+          changesAudio: true,
+        ),
+      );
     }
     final decodedChannels = path.decoded.channels;
     final outputChannels = path.output.channels;
     if (outputChannels > 0 && decodedChannels > outputChannels) {
-      steps.add(_SignalPathStep(icon: Broken.blend, title: lang.downmix, detail: '$decodedChannels → $outputChannels ch', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.blend,
+          title: lang.downmix,
+          detail: '$decodedChannels → $outputChannels ch',
+          changesAudio: true,
+        ),
+      );
     }
     if (path.isOutputDithered) {
-      steps.add(_SignalPathStep(icon: Broken.convert, title: lang.dither, detail: '→ ${path.output.bitDepth}-bit', changesAudio: true));
+      steps.add(
+        _SignalPathStep(
+          icon: Broken.convert,
+          title: lang.dither,
+          detail: '→ ${path.output.bitDepth}-bit',
+          changesAudio: true,
+        ),
+      );
     }
     return steps;
   }
@@ -210,18 +311,43 @@ abstract final class _SignalPathSteps {
         final isResampled = mixerRate > 0 && mixerRate != path.output.sampleRate;
         final mixerRateText = _SignalPathFormat.rate(mixerRate);
         final detail = isResampled ? '$formatText → $mixerRateText' : formatText;
-        return _SignalPathStep(icon: Broken.blend_2, title: lang.androidMixer, detail: detail, changesAudio: true);
+        return _SignalPathStep(
+          icon: Broken.blend_2,
+          title: lang.androidMixer,
+          detail: detail,
+          changesAudio: true,
+        );
       case AudioSignalOutputType.bitPerfectMixer:
-        return _SignalPathStep(icon: Broken.blend_2, title: '${lang.androidMixer} · ${lang.bitPerfect}', detail: formatText, changesAudio: false);
+        return _SignalPathStep(
+          icon: Broken.blend_2,
+          title: '${lang.androidMixer} · ${lang.bitPerfect}',
+          detail: formatText,
+          changesAudio: false,
+        );
       case AudioSignalOutputType.usbDirect:
         final detail = path.hasOutputHardwareVolume ? '$formatText · ${lang.usbDirectHardwareVolume}' : formatText;
-        return _SignalPathStep(icon: Broken.cpu, title: lang.usbDirect, detail: detail, changesAudio: false);
+        return _SignalPathStep(
+          icon: Broken.cpu,
+          title: lang.usbDirect,
+          detail: detail,
+          changesAudio: false,
+        );
       case AudioSignalOutputType.desktopShared:
         final driver = path.outputDriver?.toUpperCase() ?? lang.output;
-        return _SignalPathStep(icon: Broken.blend_2, title: driver, detail: formatText, changesAudio: true);
+        return _SignalPathStep(
+          icon: Broken.blend_2,
+          title: driver,
+          detail: formatText,
+          changesAudio: true,
+        );
       case AudioSignalOutputType.desktopExclusive:
         final driver = path.outputDriver?.toUpperCase() ?? lang.output;
-        return _SignalPathStep(icon: Broken.blend_2, title: '$driver · ${lang.exclusive}', detail: formatText, changesAudio: !path.isBitPerfect);
+        return _SignalPathStep(
+          icon: Broken.blend_2,
+          title: '$driver · ${lang.exclusive}',
+          detail: formatText,
+          changesAudio: !path.isBitPerfect,
+        );
     }
   }
 }

@@ -672,7 +672,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       style: NText.small,
                     ),
                     const SizedBox(height: 6.0),
-                    Icon(icon, size: 20.0),
+                    Icon(
+                      icon,
+                      size: 20.0,
+                    ),
                     const SizedBox(height: 12.0),
                   ],
                 ),
@@ -996,7 +999,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 padding: const EdgeInsets.all(6.0),
                 child: Row(
                   children: [
-                    const Icon(Broken.play_cricle, size: 20.0),
+                    const Icon(
+                      Broken.play_cricle,
+                      size: 20.0,
+                    ),
                     const SizedBox(width: 12.0),
                     NamidaText(
                       "${speed}x",
@@ -1021,7 +1027,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           padding: const EdgeInsets.all(6.0),
           child: Row(
             children: [
-              const Icon(Broken.add_circle, size: 20.0),
+              const Icon(
+                Broken.add_circle,
+                size: 20.0,
+              ),
               const SizedBox(width: 12.0),
               NamidaText(
                 lang.add,
@@ -1229,7 +1238,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     selected: selected?.id == track.id,
                     isCached: true,
                   );
-                  return supported ? chip : Opacity(opacity: 0.5, child: chip);
+                  return supported
+                      ? chip
+                      : Opacity(
+                          opacity: 0.5,
+                          child: chip,
+                        );
                 },
               );
             },

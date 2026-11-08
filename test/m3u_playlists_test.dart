@@ -247,7 +247,15 @@ void main() {
 
   group('headers', () {
     List<String> rewrite(List<String> lines, {String name = 'n', List<String> moods = const [], List<String> tags = const [], String description = ''}) {
-      return M3UFiles.rewriteHeaderLines(lines, name: name, moods: moods, tags: tags, description: description, tracksCount: 2, computeDurationMS: () => 90500);
+      return M3UFiles.rewriteHeaderLines(
+        lines,
+        name: name,
+        moods: moods,
+        tags: tags,
+        description: description,
+        tracksCount: 2,
+        computeDurationMS: () => 90500,
+      );
     }
 
     test('parses the values of other apps', () {
@@ -302,13 +310,28 @@ void main() {
     });
 
     test('parsing a rewritten header gives back the same values', () {
-      final lines = rewrite(const [], name: 'n', moods: ['m1', 'm2'], tags: ['t/1'], description: 'd');
+      final lines = rewrite(
+        const [],
+        name: 'n',
+        moods: ['m1', 'm2'],
+        tags: ['t/1'],
+        description: 'd',
+      );
       final header = M3UFiles.parseHeaderLines(lines);
       expect(header.name, 'n');
       expect(header.moods, ['m1', 'm2']);
       expect(header.tags, ['t/1']);
       expect(header.description, 'd');
-      expect(rewrite(lines, name: 'n', moods: ['m1', 'm2'], tags: ['t/1'], description: 'd'), lines);
+      expect(
+        rewrite(
+          lines,
+          name: 'n',
+          moods: ['m1', 'm2'],
+          tags: ['t/1'],
+          description: 'd',
+        ),
+        lines,
+      );
     });
 
     group('merging', () {

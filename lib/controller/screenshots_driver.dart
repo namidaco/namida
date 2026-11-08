@@ -746,7 +746,12 @@ class ScreenshotsDriver {
       case 'trackAdvanced':
         final track = _resolveTrack(step);
         final colorScheme = CurrentColor.inst.color;
-        showTrackAdvancedDialog(tracks: [track], networkArtworkInfo: null, colorScheme: colorScheme, source: QueueSource.allTracks);
+        showTrackAdvancedDialog(
+          tracks: [track],
+          networkArtworkInfo: null,
+          colorScheme: colorScheme,
+          source: QueueSource.allTracks,
+        );
       case 'trackListens':
         final track = _resolveTrack(step);
         showTrackListensDialog(track);
@@ -828,7 +833,13 @@ class ScreenshotsDriver {
         showClearCacheDialog(videoIds: [videoId]);
       case 'ytDownload':
         final videoId = step['id'] as String;
-        showDownloadVideoBottomSheet(videoId: videoId, playlistId: null, originalIndex: null, totalLength: null, streamInfoItem: null);
+        showDownloadVideoBottomSheet(
+          videoId: videoId,
+          playlistId: null,
+          originalIndex: null,
+          totalLength: null,
+          streamInfoItem: null,
+        );
       case 'ytAddToPlaylist':
         final videoId = step['id'] as String;
         showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: const {});

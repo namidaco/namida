@@ -877,7 +877,11 @@ class _CAMorphCheckIconState extends State<CAMorphCheckIcon> with SingleTickerPr
                   angle: -0.6 * lt,
                   child: Transform.scale(
                     scale: 1.0 - lt,
-                    child: Icon(prevIcon, size: widget.size, color: widget.color),
+                    child: Icon(
+                      prevIcon,
+                      size: widget.size,
+                      color: widget.color,
+                    ),
                   ),
                 ),
               ),
@@ -908,13 +912,20 @@ class _CAMorphCheckIconState extends State<CAMorphCheckIcon> with SingleTickerPr
                 opacity: checkFade,
                 child: Transform.scale(
                   scale: 0.72 + 0.28 * Curves.easeOutBack.transform(checkFade),
-                  child: Icon(widget.icon, size: widget.size, color: widget.color),
+                  child: Icon(
+                    widget.icon,
+                    size: widget.size,
+                    color: widget.color,
+                  ),
                 ),
               ),
             );
           }
 
-          return Stack(alignment: Alignment.center, children: children);
+          return Stack(
+            alignment: Alignment.center,
+            children: children,
+          );
         },
       ),
     );
@@ -1138,7 +1149,10 @@ class _CAMagnitudeOdometerState extends State<CAMagnitudeOdometer> with SingleTi
     final style = resolved.fontFeatures == null ? resolved.copyWith(fontFeatures: const [FontFeature.tabularFigures()]) : resolved;
 
     if (_settled || _animationsDisabled(context)) {
-      return Text(widget.value, style: style);
+      return Text(
+        widget.value,
+        style: style,
+      );
     }
 
     _prepare(style, Directionality.of(context), MediaQuery.textScalerOf(context));
@@ -1205,7 +1219,12 @@ class _OdometerCellWidget extends StatelessWidget {
       return SizedBox(
         width: cell.width,
         height: height,
-        child: Center(child: Text(cell.to, style: style)),
+        child: Center(
+          child: Text(
+            cell.to,
+            style: style,
+          ),
+        ),
       );
     }
 
@@ -1229,11 +1248,21 @@ class _OdometerCellWidget extends StatelessWidget {
                 if (cell.from != null)
                   Transform.translate(
                     offset: Offset(0, sign * height * eased),
-                    child: Center(child: Text(cell.from!, style: digitStyle)),
+                    child: Center(
+                      child: Text(
+                        cell.from!,
+                        style: digitStyle,
+                      ),
+                    ),
                   ),
                 Transform.translate(
                   offset: Offset(0, sign * height * (eased - 1)),
-                  child: Center(child: Text(cell.to, style: digitStyle)),
+                  child: Center(
+                    child: Text(
+                      cell.to,
+                      style: digitStyle,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -1502,7 +1531,10 @@ class _ConstellationTile extends StatelessWidget {
         final scale = 1.0 + 0.05 * (offset.distance / maxPull).clamp(0.0, 1.0);
         return Transform.translate(
           offset: offset,
-          child: Transform.scale(scale: scale, child: child),
+          child: Transform.scale(
+            scale: scale,
+            child: child,
+          ),
         );
       },
     );

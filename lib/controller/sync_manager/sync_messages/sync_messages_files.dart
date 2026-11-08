@@ -221,7 +221,12 @@ class DirFilesManifestResponseMessage extends BaseMessage {
 
     if (messagesToSendTotalCount == 0) return; // -- they are up to date
 
-    batchRef?.setProgress(count: 0, totalCount: messagesToSendTotalCount, bytes: 0, totalBytes: messagesToSendTotalSizeBytes);
+    batchRef?.setProgress(
+      count: 0,
+      totalCount: messagesToSendTotalCount,
+      bytes: 0,
+      totalBytes: messagesToSendTotalSizeBytes,
+    );
 
     for (final msgWrapper in messagesToSend) {
       final Uint8List bytes;
@@ -237,7 +242,12 @@ class DirFilesManifestResponseMessage extends BaseMessage {
       sentBytes += msgWrapper.sizeBytes;
 
       // -- throttled inside, sending a snapshot per file would double the frames
-      batchRef?.setProgress(count: sentCount, totalCount: messagesToSendTotalCount, bytes: sentBytes, totalBytes: messagesToSendTotalSizeBytes);
+      batchRef?.setProgress(
+        count: sentCount,
+        totalCount: messagesToSendTotalCount,
+        bytes: sentBytes,
+        totalBytes: messagesToSendTotalSizeBytes,
+      );
     }
 
     if (_kEnableSyncDebug) _debugNotify('==> dir files sent[${subtype.name}]: $sentCount, skipped large: $skippedLargeCount');

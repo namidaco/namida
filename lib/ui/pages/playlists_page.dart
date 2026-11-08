@@ -1577,7 +1577,12 @@ class _PlaylistSourceBadge extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: EdgeInsets.only(left: fadeWidth, top: topPadding, right: rightPadding, bottom: bottomPadding),
+          padding: EdgeInsets.only(
+            left: fadeWidth,
+            top: topPadding,
+            right: rightPadding,
+            bottom: bottomPadding,
+          ),
           child: NamidaTooltip(
             message: tooltip,
             child: child,

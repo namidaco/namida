@@ -142,8 +142,14 @@ class QueueTile extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(top: 0, child: absorberWidget),
-          Positioned(bottom: 0, child: absorberWidget),
+          Positioned(
+            top: 0,
+            child: absorberWidget,
+          ),
+          Positioned(
+            bottom: 0,
+            child: absorberWidget,
+          ),
         ],
       ),
     );

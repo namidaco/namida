@@ -453,7 +453,14 @@ class _TrackTypesChip extends StatelessWidget {
                   isActive: tracksActive,
                   isFilled: tracksActive && !bothActive,
                   showCount: tracksActive && !bothActive,
-                  padding: bothActive ? const EdgeInsetsDirectional.only(start: 12.0, end: 8.0, top: 6.0, bottom: 6.0) : _kFilterChipPadding,
+                  padding: bothActive
+                      ? const EdgeInsetsDirectional.only(
+                          start: 12.0,
+                          end: 8.0,
+                          top: 6.0,
+                          bottom: 6.0,
+                        )
+                      : _kFilterChipPadding,
                   borderRadius: BorderRadiusDirectional.horizontal(start: radius),
                   onTap: () => SearchSortController.inst.toggleSearchTrackType(TrackTypeSearch.tr),
                   onLongPress: () => onJump(MediaType.track),
@@ -472,7 +479,14 @@ class _TrackTypesChip extends StatelessWidget {
                   isActive: videosActive,
                   isFilled: videosActive && !bothActive,
                   showCount: !tracksActive,
-                  padding: bothActive ? const EdgeInsetsDirectional.only(start: 8.0, end: 12.0, top: 6.0, bottom: 6.0) : _kFilterChipPadding,
+                  padding: bothActive
+                      ? const EdgeInsetsDirectional.only(
+                          start: 8.0,
+                          end: 12.0,
+                          top: 6.0,
+                          bottom: 6.0,
+                        )
+                      : _kFilterChipPadding,
                   borderRadius: BorderRadiusDirectional.horizontal(end: radius),
                   onTap: () => SearchSortController.inst.toggleSearchTrackType(TrackTypeSearch.v),
                   onLongPress: () => onJump(MediaType.track),

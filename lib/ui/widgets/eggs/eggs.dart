@@ -413,7 +413,12 @@ class _UnlockedCard extends StatelessWidget {
       builder: (context, colors) => NamidaInkWell(
         bgColor: const NColors(.onSurface, opacity: 0.03),
         borderRadius: 10.0,
-        padding: const EdgeInsetsDirectional.only(start: 4.0, end: 8.0, top: 4.0, bottom: 4.0),
+        padding: const EdgeInsetsDirectional.only(
+          start: 4.0,
+          end: 8.0,
+          top: 4.0,
+          bottom: 4.0,
+        ),
         decoration: BoxDecoration(
           border: Border.all(
             color: colors.secondary.withOpacityExt(0.18),

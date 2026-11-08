@@ -113,7 +113,14 @@ void main() {
   peerConnectsProven(String peerId, List<int> secret, {String? name}) async {
     final (session, socket, peer) = await peerConnects(peerId, name: name);
     final challenge = socket.sent.single;
-    final peerProof = peer.onChallenge(secret: secret, serverNonce: challenge.nonce, serverProof: challenge.proof, serverId: ourId, clientId: peerId, ownAddresses: ownAddresses);
+    final peerProof = peer.onChallenge(
+      secret: secret,
+      serverNonce: challenge.nonce,
+      serverProof: challenge.proof,
+      serverId: ourId,
+      clientId: peerId,
+      ownAddresses: ownAddresses,
+    );
     await deliver(socket, messageOf(.proof, peerId, name: name, proof: peerProof));
     return (session, socket);
   }
@@ -145,7 +152,14 @@ void main() {
     final challenge = peerServer.buildChallenge(secret: secret, serverId: peerId, clientId: ourId)!;
     await deliver(socket, messageOf(.challenge, peerId, nonce: challenge.nonce, proof: challenge.proof));
     final proof = socket.sent.last;
-    final decision = peerServer.onProof(secret: secret, clientProof: proof.proof, serverId: peerId, clientId: ourId, ownAddresses: ownAddresses, canAutoAccept: true);
+    final decision = peerServer.onProof(
+      secret: secret,
+      clientProof: proof.proof,
+      serverId: peerId,
+      clientId: ourId,
+      ownAddresses: ownAddresses,
+      canAutoAccept: true,
+    );
     expect(decision.name, 'trust', reason: 'our client answers with the proof of $peerId');
     await deliver(socket, messageOf(.accepted, peerId));
     return (session, socket);
@@ -191,7 +205,14 @@ void main() {
         clientId: clientId,
         ownAddresses: ownAddresses,
       );
-      final decision = server.onProof(secret: sharedSecret, clientProof: clientProof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true);
+      final decision = server.onProof(
+        secret: sharedSecret,
+        clientProof: clientProof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(decision.name, 'trust');
       expect(server.isPeerProven, true);
     });
@@ -220,7 +241,14 @@ void main() {
         clientId: clientId,
         ownAddresses: ownAddresses,
       );
-      final decision = server.onProof(secret: sharedSecret, clientProof: clientProof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true);
+      final decision = server.onProof(
+        secret: sharedSecret,
+        clientProof: clientProof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(decision.name, 'prompt');
       expect(server.isPeerProven, false);
     });
@@ -293,14 +321,28 @@ void main() {
         clientId: clientId,
         ownAddresses: ownAddresses,
       );
-      server.onProof(secret: sharedSecret, clientProof: clientProof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true);
+      server.onProof(
+        secret: sharedSecret,
+        clientProof: clientProof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(server.isAwaitingProof, false);
       expect(client.isAwaitingChallenge, false);
     });
 
     test('the server proof sent back as the client proof fails (swapped roles)', () {
       final (_, server, challenge) = challengedPair();
-      final decision = server.onProof(secret: sharedSecret, clientProof: challenge.proof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true);
+      final decision = server.onProof(
+        secret: sharedSecret,
+        clientProof: challenge.proof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(decision.name, 'prompt');
       expect(server.isPeerProven, false);
     });
@@ -326,14 +368,30 @@ void main() {
         clientId: clientId,
         ownAddresses: ownAddresses,
       );
-      final decision = server.onProof(secret: sharedSecret, clientProof: clientProof, serverId: clientId, clientId: serverId, ownAddresses: ownAddresses, canAutoAccept: true);
+      final decision = server.onProof(
+        secret: sharedSecret,
+        clientProof: clientProof,
+        serverId: clientId,
+        clientId: serverId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(decision.name, 'prompt');
     });
 
     test('a missing or truncated client proof fails', () {
       final (_, missingServer, _) = challengedPair();
       expect(
-        missingServer.onProof(secret: sharedSecret, clientProof: null, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true).name,
+        missingServer
+            .onProof(
+              secret: sharedSecret,
+              clientProof: null,
+              serverId: serverId,
+              clientId: clientId,
+              ownAddresses: ownAddresses,
+              canAutoAccept: true,
+            )
+            .name,
         'prompt',
       );
 
@@ -348,7 +406,16 @@ void main() {
       )!;
       final truncatedProof = clientProof.sublist(0, clientProof.length - 1);
       expect(
-        truncatedServer.onProof(secret: sharedSecret, clientProof: truncatedProof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true).name,
+        truncatedServer
+            .onProof(
+              secret: sharedSecret,
+              clientProof: truncatedProof,
+              serverId: serverId,
+              clientId: clientId,
+              ownAddresses: ownAddresses,
+              canAutoAccept: true,
+            )
+            .name,
         'prompt',
       );
     });
@@ -390,7 +457,14 @@ void main() {
 
     test('a client trusts a proven server, pairs with one it holds no secret for, and prompts for an unproven one it holds a secret for', () {
       final (client, _, challenge) = challengedPair();
-      client.onChallenge(secret: sharedSecret, serverNonce: challenge.nonce, serverProof: challenge.proof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses);
+      client.onChallenge(
+        secret: sharedSecret,
+        serverNonce: challenge.nonce,
+        serverProof: challenge.proof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+      );
       expect(client.onAccepted(hasSecret: true, isAutoReconnect: true).name, 'trust');
 
       final unchallengedClient = newHandshake()..start();
@@ -461,7 +535,16 @@ void main() {
       final proof = viaCodec(messageOf(.proof, clientId, proof: clientProof));
       expect(proof.proof, isNull);
       expect(
-        server.onProof(secret: sharedSecret, clientProof: proof.proof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true).name,
+        server
+            .onProof(
+              secret: sharedSecret,
+              clientProof: proof.proof,
+              serverId: serverId,
+              clientId: clientId,
+              ownAddresses: ownAddresses,
+              canAutoAccept: true,
+            )
+            .name,
         'prompt',
       );
       expect(client.onAccepted(hasSecret: true, isAutoReconnect: false).name, 'prompt');
@@ -522,7 +605,14 @@ void main() {
         ownAddresses: relayOwnAddresses,
       );
       expect(clientProof, isNotNull);
-      final decision = server.onProof(secret: sharedSecret, clientProof: clientProof, serverId: serverId, clientId: clientId, ownAddresses: ownAddresses, canAutoAccept: true);
+      final decision = server.onProof(
+        secret: sharedSecret,
+        clientProof: clientProof,
+        serverId: serverId,
+        clientId: clientId,
+        ownAddresses: ownAddresses,
+        canAutoAccept: true,
+      );
       expect(decision.name, 'prompt');
       expect(server.isPeerProven, false);
     });

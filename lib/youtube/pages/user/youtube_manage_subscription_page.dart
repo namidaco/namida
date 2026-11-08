@@ -480,12 +480,18 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                   IconButton(
                     tooltip: lang.refresh,
                     onPressed: _refreshPatreon,
-                    icon: const Icon(Broken.refresh, size: 20.0),
+                    icon: const Icon(
+                      Broken.refresh,
+                      size: 20.0,
+                    ),
                   ),
                   IconButton(
                     tooltip: lang.signOut,
                     onPressed: _onPatreonSignOut,
-                    icon: const Icon(Broken.logout, size: 20.0),
+                    icon: const Icon(
+                      Broken.logout,
+                      size: 20.0,
+                    ),
                   ),
                 ],
               ),
@@ -527,7 +533,10 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                   IconButton(
                     tooltip: lang.clear,
                     onPressed: _onPatreonSignOut,
-                    icon: const Icon(Broken.broom, size: 20.0),
+                    icon: const Icon(
+                      Broken.broom,
+                      size: 20.0,
+                    ),
                   ),
               ],
             ),
@@ -560,12 +569,18 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                         IconButton(
                           tooltip: lang.refresh,
                           onPressed: _refreshSupabase,
-                          icon: const Icon(Broken.refresh, size: 20.0),
+                          icon: const Icon(
+                            Broken.refresh,
+                            size: 20.0,
+                          ),
                         ),
                         IconButton(
                           tooltip: lang.clear,
                           onPressed: _onSupabaseClearTap,
-                          icon: const Icon(Broken.broom, size: 20.0),
+                          icon: const Icon(
+                            Broken.broom,
+                            size: 20.0,
+                          ),
                         ),
                       ],
                     )

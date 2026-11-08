@@ -19,7 +19,16 @@ class _Room implements PartyHostDelegate {
   List<String>? reactions;
 
   _Room() {
-    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, repeat: PartyRepeat.initial, crossfadeMS: 0, delegate: this);
+    host = PartyHost.create(
+      state: hostState,
+      selfN: 1,
+      selfName: 'host',
+      roomName: 'room',
+      listening: true,
+      repeat: PartyRepeat.initial,
+      crossfadeMS: 0,
+      delegate: this,
+    );
   }
 
   PartyState join(int n, {String? name}) {
@@ -475,7 +484,13 @@ void main() {
     final takeover = _Room();
     takeover.members.clear();
     final oldEpoch = guest.epoch;
-    final newHost = PartyHost.takeOver(state: guest, selfN: 2, connected: {2: 'm2', 3: 'm3'}, crossfadeMS: 0, delegate: takeover);
+    final newHost = PartyHost.takeOver(
+      state: guest,
+      selfN: 2,
+      connected: {2: 'm2', 3: 'm3'},
+      crossfadeMS: 0,
+      delegate: takeover,
+    );
     expect(guest.epoch, greaterThan(oldEpoch));
     expect(guest.members[2]!.role, PartyRole.host);
     expect(guest.members[3]!.role, PartyRole.admin);

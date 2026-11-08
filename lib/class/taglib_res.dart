@@ -22,7 +22,13 @@ class TagLibRes {
 
   static Future<TagLibRes?> read(String trackPath, {required bool extractArtwork, Map<String, String>? httpHeaders}) async {
     try {
-      final stream = TagLibFile.readBatchNative([trackPath], threads: 1, readCover: extractArtwork, readChapters: true, headers: httpHeaders);
+      final stream = TagLibFile.readBatchNative(
+        [trackPath],
+        threads: 1,
+        readCover: extractArtwork,
+        readChapters: true,
+        headers: httpHeaders,
+      );
       final res = await stream.single;
       return fromBatchResult(res);
     } catch (e, st) {

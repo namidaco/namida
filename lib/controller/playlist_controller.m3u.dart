@@ -131,7 +131,12 @@ abstract final class M3UFiles {
       final header = parseHeaderLines(headerLines);
       final headerName = header.name;
       if (headerName != null && _isValidHeaderName(headerName)) headerNamesByPath[path] = headerName;
-      infoByPath[path] = _M3UPlaylistTempInfo(path: path, header: header, headerLines: headerLines, tracks: fullTracks);
+      infoByPath[path] = _M3UPlaylistTempInfo(
+        path: path,
+        header: header,
+        headerLines: headerLines,
+        tracks: fullTracks,
+      );
 
       latestInfo = null; // resetting info between each file looping
     }

@@ -137,14 +137,29 @@ class ThumbnailManager {
     if (id == null && customUrl == null) return null;
 
     if (isTemp == null) {
-      final file1 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: false, type: type);
+      final file1 = imageUrlToCacheFile(
+        id: id,
+        url: customUrl,
+        isTemp: false,
+        type: type,
+      );
       if (file1 != null && file1.existsSync()) return file1;
-      final file2 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
+      final file2 = imageUrlToCacheFile(
+        id: id,
+        url: customUrl,
+        isTemp: true,
+        type: type,
+      );
       if (file2 != null && file2.existsSync()) return file2;
       return null;
     }
 
-    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+    final file = imageUrlToCacheFile(
+      id: id,
+      url: customUrl,
+      isTemp: isTemp,
+      type: type,
+    );
     if (file != null && file.existsSync()) return file;
     return null;
   }
@@ -159,14 +174,29 @@ class ThumbnailManager {
 
     if (isTemp == null) {
       // -- check for both if temp == null
-      final file1 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: false, type: type);
+      final file1 = imageUrlToCacheFile(
+        id: id,
+        url: customUrl,
+        isTemp: false,
+        type: type,
+      );
       if (file1 != null && await file1.exists()) return file1;
-      final file2 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
+      final file2 = imageUrlToCacheFile(
+        id: id,
+        url: customUrl,
+        isTemp: true,
+        type: type,
+      );
       if (file2 != null && await file2.exists()) return file2;
       return null;
     }
 
-    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+    final file = imageUrlToCacheFile(
+      id: id,
+      url: customUrl,
+      isTemp: isTemp,
+      type: type,
+    );
     if (file != null && await file.exists()) return file;
     return null;
   }
@@ -182,13 +212,24 @@ class ThumbnailManager {
 
     final isTemp = isImportantInCache ? false : true;
 
-    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+    final file = imageUrlToCacheFile(
+      id: id,
+      url: customUrl,
+      isTemp: isTemp,
+      type: type,
+    );
     if (file == null) return null;
     if (await file.exists()) return file;
 
     if (symlinkId != null) {
       try {
-        final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp, type: type);
+        final symlinkfile = imageUrlToCacheFile(
+          id: id,
+          url: customUrl,
+          symlinkId: symlinkId,
+          isTemp: isTemp,
+          type: type,
+        );
         if (symlinkfile != null && await symlinkfile.exists()) {
           final targetFilePath = await Link.fromUri(symlinkfile.uri).target();
           final targetFile = File(targetFilePath);
@@ -213,7 +254,12 @@ class ThumbnailManager {
 
     if (isTemp == false) {
       // return the low res if high res failed
-      final filetemp = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
+      final filetemp = imageUrlToCacheFile(
+        id: id,
+        url: customUrl,
+        isTemp: true,
+        type: type,
+      );
       if (filetemp != null && await filetemp.exists()) return filetemp;
     }
 
@@ -230,7 +276,12 @@ class ThumbnailManager {
     }
     final bool lowerResYTID = isTemp;
 
-    final file = imageUrlToCacheFile(id: videoId, url: null, isTemp: isTemp, type: ThumbnailType.video);
+    final file = imageUrlToCacheFile(
+      id: videoId,
+      url: null,
+      isTemp: isTemp,
+      type: ThumbnailType.video,
+    );
     if (file == null) return null;
     final downloaded = await _getYoutubeThumbnail(
       itemId: videoId,
@@ -410,7 +461,15 @@ class _YTThumbnailDownloadManager with PortsProvider<(SendPort, ClientSettings?)
 
       if (destinationFile.existsSync()) {
         if (isImportantInCache) updateLastAccessed(destinationFile);
-        return sendPort.send(_YTThumbnailDownloadResult(itemId: id, isTemp: isTemp, token: token, file: destinationFile, notfound: false));
+        return sendPort.send(
+          _YTThumbnailDownloadResult(
+            itemId: id,
+            isTemp: isTemp,
+            token: token,
+            file: destinationFile,
+            notfound: false,
+          ),
+        );
       }
 
       final request = _IsolateThumbRequest();

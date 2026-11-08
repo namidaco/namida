@@ -1571,7 +1571,13 @@ class _MiniplayerLayout {
   RRect panelShapeOf(Rect rect) {
     final topRadius = Radius.circular(panelTopRadius);
     final bottomRadius = Radius.circular(panelBottomRadius);
-    return RRect.fromRectAndCorners(rect, topLeft: topRadius, topRight: topRadius, bottomLeft: bottomRadius, bottomRight: bottomRadius);
+    return RRect.fromRectAndCorners(
+      rect,
+      topLeft: topRadius,
+      topRight: topRadius,
+      bottomLeft: bottomRadius,
+      bottomRight: bottomRadius,
+    );
   }
 
   void update(double p, _MiniplayerLayoutInputs inputs) {
@@ -3027,7 +3033,11 @@ class _AnimatedOrPadding extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return animated
-        ? AnimatedPadding(padding: padding, duration: duration, child: child)
+        ? AnimatedPadding(
+            padding: padding,
+            duration: duration,
+            child: child,
+          )
         : Padding(
             padding: padding,
             child: child,
@@ -3184,7 +3194,10 @@ class PlayerVideoAudioChip extends StatelessWidget {
                         ),
 
                       if (audioTracks != null && audioTracks.length > 1) ...[
-                        const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                        const NamidaContainerDivider(
+                          height: 2.0,
+                          margin: EdgeInsets.symmetric(vertical: 4.0),
+                        ),
                         _MPQualityButton(
                           onTap: () => Player.inst.setAudioTrackAndSave(null),
                           icon: Broken.audio_square,
@@ -3217,7 +3230,10 @@ class PlayerVideoAudioChip extends StatelessWidget {
                         ),
                       ],
 
-                      const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                      const NamidaContainerDivider(
+                        height: 2.0,
+                        margin: EdgeInsets.symmetric(vertical: 4.0),
+                      ),
 
                       ...availableVideos.map(
                         (element) {
@@ -3328,7 +3344,10 @@ class PlayerVideoAudioChip extends StatelessWidget {
                                   Widget getTextWidget(IconData icon, String title, double value) {
                                     return Row(
                                       children: [
-                                        NIcon(icon, color: NColors.defaultIcon(mainColor: CurrentColor.inst.miniplayerColor)),
+                                        NIcon(
+                                          icon,
+                                          color: NColors.defaultIcon(mainColor: CurrentColor.inst.miniplayerColor),
+                                        ),
                                         const SizedBox(width: 12.0),
                                         NamidaButtonText(
                                           title,

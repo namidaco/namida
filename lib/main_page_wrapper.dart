@@ -383,7 +383,10 @@ class NamidaDrawer extends StatelessWidget {
                   NamidaLogoContainer(
                     afterTap: NamidaNavigator.inst.toggleDrawer,
                   ),
-                const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
+                const NamidaContainerDivider(
+                  width: 42.0,
+                  margin: EdgeInsets.all(10.0),
+                ),
                 ...LibraryTab.values
                     .where((element) => element != LibraryTab.search && element.isGroupHead && (!element.isInDrawerOnlyWhenActive || libraryTabs.contains(element)))
                     .map(

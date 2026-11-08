@@ -69,7 +69,13 @@ void main() {
         albumArtist: s.albumArtist,
         albumsList: [s.album],
         originalAlbum: s.album,
-        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(albums: [s.album], albumArtist: s.albumArtist, year: '', mbAlbumId: '', mbAlbumArtistId: ''),
+        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+          albums: [s.album],
+          albumArtist: s.albumArtist,
+          year: '',
+          mbAlbumId: '',
+          mbAlbumArtistId: '',
+        ),
         durationMS: s.seconds * 1000,
         size: s.seconds * 1000,
         generatePathHash: false,
@@ -166,7 +172,12 @@ void main() {
 
     test('a track too long for the budget does not pick its genre', () {
       const longestFirst = SortChain([SortEntry(SortType.duration)], reverse: true);
-      final limit = limitOf(amount: 5, unit: SmartPlaylistLimitUnit.minutes, sorting: longestFirst, scope: SmartPlaylistNumberScope.genre);
+      final limit = limitOf(
+        amount: 5,
+        unit: SmartPlaylistLimitUnit.minutes,
+        sorting: longestFirst,
+        scope: SmartPlaylistNumberScope.genre,
+      );
       final picked = select(limit);
       expect(picked.first, 'a02');
       expect(picked.toSet(), {'a02', 'a08'});

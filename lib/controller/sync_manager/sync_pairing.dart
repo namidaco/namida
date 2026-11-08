@@ -78,7 +78,12 @@ class _PairingSession {
   /// opens the decode gate, the returned connection is what gets registered as connected.
   _SocketWrapper trust(String deviceId) {
     trustedIds.add(deviceId);
-    return _SocketWrapper(deviceId: deviceId, socket: socket, writer: writer, reader: reader);
+    return _SocketWrapper(
+      deviceId: deviceId,
+      socket: socket,
+      writer: writer,
+      reader: reader,
+    );
   }
 
   Future<void> close() {

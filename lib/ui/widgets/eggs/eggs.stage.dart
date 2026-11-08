@@ -291,7 +291,12 @@ class _EggSlot extends StatelessWidget {
     Widget eggWidget = SizedBox.fromSize(
       size: _kSize,
       child: CustomPaint(
-        painter: _EggPainter(color: color, isFilled: isCollected, isRainbow: egg.isRainbow, shine: isCollected ? shine : null),
+        painter: _EggPainter(
+          color: color,
+          isFilled: isCollected,
+          isRainbow: egg.isRainbow,
+          shine: isCollected ? shine : null,
+        ),
         child: questionMark,
       ),
     );

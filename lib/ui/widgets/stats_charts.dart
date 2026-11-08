@@ -1248,7 +1248,12 @@ class _DonutChartState extends State<DonutChart> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _painter = _DonutPainter(data: widget.data, otherValue: widget.otherValue, repaint: revealCurve, selected: _selected);
+    _painter = _DonutPainter(
+      data: widget.data,
+      otherValue: widget.otherValue,
+      repaint: revealCurve,
+      selected: _selected,
+    );
     startReveal();
   }
 
@@ -1257,7 +1262,12 @@ class _DonutChartState extends State<DonutChart> with SingleTickerProviderStateM
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.data, widget.data) || oldWidget.otherValue != widget.otherValue) {
       _selected.value = null;
-      _painter = _DonutPainter(data: widget.data, otherValue: widget.otherValue, repaint: revealCurve, selected: _selected);
+      _painter = _DonutPainter(
+        data: widget.data,
+        otherValue: widget.otherValue,
+        repaint: revealCurve,
+        selected: _selected,
+      );
       restartReveal();
     }
   }
@@ -1644,7 +1654,12 @@ class _ListensLineChartState extends State<ListensLineChart> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _painter = _ListensLinePainter(series: widget.series, firstDay: widget.firstDay, isCumulative: widget.isCumulative, repaint: revealCurve);
+    _painter = _ListensLinePainter(
+      series: widget.series,
+      firstDay: widget.firstDay,
+      isCumulative: widget.isCumulative,
+      repaint: revealCurve,
+    );
     startReveal();
   }
 
@@ -1652,7 +1667,12 @@ class _ListensLineChartState extends State<ListensLineChart> with SingleTickerPr
   void didUpdateWidget(covariant ListensLineChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.series, widget.series) || oldWidget.firstDay != widget.firstDay || oldWidget.isCumulative != widget.isCumulative) {
-      _painter = _ListensLinePainter(series: widget.series, firstDay: widget.firstDay, isCumulative: widget.isCumulative, repaint: revealCurve);
+      _painter = _ListensLinePainter(
+        series: widget.series,
+        firstDay: widget.firstDay,
+        isCumulative: widget.isCumulative,
+        repaint: revealCurve,
+      );
       restartReveal();
     }
   }

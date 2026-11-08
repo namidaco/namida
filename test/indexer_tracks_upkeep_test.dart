@@ -69,7 +69,13 @@ void main() {
     test('a changed link moves the track to its new id once, other tag edits keep it', () async {
       final track = await addTrack('editing${sep}song id=ddddddddddd.wav');
       Future<void> writeAndReindex(Map<String, List<String>> properties) async {
-        TagLibRes.writeSync(track.path, newPropertiesMap: properties, ratingPercentage: null, artwork: null, chapters: null);
+        TagLibRes.writeSync(
+          track.path,
+          newPropertiesMap: properties,
+          ratingPercentage: null,
+          artwork: null,
+          chapters: null,
+        );
         await indexer.reindexTracks(tracks: [PhysicalMedia.fromTrack(track)], onProgress: (_) {}, onFinish: (_) {});
       }
 

@@ -246,8 +246,18 @@ void main() {
   test('the tracks db of the backup is restored, except paths matched to tracks here', () async {
     final indexer = Indexer.inst;
     final tracksDbInfo = AppPaths.TRACKS_DB_INFO;
-    final hereSong = kDummyExtendedTrack.copyWith(title: 'Here', originalArtist: 'A', durationMS: 100000, generatePathHash: false);
-    final removedSong = kDummyExtendedTrack.copyWith(title: 'Removed', originalArtist: 'B', durationMS: 200000, generatePathHash: false);
+    final hereSong = kDummyExtendedTrack.copyWith(
+      title: 'Here',
+      originalArtist: 'A',
+      durationMS: 100000,
+      generatePathHash: false,
+    );
+    final removedSong = kDummyExtendedTrack.copyWith(
+      title: 'Removed',
+      originalArtist: 'B',
+      durationMS: 200000,
+      generatePathHash: false,
+    );
     final localPath = p.join(root.path, 'music', 'here', 'here.m4a');
     const otherHerePath = '/storage/other/here.m4a';
     const removedPath = '/storage/sdcard/removed.m4a';

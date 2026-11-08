@@ -45,7 +45,12 @@ void main() {
   Track track(String name) => Track.explicit('/music/$name.mp3');
 
   Future<void> addQueue(QueueSourceBase source, int date, List<Track> tracks) {
-    return QueueController.inst.addNewQueue(source: source, homePageItem: null, date: date, tracks: tracks);
+    return QueueController.inst.addNewQueue(
+      source: source,
+      homePageItem: null,
+      date: date,
+      tracks: tracks,
+    );
   }
 
   List<int> u32(int value) => [value & 0xFF, value >> 8 & 0xFF, value >> 16 & 0xFF, value >> 24 & 0xFF];
@@ -342,7 +347,13 @@ void main() {
         originalAlbum: album,
         albumsList: [album],
         albumArtist: albumArtist,
-        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(albums: [album], albumArtist: albumArtist, year: '1992', mbAlbumId: '', mbAlbumArtistId: ''),
+        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+          albums: [album],
+          albumArtist: albumArtist,
+          year: '1992',
+          mbAlbumId: '',
+          mbAlbumArtistId: '',
+        ),
         generatePathHash: false,
       );
       return Track.explicit(path);

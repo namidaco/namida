@@ -58,7 +58,13 @@ void main() {
   test('stats with values keep them through the sync codec', () {
     final track = trackOf('rated');
     final received = sendThroughSync([
-      statsOf(track, rating: 80, tags: ['a'], moods: ['Happy'], modifiedDate: 5),
+      statsOf(
+        track,
+        rating: 80,
+        tags: ['a'],
+        moods: ['Happy'],
+        modifiedDate: 5,
+      ),
     ]).single;
     expect(received.rating, 80);
     expect(received.tags, ['a']);
@@ -76,7 +82,13 @@ void main() {
     final newerTrack = trackOf('newer');
     final olderTrack = trackOf('older');
     final statsMap = Indexer.inst.trackStatsMap.value;
-    statsMap[newerTrack] = statsOf(newerTrack, rating: 80, tags: ['x'], moods: ['Calm'], modifiedDate: 1000);
+    statsMap[newerTrack] = statsOf(
+      newerTrack,
+      rating: 80,
+      tags: ['x'],
+      moods: ['Calm'],
+      modifiedDate: 1000,
+    );
     statsMap[olderTrack] = statsOf(olderTrack, rating: 60, modifiedDate: 3000);
 
     final incoming = sendThroughSync([statsOf(newerTrack, modifiedDate: 2000), statsOf(olderTrack, modifiedDate: 2000)]);

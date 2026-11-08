@@ -1092,7 +1092,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   void onPlaybackError(Object e, StackTrace st) {
     // -- no skipping, every item would fail the same
     if (e is AudioOutputUnavailableException) {
-      snackyy(title: lang.error, message: lang.outputDeviceUnavailable, top: false, isError: true);
+      snackyy(
+        title: lang.error,
+        message: lang.outputDeviceUnavailable,
+        top: false,
+        isError: true,
+      );
       return;
     }
     final item = currentItem.value;
@@ -1190,7 +1195,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       // -- we check if it exists to avoid refreshing notification redundently.
       // -- otherwise `getArtwork` already handles duplications.
       if (!exists) {
-        Indexer.inst.getArtwork(imagePath: imagePath, track: tr, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
+        Indexer.inst
+            .getArtwork(
+              imagePath: imagePath,
+              track: tr,
+              compressed: false,
+              checkFileFirst: false,
+            )
+            .then((value) => refreshNotification());
       }
     });
 
@@ -1746,7 +1758,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
           final playabilty = streamsResult.playability;
           final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
           final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
-          snackyy(title: lang.error, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
+          snackyy(
+            title: lang.error,
+            message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText',
+            top: false,
+            isError: true,
+          );
         }
         return null;
       } else {
@@ -2347,7 +2364,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
             if (skipAfterCountdown) {
               _pauseAndSkipYTAfterCountdown(reasonMsg);
             } else {
-              snackyy(title: 'Error playing video', message: 'Reason: $reasonMsg', top: false, isError: true);
+              snackyy(
+                title: 'Error playing video',
+                message: 'Reason: $reasonMsg',
+                top: false,
+                isError: true,
+              );
             }
 
             if (shouldLogError) {

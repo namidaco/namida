@@ -143,8 +143,15 @@ class _YourYearPageState extends State<YourYearPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(lang.yourYear(year: yearText), style: style.title),
-              if (a.isYoutube) Text(lang.youtube, style: style.subtitle),
+              Text(
+                lang.yourYear(year: yearText),
+                style: style.title,
+              ),
+              if (a.isYoutube)
+                Text(
+                  lang.youtube,
+                  style: style.subtitle,
+                ),
               const SizedBox(height: 12.0),
               CAKineticPathReveal(
                 points: _monthlyPoints(s),
@@ -186,7 +193,10 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${lang.top} ${a.itemsLabel}', style: style.title),
+                Text(
+                  '${lang.top} ${a.itemsLabel}',
+                  style: style.title,
+                ),
                 const SizedBox(height: 16.0),
                 a.list(shown, listensRangeMS: rangeMS, big: true),
               ],
@@ -206,9 +216,15 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${lang.top} ${a.artistsLabel}', style: style.title),
+                Text(
+                  '${lang.top} ${a.artistsLabel}',
+                  style: style.title,
+                ),
                 const SizedBox(height: 6.0),
-                Text('${s.uniqueArtists.formatDecimal()} ${a.artistsLabel}', style: style.subtitle),
+                Text(
+                  '${s.uniqueArtists.formatDecimal()} ${a.artistsLabel}',
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 16.0),
                 RankBarsChart(
                   data: data,
@@ -219,8 +235,18 @@ class _YourYearPageState extends State<YourYearPage> {
                   const SizedBox(height: 20.0),
                   Wrap(
                     children: [
-                      if (s.topAlbums.isNotEmpty) StatsMiniTile(icon: MediaType.album.toIcon(), label: lang.album, value: s.topAlbums.first.key),
-                      if (s.topGenres.isNotEmpty) StatsMiniTile(icon: MediaType.genre.toIcon(), label: lang.genre, value: s.topGenres.first.key),
+                      if (s.topAlbums.isNotEmpty)
+                        StatsMiniTile(
+                          icon: MediaType.album.toIcon(),
+                          label: lang.album,
+                          value: s.topAlbums.first.key,
+                        ),
+                      if (s.topGenres.isNotEmpty)
+                        StatsMiniTile(
+                          icon: MediaType.genre.toIcon(),
+                          label: lang.genre,
+                          value: s.topGenres.first.key,
+                        ),
                     ],
                   ),
                 ],
@@ -245,11 +271,22 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.genres, style: style.title),
+                Text(
+                  lang.genres,
+                  style: style.title,
+                ),
                 const SizedBox(height: 6.0),
-                Text(lang.countGenres(count: s.uniqueGenres), style: style.subtitle),
+                Text(
+                  lang.countGenres(count: s.uniqueGenres),
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 16.0),
-                DonutChart(data: data, otherValue: other, size: 160.0, centerLabel: lang.totalListens),
+                DonutChart(
+                  data: data,
+                  otherValue: other,
+                  size: 160.0,
+                  centerLabel: lang.totalListens,
+                ),
               ],
             ),
           ),
@@ -268,11 +305,22 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.listeningClock, style: style.title),
+                Text(
+                  lang.listeningClock,
+                  style: style.title,
+                ),
                 const SizedBox(height: 16.0),
-                Center(child: ListeningClockChart(hours: s.hours, size: 220.0)),
+                Center(
+                  child: ListeningClockChart(
+                    hours: s.hours,
+                    size: 220.0,
+                  ),
+                ),
                 const SizedBox(height: 16.0),
-                VerticalBarsChart(data: weekdays, height: 90.0),
+                VerticalBarsChart(
+                  data: weekdays,
+                  height: 90.0,
+                ),
               ],
             ),
           ),
@@ -289,9 +337,16 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.days, style: style.title),
+                Text(
+                  lang.days,
+                  style: style.title,
+                ),
                 const SizedBox(height: 16.0),
-                ListensHeatmapChart(values: s.listensPerDay, firstDay: s.firstDay, cellMaxSize: 12.0),
+                ListensHeatmapChart(
+                  values: s.listensPerDay,
+                  firstDay: s.firstDay,
+                  cellMaxSize: 12.0,
+                ),
                 const SizedBox(height: 20.0),
                 if (streak != null)
                   _BigStat(
@@ -327,9 +382,15 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.discoveries, style: style.title),
+                Text(
+                  lang.discoveries,
+                  style: style.title,
+                ),
                 const SizedBox(height: 6.0),
-                Text(lang.firstListen, style: style.subtitle),
+                Text(
+                  lang.firstListen,
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 16.0),
                 Row(
                   children: [
@@ -367,7 +428,10 @@ class _YourYearPageState extends State<YourYearPage> {
                 ],
                 if (oldest != null) ...[
                   const SizedBox(height: 16.0),
-                  Text('${lang.oldestFavorite} • ${oldest.firstListenMS.dateFormattedOriginal}', style: style.subtitle),
+                  Text(
+                    '${lang.oldestFavorite} • ${oldest.firstListenMS.dateFormattedOriginal}',
+                    style: style.subtitle,
+                  ),
                   const SizedBox(height: 10.0),
                   a.item(oldest.item, oldest.count, big: true, listensRangeMS: rangeMS),
                 ],
@@ -389,7 +453,10 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.yearInSongs(count: songsCount), style: style.title),
+                Text(
+                  lang.yearInSongs(count: songsCount),
+                  style: style.title,
+                ),
                 const SizedBox(height: 16.0),
                 LayoutWidthProvider(
                   builder: (context, maxWidth) {
@@ -425,10 +492,16 @@ class _YourYearPageState extends State<YourYearPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lang.obsession, style: style.title),
+                Text(
+                  lang.obsession,
+                  style: style.title,
+                ),
                 if (obsessions.isNotEmpty) ...[
                   const SizedBox(height: 6.0),
-                  Text('${lang.mostPlayed} • ${lang.day}', style: style.subtitle),
+                  Text(
+                    '${lang.mostPlayed} • ${lang.day}',
+                    style: style.subtitle,
+                  ),
                   const SizedBox(height: 12.0),
                   a.list(
                     obsessions.map((o) => StatsRankEntry(o.item, o.count)).toList(),
@@ -441,7 +514,10 @@ class _YourYearPageState extends State<YourYearPage> {
                   const SizedBox(height: 24.0),
                   _BigStat(value: StatsFormat.durationMS(session.durationMS), label: '${lang.longestSession} • ${session.startMS.dateFormattedOriginal}', style: style),
                   const SizedBox(height: 6.0),
-                  Text('${session.startMS.clockFormatted} → ${session.endMS.clockFormatted} • ${lang.totalListens}: ${session.listens.formatDecimal()}', style: style.subtitle),
+                  Text(
+                    '${session.startMS.clockFormatted} → ${session.endMS.clockFormatted} • ${lang.totalListens}: ${session.listens.formatDecimal()}',
+                    style: style.subtitle,
+                  ),
                 ],
               ],
             ),
@@ -462,7 +538,10 @@ class _YourYearPageState extends State<YourYearPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(lang.habits, style: style.title),
+              Text(
+                lang.habits,
+                style: style.title,
+              ),
               const SizedBox(height: 16.0),
               Row(
                 children: [
@@ -499,13 +578,19 @@ class _YourYearPageState extends State<YourYearPage> {
               ],
               if (itemStreak != null) ...[
                 const SizedBox(height: 16.0),
-                Text('${lang.streak} • ${lang.countDays(count: itemStreak.days)}', style: style.subtitle),
+                Text(
+                  '${lang.streak} • ${lang.countDays(count: itemStreak.days)}',
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 10.0),
                 a.item(itemStreak.item, s.topItems.firstWhereEff((e) => e.key == itemStreak.item)?.count ?? itemStreak.days, big: true, listensRangeMS: rangeMS),
               ],
               if (rediscoveries.isNotEmpty) ...[
                 const SizedBox(height: 16.0),
-                Text(lang.rediscoveries, style: style.subtitle),
+                Text(
+                  lang.rediscoveries,
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 10.0),
                 a.list(
                   rediscoveries.map((e) => StatsRankEntry(e.item, e.count)).toList(),
@@ -529,7 +614,10 @@ class _YourYearPageState extends State<YourYearPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(otherAdapter.isYoutube ? lang.youtube : lang.local, style: style.title),
+              Text(
+                otherAdapter.isYoutube ? lang.youtube : lang.local,
+                style: style.title,
+              ),
               const SizedBox(height: 16.0),
               Row(
                 children: [
@@ -576,7 +664,10 @@ class _YourYearPageState extends State<YourYearPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(lang.yourYear(year: yearText), style: style.title),
+              Text(
+                lang.yourYear(year: yearText),
+                style: style.title,
+              ),
               const SizedBox(height: 20.0),
               if (topItem != null) ...[
                 Center(child: a.hero(topItem)),
@@ -638,7 +729,10 @@ class _YourYearPageState extends State<YourYearPage> {
               ),
               if (prev != null && !prev.isEmpty) ...[
                 const SizedBox(height: 20.0),
-                Text('${lang.previous} • ${_year - 1}', style: style.subtitle),
+                Text(
+                  '${lang.previous} • ${_year - 1}',
+                  style: style.subtitle,
+                ),
                 const SizedBox(height: 8.0),
                 Row(
                   children: [
@@ -650,7 +744,10 @@ class _YourYearPageState extends State<YourYearPage> {
                           const SizedBox(width: 8.0),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16.0),
-                            child: StatsDelta(now: s.totalListens, previous: prev.totalListens),
+                            child: StatsDelta(
+                              now: s.totalListens,
+                              previous: prev.totalListens,
+                            ),
                           ),
                         ],
                       ),
@@ -729,7 +826,11 @@ class _YourYearPageState extends State<YourYearPage> {
             child: Row(
               children: [
                 if (widget.isYoutube) ...[
-                  NIcon(Broken.video_square, size: 18.0, color: NColors.defaultIcon()),
+                  NIcon(
+                    Broken.video_square,
+                    size: 18.0,
+                    color: NColors.defaultIcon(),
+                  ),
                   const SizedBox(width: 8.0),
                 ],
                 Expanded(

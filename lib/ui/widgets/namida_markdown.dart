@@ -529,7 +529,12 @@ class _MdBlocksBuilder {
       case 'summary' || 'dt':
         _addParagraph(children, align ?? TextAlign.start, strong: true);
       case 'dd':
-        final builder = _MdBlocksBuilder(inTable: inTable, indentEm: indentEm + _bulletEm, depth: depth, commit: commit);
+        final builder = _MdBlocksBuilder(
+          inTable: inTable,
+          indentEm: indentEm + _bulletEm,
+          depth: depth,
+          commit: commit,
+        );
         builder.addNodes(children, align: align);
         out.addAll(builder.out);
       default:
@@ -668,7 +673,12 @@ class _MdBlocksBuilder {
       );
 
       if (splitIndex != -1) {
-        final builder = _MdBlocksBuilder(inTable: inTable, indentEm: indentEm + markerEm, depth: childDepth, commit: itemCommit);
+        final builder = _MdBlocksBuilder(
+          inTable: inTable,
+          indentEm: indentEm + markerEm,
+          depth: childDepth,
+          commit: itemCommit,
+        );
         builder.addNodes(children.sublist(splitIndex));
         out.addAll(builder.out);
       }
@@ -843,7 +853,11 @@ class _MdRenderer {
       _MdListItemBlock() => _listItem(block),
       _MdQuoteBlock() => _quote(block, style),
       _MdCodeBlock() => _code(block),
-      _MdRuleBlock() => Divider(height: 1.0, thickness: 1.0, color: borderColor),
+      _MdRuleBlock() => Divider(
+        height: 1.0,
+        thickness: 1.0,
+        color: borderColor,
+      ),
       _MdTableBlock() => _table(block, style),
       _MdDetailsBlock() => _MdDetails(renderer: this, block: block, style: style),
     };

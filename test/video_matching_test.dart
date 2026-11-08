@@ -93,13 +93,31 @@ void main() {
 
     test('empty artist and genre match nothing', () {
       final video = videoPath('Artist - Title.mp4');
-      expect(match([video], title: 'Title', artist: '', genre: '', matchingType: LocalVideoMatchingType.titleAndArtist), isEmpty);
+      expect(
+        match(
+          [video],
+          title: 'Title',
+          artist: '',
+          genre: '',
+          matchingType: LocalVideoMatchingType.titleAndArtist,
+        ),
+        isEmpty,
+      );
       expect(match([video], title: 'Title', matchingType: LocalVideoMatchingType.titleAndArtist), isEmpty);
     });
 
     test('the first genre can stand in for the artist, like nightcore', () {
       final video = videoPath('Nightcore - Title.mp4');
-      expect(match([video], title: 'Title', artist: 'Someone', genre: 'Nightcore', matchingType: LocalVideoMatchingType.titleAndArtist), {video});
+      expect(
+        match(
+          [video],
+          title: 'Title',
+          artist: 'Someone',
+          genre: 'Nightcore',
+          matchingType: LocalVideoMatchingType.titleAndArtist,
+        ),
+        {video},
+      );
     });
 
     test('cjk titles without spaces match', () {
@@ -196,7 +214,13 @@ void main() {
     final byID = videoPath('Something [dQw4w9WgXcQ].mp4');
     final unrelated = videoPath('Unrelated.mp4');
     final videos = [byFilename, byTitle, byID, unrelated];
-    final matched = match(videos, filenameWOExt: '01 Track Name', title: 'Title', artist: 'Artist', ytID: 'dQw4w9WgXcQ');
+    final matched = match(
+      videos,
+      filenameWOExt: '01 Track Name',
+      title: 'Title',
+      artist: 'Artist',
+      ytID: 'dQw4w9WgXcQ',
+    );
     expect(matched, {byFilename, byTitle, byID});
   });
 }

@@ -735,7 +735,10 @@ class _PlaylistSettingsMenuButton extends StatelessWidget {
       },
       child: const Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-        child: Icon(Broken.setting_3, size: 20.0),
+        child: Icon(
+          Broken.setting_3,
+          size: 20.0,
+        ),
       ),
     );
   }

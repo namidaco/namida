@@ -56,14 +56,20 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
     final isEnabled = enabled(sort);
     final chipContent = Row(
       children: [
-        Icon(icon, size: 18.0),
+        Icon(
+          icon,
+          size: 18.0,
+        ),
         const SizedBox(width: 4.0),
         NamidaText(
           title,
           style: NText.medium,
         ),
         const SizedBox(width: 4.0),
-        const Icon(Broken.arrow_down_2, size: 14.0),
+        const Icon(
+          Broken.arrow_down_2,
+          size: 14.0,
+        ),
       ],
     );
     return NBuilder(
@@ -246,7 +252,10 @@ class _CachedOnlyChip extends StatelessWidget {
       builder: (context, enabled) {
         final chipContent = Row(
           children: [
-            Icon(enabled ? Broken.tick_circle : Broken.document_download, size: 18.0),
+            Icon(
+              enabled ? Broken.tick_circle : Broken.document_download,
+              size: 18.0,
+            ),
             const SizedBox(width: 4.0),
             NamidaText(
               lang.cache,

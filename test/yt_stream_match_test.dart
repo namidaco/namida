@@ -165,7 +165,16 @@ void main() {
 
     test('a gone itag picks the same height in the same container when the fps differs', () {
       final sameContainer = video(299, height: 1080, fps: 60);
-      final streams = [video(303, height: 1080, fps: 60, container: 'webm', codec: 'vp9'), sameContainer];
+      final streams = [
+        video(
+          303,
+          height: 1080,
+          fps: 60,
+          container: 'webm',
+          codec: 'vp9',
+        ),
+        sameContainer,
+      ];
       final match = YoutubeController.matchVideoStreamOrSimilar(streams, target1080);
       expect(match, same(sameContainer));
     });

@@ -1110,12 +1110,30 @@ class _DateSpans {
     final start2 = span2?.start;
     final end2 = span2?.end;
     if (start == null || end == null || start2 == null || end2 == null) {
-      return _DateSpans._(start: start, end: end, rangeStart: start, rangeEnd: end2, wrapsAround: false);
+      return _DateSpans._(
+        start: start,
+        end: end,
+        rangeStart: start,
+        rangeEnd: end2,
+        wrapsAround: false,
+      );
     }
     if (isCyclic && start2 < start) {
-      return _DateSpans._(start: start, end: end, rangeStart: start, rangeEnd: end2, wrapsAround: true);
+      return _DateSpans._(
+        start: start,
+        end: end,
+        rangeStart: start,
+        rangeEnd: end2,
+        wrapsAround: true,
+      );
     }
-    return _DateSpans._(start: start, end: end, rangeStart: start.withMaximum(start2), rangeEnd: end.withMinimum(end2), wrapsAround: false);
+    return _DateSpans._(
+      start: start,
+      end: end,
+      rangeStart: start.withMaximum(start2),
+      rangeEnd: end.withMinimum(end2),
+      wrapsAround: false,
+    );
   }
 
   bool isWithin(int valueStart, int valueEnd) {

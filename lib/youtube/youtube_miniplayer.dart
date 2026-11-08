@@ -1464,8 +1464,13 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               //         identity: currentId,
                               //       )
                               //     : null,
-                              onLongPress: () async =>
-                                  await showDownloadVideoBottomSheet(videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
+                              onLongPress: () async => await showDownloadVideoBottomSheet(
+                                videoId: currentId,
+                                originalIndex: null,
+                                totalLength: null,
+                                playlistId: null,
+                                streamInfoItem: null,
+                              ),
                               onPressed: () async {
                                 if (isDownloading) {
                                   YoutubeController.inst.pauseDownloadTask(
@@ -1479,7 +1484,13 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     groupName: const DownloadTaskGroupName.defaulty(),
                                   );
                                 } else {
-                                  await showDownloadVideoBottomSheet(videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null);
+                                  await showDownloadVideoBottomSheet(
+                                    videoId: currentId,
+                                    originalIndex: null,
+                                    totalLength: null,
+                                    playlistId: null,
+                                    streamInfoItem: null,
+                                  );
                                 }
                               },
                             );
@@ -2045,7 +2056,10 @@ class _VideoFeather extends StatelessWidget {
     return IgnorePointer(
       child: DecoratedBox(
         decoration: _decorationFor(color),
-        child: SizedBox(height: height, width: double.infinity),
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+        ),
       ),
     );
   }

@@ -307,7 +307,13 @@ void main() {
       file.writeAsBytesSync(serverBytes);
       final requester = _FakeRequester((range, _) => throw _statusError(416, headers: [('content-range', 'bytes */$serverSize')]));
       final moveTo = moveToPath();
-      final (result, _) = await runDownload(requester, totalBytes: expectedSize, threads: 1, moveTo: moveTo, moveToRequiredBytes: expectedSize);
+      final (result, _) = await runDownload(
+        requester,
+        totalBytes: expectedSize,
+        threads: 1,
+        moveTo: moveTo,
+        moveToRequiredBytes: expectedSize,
+      );
 
       expect(result, isNotNull);
       expect(File(moveTo).existsSync(), false);
@@ -318,7 +324,13 @@ void main() {
       file.writeAsBytesSync(bigSource);
       final requester = _FakeRequester((range, _) => _partial(bigSource, range, pieceSize: _kBigPieceSize));
       final moveTo = moveToPath();
-      final (result, progress) = await runDownload(requester, totalBytes: bigSource.length, threads: 2, moveTo: moveTo, moveToRequiredBytes: bigSource.length);
+      final (result, progress) = await runDownload(
+        requester,
+        totalBytes: bigSource.length,
+        threads: 2,
+        moveTo: moveTo,
+        moveToRequiredBytes: bigSource.length,
+      );
 
       expect(result, null);
       expect(requester.requestedRanges, isEmpty);

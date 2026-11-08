@@ -1300,7 +1300,13 @@ void main() {
       final bassPreset = EqualizerPreset.allDefaults[1];
       final night = PlayerConfigPreset(
         name: 'Night',
-        config: defaults.copyWith(equalizerEnabled: true, equalizer: bassPreset.equalizer, preset: bassPreset, volume: 0.5, loudnessEnhancer: 2.5),
+        config: defaults.copyWith(
+          equalizerEnabled: true,
+          equalizer: bassPreset.equalizer,
+          preset: bassPreset,
+          volume: 0.5,
+          loudnessEnhancer: 2.5,
+        ),
       );
       final slowed = PlayerConfigPreset(name: 'Slowed', config: defaults.copyWith(speed: 0.85, pitch: 0.85));
       settings.equalizer.putConfigPreset(slowed);

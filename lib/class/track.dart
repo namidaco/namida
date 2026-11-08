@@ -689,7 +689,12 @@ class TrackExtended {
     return TrackExtended(
       title: title,
       originalArtist: originalArtist,
-      artistsList: Indexer.splitArtist(title: title, originalArtist: originalArtist, tagged: multiValues?.artists, config: artistsConfig),
+      artistsList: Indexer.splitArtist(
+        title: title,
+        originalArtist: originalArtist,
+        tagged: multiValues?.artists,
+        config: artistsConfig,
+      ),
       originalAlbum: originalAlbum,
       albumsList: albumsList,
       albumArtist: albumArtist,

@@ -331,7 +331,13 @@ TrackExtended debugJellyfinItemToTrack(Map<String, dynamic> itemJson, {required 
   final item = _JellyfinItem.fromJson(itemJson);
   final serverUriParsed = Uri.parse(server);
   final path = _serverTrackPath(serverUriParsed, item.id ?? '');
-  return _JellyfinServer._baseItemDtoToTrackExtended(item, path: path, lyrics: '', splitConfig: splitConfig, server: server);
+  return _JellyfinServer._baseItemDtoToTrackExtended(
+    item,
+    path: path,
+    lyrics: '',
+    splitConfig: splitConfig,
+    server: server,
+  );
 }
 
 @visibleForTesting
