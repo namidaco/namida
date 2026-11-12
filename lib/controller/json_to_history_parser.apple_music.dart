@@ -103,13 +103,17 @@ class _AppleMusicPlayActivityParser {
   }
 }
 
-/// play activity has no artist, it comes from the library json, then from the daily tracks csv (`Artist - Title` per day).
+/// play activity has no artist and its song name can lack the version (`Snowblind` for `Snowblind (KERO Remix)`).
+/// both come from the library json, then from the daily tracks csv (`Artist - Title` per day).
 class _AppleMusicLookup {
   static const _kSameRecordingMaxDiffMS = 2000;
   static const _kDescriptionSeparator = ' - ';
+  static const _kVersionStarts = ['(', '[', '-'];
 
   final _libraryTracksByTitle = <String, List<_AppleMusicLibraryTrack>>{};
-  final _playedArtistsDaysByTitle = <String, Map<String, Set<int>>>{};
+  final _libraryTracksByAlbum = <String, List<_AppleMusicLibraryTrack>>{};
+  final _playedTracksByDay = <int, Set<_AppleMusicPlayedTrack>>{};
+  final _playedArtistsByTitle = <String, Set<String>>{};
   final _favouritesByPath = <String, List<_GeneralSourceItemInfo>>{};
 
   _AppleMusicLookup.fromFiles(List<File> files, {required int importTimeMS}) {
@@ -124,7 +128,19 @@ class _AppleMusicLookup {
 
   List<_GeneralSourceItemInfo> favouritesOf(File file) => _favouritesByPath[file.path] ?? const [];
 
-  String artistOf(_AppleMusicListen listen) => _libraryArtistOf(listen) ?? _playedArtistOf(listen) ?? '';
+  /// the fuller title wins, the library or played one can hold the version.
+  _GeneralSourceItemInfo infoOf(_AppleMusicListen listen) {
+    final titleLower = listen.title.toLowerCase();
+    final libraryTrack = _libraryTrackOf(listen, titleLower);
+    final playedTrack = libraryTrack == null ? _playedTrackOf(listen, titleLower) : null;
+    final foundTitle = libraryTrack?.title ?? playedTrack?.title;
+    final isFoundTitleFuller = foundTitle != null && foundTitle.length >= listen.title.length;
+    return _GeneralSourceItemInfo(
+      itemArtist: libraryTrack?.artist ?? playedTrack?.artist ?? '',
+      itemTitle: isFoundTitleFuller ? foundTitle : listen.title,
+      dateMSSE: listen.dateMS,
+    );
+  }
 
   void _addLibrary(File file, int importTimeMS) {
     final favourites = <_GeneralSourceItemInfo>[];
@@ -137,11 +153,14 @@ class _AppleMusicLookup {
         final album = map['Album'] as String? ?? '';
         final durationMS = map['Track Duration'] as int? ?? 0;
         final track = _AppleMusicLibraryTrack(
+          title: title,
+          titleLower: title.toLowerCase(),
           album: album,
           artist: artist,
           durationMS: durationMS,
         );
         _libraryTracksByTitle.addForce(title, track);
+        _libraryTracksByAlbum.addForce(album, track);
 
         // -- `Track Like Rating` is from before favourites replaced loves
         final isFavourite = map['Favorite Status - Track'] == true || map['Track Like Rating'] == 'liked';
@@ -171,52 +190,81 @@ class _AppleMusicLookup {
       final dayOfMonth = datePlayed % 100;
       final dateUtc = DateTime.utc(year, month, dayOfMonth);
       final day = dateUtc.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+      final dayTracks = _playedTracksByDay[day] ??= {};
 
       // -- artists and titles can hold the separator too, every split is kept
       int separatorIndex = description.indexOf(_kDescriptionSeparator);
       while (separatorIndex > 0) {
         final artist = description.substring(0, separatorIndex);
         final title = description.substring(separatorIndex + _kDescriptionSeparator.length);
-        final artistsDays = _playedArtistsDaysByTitle[title] ??= {};
-        final days = artistsDays[artist] ??= {};
-        days.add(day);
+        dayTracks.add((artist: artist, title: title, titleLower: title.toLowerCase()));
+        final artists = _playedArtistsByTitle[title] ??= {};
+        artists.add(artist);
         separatorIndex = description.indexOf(_kDescriptionSeparator, separatorIndex + 1);
       }
     });
   }
 
-  /// same album first, then the closest duration, another album only when it's the same recording.
-  String? _libraryArtistOf(_AppleMusicListen listen) {
-    final tracks = _libraryTracksByTitle[listen.title];
-    if (tracks == null) return null;
+  /// same album with the same title or the same song in the same recording, closest duration.
+  /// another album only with the same title in the same recording.
+  _AppleMusicLibraryTrack? _libraryTrackOf(_AppleMusicListen listen, String titleLower) {
+    _AppleMusicLibraryTrack? closest;
+    int closestDiffMS = 0;
 
-    var closest = tracks.first;
-    var closestDiffMS = (closest.durationMS - listen.durationMS).abs();
-    var isClosestSameAlbum = closest.album == listen.album;
-    for (int i = 1; i < tracks.length; i++) {
-      final tr = tracks[i];
-      final isSameAlbum = tr.album == listen.album;
-      if (isClosestSameAlbum && !isSameAlbum) continue;
+    final albumTracks = _libraryTracksByAlbum[listen.album];
+    if (albumTracks != null) {
+      for (final tr in albumTracks) {
+        final diffMS = (tr.durationMS - listen.durationMS).abs();
+        if (closest != null && diffMS >= closestDiffMS) continue;
+        final isSameTitle = tr.title == listen.title;
+        if (!isSameTitle && (diffMS > _kSameRecordingMaxDiffMS || !_isSameSong(tr.titleLower, titleLower))) continue;
+        closest = tr;
+        closestDiffMS = diffMS;
+      }
+      if (closest != null) return closest;
+    }
+
+    final titleTracks = _libraryTracksByTitle[listen.title];
+    if (titleTracks == null) return null;
+    for (final tr in titleTracks) {
       final diffMS = (tr.durationMS - listen.durationMS).abs();
-      final isCloser = (isSameAlbum && !isClosestSameAlbum) || diffMS < closestDiffMS;
-      if (!isCloser) continue;
+      if (diffMS > _kSameRecordingMaxDiffMS) continue;
+      if (closest != null && diffMS >= closestDiffMS) continue;
       closest = tr;
       closestDiffMS = diffMS;
-      isClosestSameAlbum = isSameAlbum;
     }
-
-    if (!isClosestSameAlbum && closestDiffMS > _kSameRecordingMaxDiffMS) return null;
-    return closest.artist;
+    return closest;
   }
 
-  String? _playedArtistOf(_AppleMusicListen listen) {
-    final artistsDays = _playedArtistsDaysByTitle[listen.title];
-    if (artistsDays == null) return null;
+  /// that day first: the same title, or the same song when only one version of it was played.
+  _AppleMusicPlayedTrack? _playedTrackOf(_AppleMusicListen listen, String titleLower) {
     final day = listen.dateMS ~/ Duration.millisecondsPerDay;
-    for (final e in artistsDays.entries) {
-      if (e.value.contains(day)) return e.key;
+    final dayTracks = _playedTracksByDay[day];
+    if (dayTracks != null) {
+      _AppleMusicPlayedTrack? sameSong;
+      bool isSameSongUnique = true;
+      for (final tr in dayTracks) {
+        if (tr.title == listen.title) return tr;
+        if (!_isSameSong(tr.titleLower, titleLower)) continue;
+        if (sameSong != null) isSameSongUnique = false;
+        sameSong = tr;
+      }
+      if (isSameSongUnique && sameSong != null) return sameSong;
     }
-    return artistsDays.length == 1 ? artistsDays.keys.first : null;
+
+    final artists = _playedArtistsByTitle[listen.title];
+    if (artists == null || artists.length != 1) return null;
+    return (artist: artists.first, title: listen.title, titleLower: titleLower);
+  }
+
+  /// equal, or one adds a version to the other (`snowblind` and `snowblind (kero remix)`). both lowercased.
+  static bool _isSameSong(String titleLower, String otherTitleLower) {
+    final isLonger = titleLower.length >= otherTitleLower.length;
+    final longer = isLonger ? titleLower : otherTitleLower;
+    final shorter = isLonger ? otherTitleLower : titleLower;
+    if (!longer.startsWith(shorter)) return false;
+    final version = longer.substring(shorter.length).trimLeft();
+    return version.isEmpty || _kVersionStarts.any(version.startsWith);
   }
 }
 
@@ -512,11 +560,15 @@ class _AppleMusicListen {
 }
 
 class _AppleMusicLibraryTrack {
+  final String title;
+  final String titleLower;
   final String album;
   final String artist;
   final int durationMS;
 
   const _AppleMusicLibraryTrack({
+    required this.title,
+    required this.titleLower,
     required this.album,
     required this.artist,
     required this.durationMS,
@@ -550,3 +602,5 @@ enum _DailyTracksColumn {
 }
 
 typedef _ListenCountRule = ({int minListenSeconds, int minListenPercentage, int seekSeconds, int seekPercentage, bool isSeekPercentage});
+
+typedef _AppleMusicPlayedTrack = ({String artist, String title, String titleLower});

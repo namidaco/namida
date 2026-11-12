@@ -226,20 +226,28 @@ class ReverseSearchMatcher<T> {
     entries.add((item, tokens));
   }
 
-  /// items whose tokens are all inside [haystackTokens], built by [SearchMatcher.tokenizeHaystack].
-  List<T> matchContainedIn(Set<String> haystackTokens) {
-    final matched = <T>[];
+  /// every item passing [test] whose tokens are all inside [haystackTokens] (built by [SearchMatcher.tokenizeHaystack]) and that has the most tokens.
+  List<T> matchMostSpecificAll(Set<String> haystackTokens, bool Function(T item) test) {
+    final mostSpecific = <T>[];
+    int mostTokensCount = 0;
     for (final token in haystackTokens) {
       final entries = _entriesByAnchorToken[token];
       if (entries == null) continue;
       for (final (item, tokens) in entries) {
-        if (haystackTokens.containsAll(tokens)) matched.add(item);
+        final tokensCount = tokens.length;
+        if (tokensCount < mostTokensCount) continue;
+        if (!haystackTokens.containsAll(tokens) || !test(item)) continue;
+        if (tokensCount > mostTokensCount) {
+          mostSpecific.clear();
+          mostTokensCount = tokensCount;
+        }
+        mostSpecific.add(item);
       }
     }
-    return matched;
+    return mostSpecific;
   }
 
-  /// the [matchContainedIn] item passing [test] with the most tokens, ties keep the first.
+  /// the first of [matchMostSpecificAll].
   T? matchMostSpecific(Set<String> haystackTokens, bool Function(T item) test) {
     T? mostSpecific;
     int mostTokensCount = 0;

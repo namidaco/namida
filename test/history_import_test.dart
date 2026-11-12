@@ -474,6 +474,25 @@ void main() {
       expect(await listenedPaths('Artist - Song', 'Label', tracks), [tracks[0].path]);
       expect(await listensOf('Artist - Song', 'Label', tracks, matchAll: true), 2);
     });
+
+    test('matchAll skips less specific titles held by the video title', () async {
+      final original = ytTrack('Shelter', 'Porter Robinson');
+      final remix = ytTrack('Shelter (Stessie Remix)', 'Porter Robinson');
+      final remixCopy = ytTrack('Shelter (Stessie Remix)', 'Porter Robinson', filename: 'copy.m4a');
+      final paths = await listenedPaths('Porter Robinson - Shelter (Stessie Remix)', 'Label', [original, remix, remixCopy], matchAll: true);
+      expect(paths.toSet(), {remix.path, remixCopy.path});
+    });
+
+    test('missing watches of a video are one entry with every watch date', () async {
+      final file = takeoutJson([
+        jsonWatch('dQw4w9WgXcQ', 'Unknown Song', 'Channel', '2022-02-04T14:20:56.789Z'),
+        jsonWatch('dQw4w9WgXcQ', 'Unknown Song', 'Channel', '2022-02-05T14:20:56.789Z'),
+      ]);
+      final res = await parseYT([file], [ytTrack('Song', 'Artist')]);
+      final missing = res!.missingEntriesSorted.entries.single;
+      expect(missing.key.youtubeID, 'dQw4w9WgXcQ');
+      expect(missing.value.toSet(), {utcMS(2022, 2, 4, 14, 20, 56) + 789, utcMS(2022, 2, 5, 14, 20, 56) + 789});
+    });
   });
 
   test('link matching reads the id from the comment, a v= filename or an id in brackets ending the filename, never a bare id filename', () async {
@@ -508,7 +527,7 @@ void main() {
   );
 
   group('lastfm csv', () {
-    addLastFm(List<String> lines, List<_Track> tracks, {SplayTreeMap<int, List<TrackWithDate>>? localHistory}) {
+    addLastFm(List<String> lines, List<_Track> tracks, {SplayTreeMap<int, List<TrackWithDate>>? localHistory, bool matchAll = false}) {
       final file = writeFile('csv', lines.join('\n'));
       return JsonToHistoryParser.debugAddLastFmSource((
         tracks: tracks,
@@ -518,7 +537,7 @@ void main() {
         favouriteFiles: const [],
         lookupFiles: const [],
         addHistory: true,
-        matchAll: false,
+        matchAll: matchAll,
         artistsSplitConfig: splitConfig,
         listenCountRule: listenCountRule,
         portProgressParsed: newPort(),
@@ -551,10 +570,10 @@ void main() {
       final res = await addLastFm(lines, [tr]);
 
       expect(res!.localHistory.values.single.single.track.path, tr.path);
-      final missing = res.missingEntriesSorted.keys.single;
-      expect(missing.artistOrChannel, 'Say "Hi"');
-      expect(missing.title, 'Song, Pt. 2');
-      expect(missing.dateMSSE, utcMS(2026, 10, 5, 12, 40));
+      final missing = res.missingEntriesSorted.entries.single;
+      expect(missing.key.artistOrChannel, 'Say "Hi"');
+      expect(missing.key.title, 'Song, Pt. 2');
+      expect(missing.value, [utcMS(2026, 10, 5, 12, 40)]);
     });
 
     test('an unparsable date takes the previous one minus 30 seconds', () async {
@@ -563,8 +582,11 @@ void main() {
         'Artist,Album,Second,not a date',
       ], []);
 
-      final datesByTitle = {for (final e in res!.missingEntriesSorted.keys) e.title: e.dateMSSE};
-      expect(datesByTitle, {'First': utcMS(2026, 10, 5, 12, 34), 'Second': utcMS(2026, 10, 5, 12, 34) - 30000});
+      final datesByTitle = {for (final e in res!.missingEntriesSorted.entries) e.key.title: e.value};
+      expect(datesByTitle, {
+        'First': [utcMS(2026, 10, 5, 12, 34)],
+        'Second': [utcMS(2026, 10, 5, 12, 34) - 30000],
+      });
     });
 
     test('lines before any parsable date are skipped instead of landing at the epoch', () async {
@@ -606,6 +628,46 @@ void main() {
       final res = await addLastFm(['Camo & Crooked,Album,Song,05 Oct 2026 12:34'], [tr]);
       expect(res!.localHistory.values.single.single.track.path, tr.path);
     });
+
+    test('a whole library title goes before other versions of the same base title, matchAll keeps only the equal ones', () async {
+      final original = track('Shelter', 'Porter Robinson; Madeon');
+      final remix = track('Shelter (Stessie Remix)', 'Porter Robinson; Madeon; Stessie');
+      final otherRemix = track('Shelter (Other Remix)', 'Porter Robinson; Madeon; Other');
+      const lines = [
+        'Porter Robinson & Madeon,Album,Shelter,05 Oct 2026 12:34',
+        'Porter Robinson & Madeon,Album,Shelter (Stessie Remix),05 Oct 2026 12:40',
+      ];
+      for (final matchAll in [false, true]) {
+        for (final tracks in [
+          [original, remix, otherRemix],
+          [otherRemix, remix, original],
+        ]) {
+          final res = await addLastFm(lines, tracks, matchAll: matchAll);
+          final paths = res!.localHistory.values.expand((e) => e).map((e) => e.track.path);
+          expect(paths, [original.path, remix.path]);
+        }
+      }
+    });
+
+    test('any of the library artists matches, sources order collab artists differently', () async {
+      final tr = track('Trinite (Nasko Remix)', 'Skybreak; Sharks; Paper Skies; Nasko');
+      final res = await addLastFm(['"Sharks, Paper Skies & Nasko",Album,Trinite (Nasko Remix),05 Oct 2026 12:34'], [tr]);
+      expect(res!.localHistory.values.single.single.track.path, tr.path);
+    });
+
+    test('missing listens of the same track are one entry with every date, the most listened first', () async {
+      final res = await addLastFm([
+        'Artist,Album,Other,05 Oct 2026 12:30',
+        'Artist,Album,Missing,05 Oct 2026 12:34',
+        'Artist,Album,Missing,05 Oct 2026 12:40',
+      ], []);
+      final datesByTitle = {for (final e in res!.missingEntriesSorted.entries) e.key.title: e.value};
+      expect(datesByTitle, {
+        'Missing': [utcMS(2026, 10, 5, 12, 34), utcMS(2026, 10, 5, 12, 40)],
+        'Other': [utcMS(2026, 10, 5, 12, 30)],
+      });
+      expect(datesByTitle.keys.first, 'Missing');
+    });
   });
 
   group('spotify json', () {
@@ -643,9 +705,9 @@ void main() {
       expect(twd.track.path, tr.path);
       expect(twd.dateAdded, utcMS(2023, 1, 15, 14, 32));
       expect(twd.source, TrackSource.spotify);
-      final missing = res.missingEntriesSorted.keys.single;
-      expect(missing.title, 'Unknown Song');
-      expect(missing.dateMSSE, utcMS(2023, 1, 15, 15, 0));
+      final missing = res.missingEntriesSorted.entries.single;
+      expect(missing.key.title, 'Unknown Song');
+      expect(missing.value, [utcMS(2023, 1, 15, 15, 0)]);
     });
 
     test('extended entries still import next to account data ones', () async {
@@ -1014,6 +1076,80 @@ void main() {
       expect((missing.artistOrChannel, missing.title), ('', 'Unknown'));
     });
 
+    test('a song name without its version takes the library title of the same album and recording', () async {
+      final original = track('Snowblind', 'Au5; Tasha Baxter');
+      final remix = track('Snowblind (KERO Remix)', 'Au5; Tasha Baxter; KERO');
+      final postMalone = track('Sunflower', 'Post Malone; Swae Lee');
+      final vanatice = track('Sunflower', 'Vanatice');
+      const spiderVerse = 'Spider-Man: Into the Spider-Verse (Soundtrack)';
+      final library = writeLibrary([
+        libraryTrack('Snowblind', 'Au5 & Tasha Baxter', 'Snowblind Legacy', 347826),
+        libraryTrack('Snowblind (KERO Remix)', 'Au5, Tasha Baxter & KERO', 'Snowblind Legacy', 226667),
+        libraryTrack('Sunflower (Spider-Man: Into the Spider-Verse)', 'Post Malone & Swae Lee', spiderVerse, 158040),
+        libraryTrack('Sunflower', 'Vanatice', 'Sunflower - Single', 192000),
+      ]);
+      final daily = writeCsv(
+        ['Country', 'Track Description', 'Date Played', 'Hours'],
+        [
+          ['United States', 'Vanatice - Sunflower', '20240903', '10'],
+        ],
+      );
+      final hourMS = utcMS(2024, 9, 3, 10, 0);
+      List<String> fullPlay(String title, String album, int minute, int durationMS) {
+        return playRow(
+          title,
+          album,
+          hourMS + minute * 60000,
+          from: 0,
+          to: durationMS,
+          durationMS: durationMS,
+          reason: 'NATURAL_END_OF_TRACK',
+        );
+      }
+
+      final file = writeCsv(playActivityHeader, [
+        fullPlay('Snowblind', 'Snowblind Legacy', 0, 226666),
+        fullPlay('Snowblind', 'Snowblind Legacy', 10, 347826),
+        fullPlay('Sunflower', spiderVerse, 20, 159339),
+        fullPlay('Sunflower', 'Sunflower - Single', 30, 192000),
+      ]);
+      final res = await addAppleMusic([file], [original, remix, postMalone, vanatice], lookupFiles: [library, daily]);
+
+      final paths = res!.localHistory.values.expand((e) => e).map((e) => e.track.path);
+      expect(paths, [remix.path, original.path, postMalone.path, vanatice.path]);
+    });
+
+    test('without the library, the version played that day is taken only when it is the only one', () async {
+      final original = track('Jumpscare', 'Soffizlly');
+      final vip = track('Jumpscare (VIP)', 'Soffizlly');
+      final daily = writeCsv(
+        ['Country', 'Track Description', 'Date Played', 'Hours'],
+        [
+          ['United States', 'Soffizlly - Jumpscare (VIP)', '20240903', '10'],
+          ['United States', 'Soffizlly - Jumpscare (VIP)', '20240904', '10'],
+          ['United States', 'Soffizlly - Jumpscare (Remix)', '20240904', '11'],
+        ],
+      );
+      List<String> fullPlay(int day) {
+        return playRow(
+          'Jumpscare',
+          'Jumpscare (The Remixes)',
+          utcMS(2024, 9, day, 10, 0),
+          from: 0,
+          to: 146889,
+          durationMS: 146889,
+          reason: 'NATURAL_END_OF_TRACK',
+        );
+      }
+
+      final file = writeCsv(playActivityHeader, [fullPlay(3), fullPlay(4)]);
+      final res = await addAppleMusic([file], [original, vip], lookupFiles: [daily]);
+
+      expect(res!.localHistory.values.single.single.track.path, vip.path);
+      final missing = res.missingEntriesSorted.keys.single;
+      expect((missing.artistOrChannel, missing.title), ('', 'Jumpscare'));
+    });
+
     test('library favourites keep their date, undated ones and older loves take the import time', () async {
       final dated = track('First', 'Artist');
       final undated = track('Second', 'Artist');
@@ -1140,14 +1276,16 @@ void main() {
     });
   });
 
-  test('items added to the reverse matcher match haystacks that hold all of their tokens', () {
+  test('the reverse matcher keeps every item held whole by the haystack that has the most tokens', () {
     final matcher = ReverseSearchMatcher<String>()
       ..addItem('never gonna', 'Never Gonna')
       ..addItem('give you up', 'Give You Up!')
+      ..addItem('gonna give you', 'Gonna Give You')
       ..addItem('let you down', 'Let You Down');
 
-    final matched = matcher.matchContainedIn(SearchMatcher.tokenizeHaystack('Rick Astley - Never Gonna Give You Up'));
-    expect(matched.toSet(), {'never gonna', 'give you up'});
+    final haystackTokens = SearchMatcher.tokenizeHaystack('Rick Astley - Never Gonna Give You Up');
+    expect(matcher.matchMostSpecificAll(haystackTokens, (_) => true).toSet(), {'give you up', 'gonna give you'});
+    expect(matcher.matchMostSpecificAll(haystackTokens, (e) => e != 'give you up'), ['gonna give you']);
   });
 
   group('youtube stats buckets', () {
