@@ -62,6 +62,7 @@ class TracksSearchWrapper {
             style: e.originalStyle,
             composer: e.composer,
             multiValues: e.multiValues,
+            sortInfo: e.sortInfo,
             year: e.year,
             comment: e.comment,
             description: addDescription ? e.description : null,
@@ -132,6 +133,17 @@ class TracksSearchWrapper {
       );
     }
 
+    final sortPropertiesCache = <String, _Property>{};
+    final sortTitlePropertiesCache = <String, _Property>{};
+
+    // -- never split by separators, sort names are mostly `Last, First`
+    _Property? sortPropertyOf(_Property? mainProperty, String? sortText, {bool isTitle = false}) {
+      if (mainProperty == null || sortText == null || sortText.isEmpty) return null;
+      final cache = isTitle ? sortTitlePropertiesCache : sortPropertiesCache;
+      final sortProperty = cache[sortText] ??= _splitTextCleanedAndCleanedMinor(sortText, textCleanedForSearch, textCleanedMinorForSearch, tryCutBeforeBrackets: isTitle);
+      return _sortPropertyOrNull(sortProperty, mainProperty);
+    }
+
     final tracksExtended = <_CustomTrackExtended>[];
     int index = -1;
     for (final trMap in tracks) {
@@ -162,26 +174,51 @@ class TracksSearchWrapper {
           : null;
       final titleForSearch = removeFeatArtistsFromTitle ? Indexer.removeFeatArtistsFromTitle(title) : title;
       final titleNamesToRemove = removeArtistsFromTitle ? splitArtist : null;
+      final splitTitle = splitThis(titleForSearch, stitle, tryCutBeforeBrackets: true, namesToRemove: titleNamesToRemove);
+      final splitAlbum = salbum
+          ? _mapListCleanedAndCleanedMinor(
+              Indexer.splitAlbum(
+                trMap.album,
+                tagged: trMap.multiValues?.albums,
+                config: splitConfig.albumConfig,
+              ),
+              textCleanedForSearch,
+              textCleanedMinorForSearch,
+            )
+          : null;
+      final splitAlbumArtist = splitThis(trMap.albumArtist, salbumartist);
+      final splitComposer = scomposer
+          ? _mapListCleanedAndCleanedMinor(
+              Indexer.splitComposer(
+                trMap.composer,
+                tagged: trMap.multiValues?.composers,
+                config: splitConfig.artistsConfig,
+              ),
+              textCleanedForSearch,
+              textCleanedMinorForSearch,
+            )
+          : null;
+
+      final sortInfo = trMap.sortInfo;
+      final sortProperties = sortInfo == null
+          ? null
+          : _SortProperties.orNull(
+              title: sortPropertyOf(splitTitle, sortInfo.title, isTitle: true),
+              artist: sortPropertyOf(splitArtist, sortInfo.artist),
+              album: sortPropertyOf(splitAlbum, sortInfo.album),
+              albumArtist: sortPropertyOf(splitAlbumArtist, sortInfo.albumArtist),
+              composer: sortPropertyOf(splitComposer, sortInfo.composer),
+            );
 
       tracksExtended.add(
         _CustomTrackExtended(
           ogIndex: index,
           track: track,
-          splitTitle: splitThis(titleForSearch, stitle, tryCutBeforeBrackets: true, namesToRemove: titleNamesToRemove),
+          splitTitle: splitTitle,
           splitFilename: splitThis(path.getFilename, sfilename),
           splitFolder: splitThis(folderName, sfolder),
-          splitAlbum: salbum
-              ? _mapListCleanedAndCleanedMinor(
-                  Indexer.splitAlbum(
-                    trMap.album,
-                    tagged: trMap.multiValues?.albums,
-                    config: splitConfig.albumConfig,
-                  ),
-                  textCleanedForSearch,
-                  textCleanedMinorForSearch,
-                )
-              : null,
-          splitAlbumArtist: splitThis(trMap.albumArtist, salbumartist),
+          splitAlbum: splitAlbum,
+          splitAlbumArtist: splitAlbumArtist,
           splitArtist: splitArtist,
           splitGenre: sgenre
               ? _mapListCleanedAndCleanedMinor(
@@ -205,17 +242,8 @@ class TracksSearchWrapper {
                   textCleanedMinorForSearch,
                 )
               : null,
-          splitComposer: scomposer
-              ? _mapListCleanedAndCleanedMinor(
-                  Indexer.splitComposer(
-                    trMap.composer,
-                    tagged: trMap.multiValues?.composers,
-                    config: splitConfig.artistsConfig,
-                  ),
-                  textCleanedForSearch,
-                  textCleanedMinorForSearch,
-                )
-              : null,
+          splitComposer: splitComposer,
+          sortProperties: sortProperties,
           splitComment: splitThis(trMap.comment, scomment),
           description: _PropertySimple.orNull(description),
           splitMoods: smoods
@@ -454,6 +482,13 @@ class TracksSearchWrapper {
     return false;
   }
 
+  /// null when [sortProperty] holds nothing new over [mainProperty], ex: `Beatles, The` for `The Beatles`.
+  static _Property? _sortPropertyOrNull(_Property sortProperty, _Property mainProperty) {
+    final sortCleaned = sortProperty.cleaned;
+    if (sortCleaned.length == 0 || sortCleaned.hasSamePartsAs(mainProperty.cleaned)) return null;
+    return sortProperty;
+  }
+
   static _Property? _mapListCleanedAndCleanedMinorOrNull(
     List<String>? splitted,
     String Function(String) textCleanedForSearch,
@@ -609,6 +644,7 @@ class _CustomTrackExtended {
   final _Property? splitGenre;
   final _Property? splitStyle;
   final _Property? splitComposer;
+  final _SortProperties? sortProperties;
   final _Property? splitComment;
   final _PropertySimple? description;
   final _Property? splitMoods;
@@ -631,6 +667,7 @@ class _CustomTrackExtended {
     required this.splitGenre,
     required this.splitStyle,
     required this.splitComposer,
+    required this.sortProperties,
     required this.splitComment,
     required this.description,
     required this.splitMoods,
@@ -676,6 +713,19 @@ class _MatchText {
     return _MatchText(joined, parts, items);
   }
 
+  /// same words in any order, ex: `beatles the` and `the beatles`.
+  bool hasSamePartsAs(_MatchText other) {
+    if (text == other.text) return true;
+    final otherParts = other.parts;
+    if (mask != other.mask || parts.length != otherParts.length) return false;
+    final sortedParts = parts.toFixedList()..sort();
+    final otherSortedParts = otherParts.toFixedList()..sort();
+    for (int i = 0; i < sortedParts.length; i++) {
+      if (sortedParts[i] != otherSortedParts[i]) return false;
+    }
+    return true;
+  }
+
   bool matchesExactly(String query) {
     if (text == query) return true;
     final items = this.items;
@@ -710,6 +760,35 @@ class _Property {
     required this.joinedCutCleaned,
     required this.joinedCutCleanedMinor,
   });
+}
+
+class _SortProperties {
+  final _Property? title, artist, album, albumArtist, composer;
+
+  const _SortProperties._({
+    required this.title,
+    required this.artist,
+    required this.album,
+    required this.albumArtist,
+    required this.composer,
+  });
+
+  static _SortProperties? orNull({
+    required _Property? title,
+    required _Property? artist,
+    required _Property? album,
+    required _Property? albumArtist,
+    required _Property? composer,
+  }) {
+    if (title == null && artist == null && album == null && albumArtist == null && composer == null) return null;
+    return _SortProperties._(
+      title: title,
+      artist: artist,
+      album: album,
+      albumArtist: albumArtist,
+      composer: composer,
+    );
+  }
 }
 
 class _PropertySimple {
@@ -753,12 +832,13 @@ class _ScoreCalculator {
     }
   }
 
-  void scoreProperty(_Property? property, {int multiplier = 1, int? exactMultiplier, bool allowFuzzy = false, bool preferPrefix = false}) {
-    if (property == null) return;
+  /// whether any score was added.
+  bool scoreProperty(_Property? property, {int multiplier = 1, int? exactMultiplier, bool allowFuzzy = false, bool preferPrefix = false}) {
+    if (property == null) return false;
 
     final cleaned = property.cleaned;
-    if (cleaned.length == 0) return;
-    if (query.length == 0) return;
+    if (cleaned.length == 0) return false;
+    if (query.length == 0) return false;
 
     final cleanedMinor = property.cleanedMinor;
     // -- null when both sides are untouched by cleanup, matching them would repeat the exact same comparisons.
@@ -770,10 +850,10 @@ class _ScoreCalculator {
     final exactMatchMultiplier = exactMultiplier ?? multiplier;
     if (cleaned.matchesExactly(query.text)) {
       score += 400 * exactMatchMultiplier;
-      return;
+      return true;
     } else if (cleanedMinor != null && queryMinorText != null && cleanedMinor.matchesExactly(queryMinorText)) {
       score += 400 * exactMatchMultiplier;
-      return;
+      return true;
     }
 
     // -- same as exact match, but without the brackets possibly in title
@@ -786,10 +866,10 @@ class _ScoreCalculator {
     final joinedCutCleanedMinor = property.joinedCutCleanedMinor;
     if (joinedCutCleaned != null && joinedCutCleaned == query.text) {
       score += 400 * multiplier;
-      return;
+      return true;
     } else if (joinedCutCleanedMinor != null && joinedCutCleanedMinor == queryMinorText) {
       score += 400 * multiplier;
-      return;
+      return true;
     }
 
     // -- names are mostly filtered by typing their start, the start length relative to the name shouldn't matter
@@ -797,38 +877,48 @@ class _ScoreCalculator {
       final startsWithQuery = cleaned.text.startsWith(query.text) || (cleanedMinor != null && queryMinorText != null && cleanedMinor.text.startsWith(queryMinorText));
       if (startsWithQuery) {
         score += 200 * multiplier;
-        return;
+        return true;
       }
     }
 
     final matchingPercentageCleaned = matcher.compareMatchingPercentage(query, cleaned, fuzzy: allowFuzzy ? _queryFuzzy : null);
     if (matchingPercentageCleaned > 0) {
       score += (matchingPercentageCleaned * 200).round() * multiplier;
-      return;
+      return true;
     }
 
-    if (cleanedMinor == null || queryMinorToMatch == null) return;
+    if (cleanedMinor == null || queryMinorToMatch == null) return false;
 
     final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(queryMinorToMatch, cleanedMinor, fuzzy: allowFuzzy ? _queryMinorFuzzy : null);
-    score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
+    final addedScore = (matchingPercentageCleanedMinor * 300).round() * multiplier;
+    score += addedScore;
+    return addedScore > 0;
   }
 
   int calculate(_CustomTrackExtended trExt) {
     score = 0;
 
+    // -- sort tags only when their own field missed, so they never add up over it
+    final sort = trExt.sortProperties;
+
     // -- no early exit on a high score, it would rank below weaker matches that kept adding up (ex: filename repeating the title)
-    scoreProperty(trExt.splitTitle, multiplier: 6, allowFuzzy: true);
-    scoreProperty(trExt.splitArtist, multiplier: 2, exactMultiplier: 6, allowFuzzy: true);
-    scoreProperty(trExt.splitAlbum, multiplier: 2, allowFuzzy: true);
+    final didScoreTitle = scoreProperty(trExt.splitTitle, multiplier: 6, allowFuzzy: true);
+    if (!didScoreTitle && sort != null) scoreProperty(sort.title, multiplier: 6, allowFuzzy: true);
+    final didScoreArtist = scoreProperty(trExt.splitArtist, multiplier: 2, exactMultiplier: 6, allowFuzzy: true);
+    if (!didScoreArtist && sort != null) scoreProperty(sort.artist, multiplier: 2, exactMultiplier: 6, allowFuzzy: true);
+    final didScoreAlbum = scoreProperty(trExt.splitAlbum, multiplier: 2, allowFuzzy: true);
+    if (!didScoreAlbum && sort != null) scoreProperty(sort.album, multiplier: 2, allowFuzzy: true);
     scoreProperty(trExt.splitFilename, multiplier: 1, allowFuzzy: true);
     // -- prevent scoring more if already found in main properties
     // -- for example very useful to prevent lyrics in description from producing more score
     if (score > 0) return score;
     scoreProperty(trExt.splitFolder);
-    scoreProperty(trExt.splitAlbumArtist);
+    final didScoreAlbumArtist = scoreProperty(trExt.splitAlbumArtist);
+    if (!didScoreAlbumArtist && sort != null) scoreProperty(sort.albumArtist);
     scoreProperty(trExt.splitGenre);
     scoreProperty(trExt.splitStyle);
-    scoreProperty(trExt.splitComposer);
+    final didScoreComposer = scoreProperty(trExt.splitComposer);
+    if (!didScoreComposer && sort != null) scoreProperty(sort.composer);
     scoreProperty(trExt.splitComment);
     scorePropertySimple(trExt.description);
     scoreProperty(trExt.splitMoods);
@@ -843,14 +933,24 @@ class _ScoreCalculator {
   int calculateKey(_SearchKey key) {
     score = 0;
 
-    scoreProperty(key.title, multiplier: 6, allowFuzzy: true, preferPrefix: true);
-    scoreProperty(
+    final didScoreTitle = scoreProperty(key.title, multiplier: 6, allowFuzzy: true, preferPrefix: true);
+    if (!didScoreTitle) scoreProperty(key.titleSort, multiplier: 6, allowFuzzy: true, preferPrefix: true);
+    final didScoreSubtitle = scoreProperty(
       key.subtitle,
       multiplier: 2,
       exactMultiplier: 6,
       allowFuzzy: true,
       preferPrefix: true,
     );
+    if (!didScoreSubtitle) {
+      scoreProperty(
+        key.subtitleSort,
+        multiplier: 2,
+        exactMultiplier: 6,
+        allowFuzzy: true,
+        preferPrefix: true,
+      );
+    }
     if (score > 0) return score;
     final extras = key.extras;
     if (extras != null) {
@@ -1008,6 +1108,7 @@ typedef TracksSearchTrackParams = ({
   String style,
   String composer,
   FTagsMultiValues? multiValues,
+  FTagsSortInfo? sortInfo,
   int? year,
   String? comment,
   String? description,

@@ -8,6 +8,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/tracks_search_wrapper.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_group.dart';
 import 'package:namida/class/library_item_map.dart';
@@ -1051,8 +1052,12 @@ class SearchSortController extends SearchPortsProvider {
         final albumsMap = Indexer.inst.mainMapAlbums.value;
         final albumsTracks = albumsMap.values.toFixedList();
         final weights = _keysSearchWeightsOf(albumsTracks);
+        final albumSorts = _groupsSortTagsOf(_singleAlbumOf, (sortInfo) => sortInfo.album);
+        final albumArtistSorts = _groupsSortTagsOf(_singleAlbumOf, (sortInfo) => sortInfo.albumArtist);
         final params = (
           keys: albumsMap.keys.toFixedList(),
+          albumSorts: albumSorts,
+          albumArtistSorts: albumArtistSorts,
           weights: weights,
           cleanup: _shouldCleanup,
           sendPort: itemsSendPort,
@@ -1093,8 +1098,10 @@ class SearchSortController extends SearchPortsProvider {
         final entries = _getMediaEntries(type).toFixedList();
         final entriesTracks = entries.map((e) => e.value).toFixedList();
         final weights = _keysSearchWeightsOf(entriesTracks);
+        final sortTags = _mediaSortTagsOf(type);
         final params = (
           keys: entries.map((e) => e.key).toFixedList(),
+          sortTags: sortTags,
           weights: weights,
           cleanup: _shouldCleanup,
           keyIsPath: type == MediaType.folderMusic || type == MediaType.folderVideo || type == MediaType.folder,
@@ -1126,6 +1133,45 @@ class SearchSortController extends SearchPortsProvider {
   static KeysSearchWeights _keysSearchWeightsOf(List<List<Selectable>> groups) {
     return KeysSearchWrapper.createWeights(groups, listensCount: (tracks) => tracks.getTotalListenCount(), tracksCount: (tracks) => tracks.length);
   }
+
+  static Map<String, String>? _mediaSortTagsOf(MediaType type) {
+    return switch (type) {
+      MediaType.artist => _groupsSortTagsOf(_singleArtistOf, (sortInfo) => sortInfo.artist),
+      MediaType.albumArtist => _groupsSortTagsOf(_singleAlbumArtistOf, (sortInfo) => sortInfo.albumArtist),
+      MediaType.composer => _groupsSortTagsOf(_singleComposerOf, (sortInfo) => sortInfo.composer),
+      MediaType.genre ||
+      MediaType.style ||
+      MediaType.language ||
+      MediaType.folder ||
+      MediaType.folderMusic ||
+      MediaType.folderVideo ||
+      MediaType.mood ||
+      MediaType.tag ||
+      MediaType.rating ||
+      MediaType.track ||
+      MediaType.album ||
+      MediaType.playlist => null,
+    };
+  }
+
+  /// sort tag of each group, taken only from tracks that belong to one group, since a tag like `Choko & Someone` can't be split per name.
+  static Map<K, String> _groupsSortTagsOf<K>(K? Function(TrackExtended trExt) singleKeyOf, String? Function(FTagsSortInfo sortInfo) sortTagOf) {
+    final sortTags = <K, String>{};
+    for (final trExt in Indexer.inst.allTracksMappedByPath.values) {
+      final sortInfo = trExt.sortInfo;
+      if (sortInfo == null) continue;
+      final sortTag = sortTagOf(sortInfo);
+      if (sortTag == null || sortTag.isEmpty) continue;
+      final key = singleKeyOf(trExt);
+      if (key != null) sortTags[key] ??= sortTag;
+    }
+    return sortTags;
+  }
+
+  static String? _singleArtistOf(TrackExtended trExt) => trExt.artistsList.length == 1 ? trExt.artistsList[0] : null;
+  static String? _singleAlbumArtistOf(TrackExtended trExt) => trExt.albumArtistsList.length == 1 ? trExt.albumArtistsList[0] : null;
+  static String? _singleComposerOf(TrackExtended trExt) => trExt.composersList.length == 1 ? trExt.composersList[0] : null;
+  static AlbumIdentifierWrapper? _singleAlbumOf(TrackExtended trExt) => trExt.albumsIdentifiersWrappers.length == 1 ? trExt.albumsIdentifiersWrappers[0].modifiedOnly() : null;
 
   void searchTracks(String text, {bool temp = false}) {
     if (text == '') {
@@ -1857,8 +1903,20 @@ class SearchSortController extends SearchPortsProvider {
     }
   }
 
-  static void _searchAlbumsIsolate(({List<AlbumIdentifierWrapper> keys, KeysSearchWeights weights, bool cleanup, SendPort sendPort}) parameters) {
+  static void _searchAlbumsIsolate(
+    ({
+      List<AlbumIdentifierWrapper> keys,
+      Map<AlbumIdentifierWrapper, String> albumSorts,
+      Map<AlbumIdentifierWrapper, String> albumArtistSorts,
+      KeysSearchWeights weights,
+      bool cleanup,
+      SendPort sendPort,
+    })
+    parameters,
+  ) {
     final sendPort = parameters.sendPort;
+    final albumSorts = parameters.albumSorts;
+    final albumArtistSorts = parameters.albumArtistSorts;
 
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
@@ -1867,6 +1925,8 @@ class SearchSortController extends SearchPortsProvider {
       parameters.keys,
       title: (key) => key.displayAlbumName,
       subtitle: (key) => key.albumArtist,
+      titleSort: (key) => albumSorts[key],
+      subtitleSort: (key) => albumArtistSorts[key],
       weights: parameters.weights,
       cleanup: parameters.cleanup,
     );
@@ -1892,9 +1952,10 @@ class SearchSortController extends SearchPortsProvider {
     sendPort.send(PortsProviderMessages.prepared);
   }
 
-  static void _generalSearchIsolate(({List<String> keys, KeysSearchWeights weights, bool cleanup, bool keyIsPath, SendPort sendPort}) parameters) {
+  static void _generalSearchIsolate(({List<String> keys, Map<String, String>? sortTags, KeysSearchWeights weights, bool cleanup, bool keyIsPath, SendPort sendPort}) parameters) {
     final keyIsPath = parameters.keyIsPath;
     final sendPort = parameters.sendPort;
+    final sortTags = parameters.sortTags;
 
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
@@ -1902,6 +1963,7 @@ class SearchSortController extends SearchPortsProvider {
     final searchWrapper = KeysSearchWrapper.init(
       parameters.keys,
       title: (key) => keyIsPath ? Folder.explicit(key).folderNameRaw : key,
+      titleSort: sortTags == null ? null : (key) => sortTags[key],
       weights: parameters.weights,
       cleanup: parameters.cleanup,
     );

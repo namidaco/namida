@@ -18,6 +18,8 @@ class KeysSearchWrapper<T> {
     List<T> items, {
     required String? Function(T item) title,
     String? Function(T item)? subtitle,
+    String? Function(T item)? titleSort,
+    String? Function(T item)? subtitleSort,
     List<String>? Function(T item)? extras,
     KeysSearchWeights? weights,
     required bool cleanup,
@@ -35,14 +37,27 @@ class KeysSearchWrapper<T> {
       );
     }
 
+    _Property? sortPropertyOf(_Property? mainProperty, String? sortText, {bool tryCutBeforeBrackets = false}) {
+      if (mainProperty == null) return null;
+      final sortProperty = propertyOf(sortText, tryCutBeforeBrackets: tryCutBeforeBrackets);
+      if (sortProperty == null) return null;
+      return TracksSearchWrapper._sortPropertyOrNull(sortProperty, mainProperty);
+    }
+
     _SearchKey keyOf(T item, int listensMultiplier) {
       final titleText = title(item);
       final subtitleText = subtitle?.call(item);
+      final titleSortText = titleSort?.call(item);
+      final subtitleSortText = subtitleSort?.call(item);
       final extrasTexts = extras?.call(item);
       final extrasProperties = extrasTexts?.map(propertyOf).nonNulls.toFixedList();
+      final titleProperty = propertyOf(titleText, tryCutBeforeBrackets: true);
+      final subtitleProperty = propertyOf(subtitleText);
       return _SearchKey(
-        title: propertyOf(titleText, tryCutBeforeBrackets: true),
-        subtitle: propertyOf(subtitleText),
+        title: titleProperty,
+        subtitle: subtitleProperty,
+        titleSort: sortPropertyOf(titleProperty, titleSortText, tryCutBeforeBrackets: true),
+        subtitleSort: sortPropertyOf(subtitleProperty, subtitleSortText),
         extras: extrasProperties,
         listensMultiplier: listensMultiplier,
       );
@@ -155,12 +170,16 @@ class KeysSearchWrapper<T> {
 class _SearchKey {
   final _Property? title;
   final _Property? subtitle;
+  final _Property? titleSort;
+  final _Property? subtitleSort;
   final List<_Property>? extras;
   final int listensMultiplier;
 
   const _SearchKey({
     required this.title,
     required this.subtitle,
+    required this.titleSort,
+    required this.subtitleSort,
     required this.extras,
     required this.listensMultiplier,
   });
