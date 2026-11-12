@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:dbus/dbus.dart';
 import 'package:win32_registry/win32_registry.dart' as win32_registry;
 
 import 'package:namida/controller/logs_controller.dart';

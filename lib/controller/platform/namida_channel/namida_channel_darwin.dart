@@ -25,8 +25,12 @@ abstract class _NamidaChannelDarwin extends NamidaChannel {
         _onOpenedUrls?.call(items);
       case 'onSystemProxyChanged':
         _onSystemProxyChanged?.call();
+      case 'onSystemAccentColorChanged':
+        _onSystemAccentColorChanged?.call();
     }
   }
+
+  void Function()? _onSystemAccentColorChanged;
 
   Future<void> Function()? _onSystemProxyChanged;
 
@@ -111,5 +115,14 @@ class _NamidaChannelMacOS extends _NamidaChannelDarwin {
   @override
   Future<void>? openFileInExplorer(String filePath, {bool isDirectory = false}) {
     return Process.start('open', isDirectory ? [filePath] : ['-R', filePath]);
+  }
+
+  @override
+  Future<Color?> getSystemAccentColor() => NamidaChannel._getSystemAccentColorFromChannel(_kDarwinChannel);
+
+  @override
+  void setSystemAccentColorListener(void Function()? onChanged) {
+    _onSystemAccentColorChanged = onChanged;
+    _kDarwinChannel.invokeMethod('setSystemAccentColorListener', {'enabled': onChanged != null});
   }
 }

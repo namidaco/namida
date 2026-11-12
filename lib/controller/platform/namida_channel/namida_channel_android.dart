@@ -50,6 +50,9 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<Color?> getSystemAccentColor() => NamidaChannel._getSystemAccentColorFromChannel(_channel);
+
+  @override
   Future<NetworkProxy?> getSystemProxy() async {
     final map = await _channel.invokeMapMethod<Object?, Object?>('getSystemProxy');
     return NetworkProxy.fromPlatformMap(map);

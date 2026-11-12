@@ -35,6 +35,33 @@ class _NamidaChannelWindows extends NamidaChannel {
     WindowsRegistryWatcher.watchCurrentUserKey(_kInternetSettingsPath, onChanged);
   }
 
+  static const _kAccentPath = r'Software\Microsoft\Windows\CurrentVersion\Explorer\Accent';
+  static const _kDwmPath = r'Software\Microsoft\Windows\DWM';
+
+  @override
+  Future<Color?> getSystemAccentColor() async {
+    final key = win32_registry.CURRENT_USER;
+    final accentAbgr = key.getInt('AccentColorMenu', path: _kAccentPath);
+    if (accentAbgr != null) {
+      final accentArgb = (accentAbgr & 0xFF00FF00) | ((accentAbgr & 0xFF) << 16) | ((accentAbgr >> 16) & 0xFF);
+      return Color(accentArgb);
+    }
+    final dwmArgb = key.getInt('ColorizationColor', path: _kDwmPath);
+    if (dwmArgb == null) return null;
+    return Color(dwmArgb);
+  }
+
+  WindowsRegistryWatch? _accentColorWatch;
+
+  @override
+  void setSystemAccentColorListener(void Function()? onChanged) {
+    _accentColorWatch?.cancel();
+    _accentColorWatch = null;
+    if (onChanged == null) return;
+    _accentColorWatch = WindowsRegistryWatcher.watchCurrentUserKey(_kAccentPath, onChanged);
+    _accentColorWatch ??= WindowsRegistryWatcher.watchCurrentUserKey(_kDwmPath, onChanged);
+  }
+
   @override
   bool get supportsAppIcons => true;
 

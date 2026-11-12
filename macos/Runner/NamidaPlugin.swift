@@ -4,11 +4,12 @@ import Cocoa
 import FlutterMacOS
 import SystemConfiguration
 
-/// the `namida` channel: files & links (oauth redirects, party invites) the app was opened with, and the system proxy.
+/// the `namida` channel: files & links (oauth redirects, party invites) the app was opened with, the system proxy and accent color.
 final class NamidaPlugin: NSObject, FlutterPlugin, FlutterAppLifecycleDelegate {
   private let channel: FlutterMethodChannel
   private let openedUrls: NamidaOpenedUrls
   private var proxyStore: SCDynamicStore?
+  private var accentColorObserver: NSObjectProtocol?
 
   private init(channel: FlutterMethodChannel) {
     self.channel = channel
@@ -32,6 +33,14 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterAppLifecycleDelegate {
 
     case "listenSystemProxy":
       listenSystemProxy()
+      result(nil)
+
+    case "getSystemAccentColor":
+      result(Self.systemAccentColor())
+
+    case "setSystemAccentColorListener":
+      let enabled = (call.arguments as? [String: Any])?["enabled"] as? Bool ?? false
+      setSystemAccentColorListener(enabled)
       result(nil)
 
     default:
@@ -75,6 +84,28 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterAppLifecycleDelegate {
     guard let source = SCDynamicStoreCreateRunLoopSource(nil, store, 0) else { return }
     CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
     proxyStore = store
+  }
+
+  // MARK: - accent color
+
+  private static func systemAccentColor() -> Int? {
+    guard let color = NSColor.controlAccentColor.usingColorSpace(.sRGB) else { return nil }
+    let alpha = Int(color.alphaComponent * 255)
+    let red = Int(color.redComponent * 255)
+    let green = Int(color.greenComponent * 255)
+    let blue = Int(color.blueComponent * 255)
+    return alpha << 24 | red << 16 | green << 8 | blue
+  }
+
+  private func setSystemAccentColorListener(_ enabled: Bool) {
+    if let observer = accentColorObserver {
+      NotificationCenter.default.removeObserver(observer)
+      accentColorObserver = nil
+    }
+    guard enabled else { return }
+    accentColorObserver = NotificationCenter.default.addObserver(forName: NSColor.systemColorsDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+      self?.channel.invokeMethod("onSystemAccentColorChanged", arguments: nil)
+    }
   }
 
   /// swift imports `handleOpenURLs:` as `handleOpen(_:)`, the selector is spelled out so it's called either way.

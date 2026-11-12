@@ -4,28 +4,41 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
 /// notifies when a value of a `HKEY_CURRENT_USER` key changes. a thread pool wait on a registry change event,
-/// nothing runs until windows signals a change. a watch lasts for the app's lifetime.
+/// nothing runs until windows signals a change.
 abstract final class WindowsRegistryWatcher {
-  /// [onChanged] runs on the calling isolate, once per changed value. false when the watch couldn't start.
-  static bool watchCurrentUserKey(String path, void Function() onChanged) {
+  /// [onChanged] runs on the calling isolate, once per changed value. null when the watch couldn't start.
+  static WindowsRegistryWatch? watchCurrentUserKey(String path, void Function() onChanged) {
     final keyHandle = _openCurrentUserKey(path);
-    if (keyHandle == null) return false;
+    if (keyHandle == null) return null;
     final eventHandle = _createEvent(nullptr, 0, 0, nullptr);
-    if (eventHandle == 0) return false;
+    if (eventHandle == 0) {
+      _regCloseKey(keyHandle);
+      return null;
+    }
 
     bool arm() => _regNotifyChangeKeyValue(keyHandle, 0, _kRegNotifyChangeLastSet | _kRegNotifyThreadAgnostic, eventHandle, 1) == 0;
-    if (!arm()) return false;
+    if (!arm()) {
+      _closeHandle(eventHandle);
+      _regCloseKey(keyHandle);
+      return null;
+    }
 
     // -- a notification fires once, re-armed before reading so a change during the read isn't lost
     final callback = NativeCallable<_WaitCallbackNative>.listener((Pointer<Void> _, int _) {
       arm();
       onChanged();
     });
-    final waitHandle = calloc<IntPtr>();
-    final didRegister = _registerWaitForSingleObject(waitHandle, eventHandle, callback.nativeFunction, nullptr, _kInfinite, _kWtExecuteDefault) != 0;
-    calloc.free(waitHandle);
-    if (!didRegister) callback.close();
-    return didRegister;
+    final waitHandlePointer = calloc<IntPtr>();
+    final didRegister = _registerWaitForSingleObject(waitHandlePointer, eventHandle, callback.nativeFunction, nullptr, _kInfinite, _kWtExecuteDefault) != 0;
+    final waitHandle = waitHandlePointer.value;
+    calloc.free(waitHandlePointer);
+    if (!didRegister) {
+      callback.close();
+      _closeHandle(eventHandle);
+      _regCloseKey(keyHandle);
+      return null;
+    }
+    return WindowsRegistryWatch._(keyHandle, eventHandle, waitHandle, callback);
   }
 
   static int? _openCurrentUserKey(String path) {
@@ -48,6 +61,7 @@ abstract final class WindowsRegistryWatcher {
   static const _kRegNotifyThreadAgnostic = 0x10000000;
   static const _kInfinite = 0xFFFFFFFF;
   static const _kWtExecuteDefault = 0x00000000;
+  static const _kInvalidHandleValue = -1;
 
   static final _advapi32 = DynamicLibrary.open('advapi32.dll');
   static final _kernel32 = DynamicLibrary.open('kernel32.dll');
@@ -56,6 +70,8 @@ abstract final class WindowsRegistryWatcher {
     Int32 Function(IntPtr hKey, Pointer<Utf16> subKey, Uint32 options, Uint32 samDesired, Pointer<IntPtr> result),
     int Function(int hKey, Pointer<Utf16> subKey, int options, int samDesired, Pointer<IntPtr> result)
   >('RegOpenKeyExW');
+
+  static final _regCloseKey = _advapi32.lookupFunction<Int32 Function(IntPtr hKey), int Function(int hKey)>('RegCloseKey');
 
   static final _regNotifyChangeKeyValue = _advapi32.lookupFunction<
     Int32 Function(IntPtr hKey, Int32 watchSubtree, Uint32 notifyFilter, IntPtr event, Int32 asynchronous),
@@ -67,10 +83,33 @@ abstract final class WindowsRegistryWatcher {
     int Function(Pointer<Void> attributes, int manualReset, int initialState, Pointer<Utf16> name)
   >('CreateEventW');
 
+  static final _closeHandle = _kernel32.lookupFunction<Int32 Function(IntPtr object), int Function(int object)>('CloseHandle');
+
   static final _registerWaitForSingleObject = _kernel32.lookupFunction<
     Int32 Function(Pointer<IntPtr> newWaitObject, IntPtr object, Pointer<NativeFunction<_WaitCallbackNative>> callback, Pointer<Void> context, Uint32 milliseconds, Uint32 flags),
     int Function(Pointer<IntPtr> newWaitObject, int object, Pointer<NativeFunction<_WaitCallbackNative>> callback, Pointer<Void> context, int milliseconds, int flags)
   >('RegisterWaitForSingleObject');
+
+  static final _unregisterWaitEx = _kernel32.lookupFunction<Int32 Function(IntPtr waitHandle, IntPtr completionEvent), int Function(int waitHandle, int completionEvent)>(
+    'UnregisterWaitEx',
+  );
+}
+
+class WindowsRegistryWatch {
+  final int _keyHandle;
+  final int _eventHandle;
+  final int _waitHandle;
+  final NativeCallable<_WaitCallbackNative> _callback;
+
+  WindowsRegistryWatch._(this._keyHandle, this._eventHandle, this._waitHandle, this._callback);
+
+  void cancel() {
+    // -- waits for a callback that already started, so none runs after the handles are closed
+    WindowsRegistryWatcher._unregisterWaitEx(_waitHandle, WindowsRegistryWatcher._kInvalidHandleValue);
+    _callback.close();
+    WindowsRegistryWatcher._closeHandle(_eventHandle);
+    WindowsRegistryWatcher._regCloseKey(_keyHandle);
+  }
 }
 
 typedef _WaitCallbackNative = Void Function(Pointer<Void> context, Uint8 timerOrWaitFired);

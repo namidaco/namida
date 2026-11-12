@@ -490,7 +490,7 @@ void _initLifeCycle() {
     if (settings.player.killAfterDismissingApp.value.resolveShouldKill()) await Namida.disposeAllResourcesAndExit();
   });
 
-  NamidaChannel.inst.addOnResume(CurrentColor.inst.refreshColorsAfterResumeApp);
+  NamidaChannel.inst.addOnResume(CurrentColor.inst.refreshColorsFromDeviceWallpaper);
   NamidaChannel.inst.addOnResume(() {
     final context = namida.context;
     if (context != null) {

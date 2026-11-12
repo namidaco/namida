@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
@@ -151,6 +150,18 @@ class CurrentColor {
     final mode = settings.themeMode.value;
     final isDarkMode = mode == ThemeMode.dark || (mode == ThemeMode.system && SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
     if (_namidaColor.value == null) updatePlayerColorFromColor(isDarkMode ? playerStaticColorDark : playerStaticColorLight);
+    settings.autoColor.addListener(_refreshSystemAccentColorListener);
+    settings.pickColorsFromDeviceWallpaper.addListener(_refreshSystemAccentColorListener);
+    _refreshSystemAccentColorListener();
+  }
+
+  bool _isListeningSystemAccentColor = false;
+
+  void _refreshSystemAccentColorListener() {
+    final shouldListen = settings.autoColor.value && _shouldUpdateFromDeviceWallpaper;
+    if (shouldListen == _isListeningSystemAccentColor) return;
+    _isListeningSystemAccentColor = shouldListen;
+    NamidaChannel.inst.setSystemAccentColorListener(shouldListen ? refreshColorsFromDeviceWallpaper : null);
   }
 
   void updateColorAfterThemeModeChange() {
@@ -177,10 +188,10 @@ class CurrentColor {
     _refreshColorsRx();
   }
 
-  Future<void> refreshColorsAfterResumeApp() async {
+  Future<void> refreshColorsFromDeviceWallpaper() async {
     if (settings.autoColor.value && _shouldUpdateFromDeviceWallpaper) {
       final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
-      if (namidaColor != null) {
+      if (namidaColor != null && namidaColor != _namidaColor.value) {
         _namidaColor.set(namidaColor);
         _refreshColorsRx();
         _updateCurrentPartyPalette(namidaColor);
@@ -190,11 +201,7 @@ class CurrentColor {
 
   Future<Color?> _getDeviceWallpaperColorAccent({bool forceCheck = false}) async {
     if (_deviceWallpaperColorAccent == null || forceCheck) {
-      Color? accentColor = await DynamicColorPlugin.getAccentColor();
-      if (accentColor == null) {
-        final palette = await DynamicColorPlugin.getCorePalette();
-        if (palette != null) accentColor = Color(palette.primary.get(60));
-      }
+      final accentColor = await NamidaChannel.inst.getSystemAccentColor();
       _deviceWallpaperColorAccent = accentColor;
       return accentColor;
     } else {

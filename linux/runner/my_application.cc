@@ -2,11 +2,17 @@
 
 #include <flutter_linux/flutter_linux.h>
 
+#include <cmath>
+#include <cstring>
+
 #include "flutter/generated_plugin_registrant.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlView* view;
+  FlMethodChannel* namida_channel;
+  gulong theme_name_handler;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -15,6 +21,46 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 static void first_frame_cb(MyApplication* self, FlView *view)
 {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
+}
+
+static FlValue* get_system_accent_color(FlView* view) {
+  GdkRGBA color;
+  GtkStyleContext* context = gtk_widget_get_style_context(GTK_WIDGET(view));
+  if (!gtk_style_context_lookup_color(context, "theme_selected_bg_color", &color)) return fl_value_new_null();
+  const int64_t alpha = lround(color.alpha * 255);
+  const int64_t red = lround(color.red * 255);
+  const int64_t green = lround(color.green * 255);
+  const int64_t blue = lround(color.blue * 255);
+  return fl_value_new_int(alpha << 24 | red << 16 | green << 8 | blue);
+}
+
+static void theme_name_changed_cb(GtkSettings* settings, GParamSpec* pspec, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  fl_method_channel_invoke_method(self->namida_channel, "onSystemAccentColorChanged", nullptr, nullptr, nullptr, nullptr);
+}
+
+static void set_system_accent_color_listener(MyApplication* self, gboolean enabled) {
+  GtkSettings* settings = gtk_settings_get_default();
+  if (settings == nullptr) return;
+  g_clear_signal_handler(&self->theme_name_handler, settings);
+  if (enabled) self->theme_name_handler = g_signal_connect(settings, "notify::gtk-theme-name", G_CALLBACK(theme_name_changed_cb), self);
+}
+
+static void namida_channel_method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+  g_autoptr(FlMethodResponse) response = nullptr;
+  if (strcmp(method, "getSystemAccentColor") == 0) {
+    g_autoptr(FlValue) result = get_system_accent_color(self->view);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else if (strcmp(method, "setSystemAccentColorListener") == 0) {
+    FlValue* enabled = fl_value_lookup_string(fl_method_call_get_args(method_call), "enabled");
+    set_system_accent_color_listener(self, enabled != nullptr && fl_value_get_bool(enabled));
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+  fl_method_call_respond(method_call, response, nullptr);
 }
 
 // Implements GApplication::activate.
@@ -65,6 +111,12 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  self->view = view;
+  FlEngine* engine = fl_view_get_engine(view);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->namida_channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), "namida", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(self->namida_channel, namida_channel_method_call_cb, self, nullptr);
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
@@ -109,6 +161,8 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  set_system_accent_color_listener(self, FALSE);
+  g_clear_object(&self->namida_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 

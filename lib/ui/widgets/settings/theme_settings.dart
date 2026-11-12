@@ -81,7 +81,9 @@ class ThemeSetting extends SettingSubpageProvider {
       autoColoring,
       SettingToggle(
         settings.pickColorsFromDeviceWallpaper,
-        availability: NamidaFeaturesAvailablity.android12and_plus,
+        availability: const NamidaFeaturesAvailablityGroup(
+          items: [NamidaFeaturesAvailablity.android12and_plus, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux, NamidaFeaturesAvailablity.macos],
+        ),
         icon: Broken.gallery_import,
         title: () => lang.pickColorsFromDeviceWallpaper,
         enabledWhen: _isAutoColorEnabled,

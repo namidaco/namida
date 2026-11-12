@@ -202,6 +202,7 @@ class NamidaMainActivity : FlutterActivity() {
             result.error("MULTICAST_LOCK", e.message, null)
           }
         }
+        "getSystemAccentColor" -> result.success(SystemAccentColor.get(context))
         "getSystemProxy" -> result.success(NetworkProxyManager.getSystemProxy(context))
         "listenSystemProxy" -> {
           val engineChannel = channel

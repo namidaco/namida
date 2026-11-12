@@ -92,6 +92,19 @@ abstract class NamidaChannel {
   /// lets android offer namida as a plugged usb dac's default app.
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
 
+  /// android 12+: the wallpaper color. desktop: the accent color of the system settings.
+  Future<Color?> getSystemAccentColor() async => null;
+
+  /// [onChanged] re-reads [getSystemAccentColor], called only by native change events. null stops listening.
+  /// android needs none, the system recreates the activity when its palette changes.
+  void setSystemAccentColorListener(void Function()? onChanged) {}
+
+  static Future<Color?> _getSystemAccentColorFromChannel(MethodChannel channel) async {
+    final argb = await channel.invokeMethod<int>('getSystemAccentColor');
+    if (argb == null) return null;
+    return Color(argb);
+  }
+
   /// the proxy set in the system settings. env proxies are read for every platform by [NetworkProxyController].
   Future<NetworkProxy?> getSystemProxy() async => null;
 
