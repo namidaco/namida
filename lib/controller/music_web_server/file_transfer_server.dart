@@ -28,10 +28,7 @@ abstract class _FileTransferServer extends MusicWebServer {
       final cacheFile = ServerCacheController.cacheFileFor(authDetails.dir.type, authDetails.auth.username, id);
       await _downloadToFile(id, cacheFile);
       onFetchedIfLocal?.call(cacheFile);
-      return WebStreamUriDetails.fromUri(
-        Uri.file(cacheFile.path),
-        allowStreamCaching: false, // already cached
-      );
+      return WebStreamUriDetails.fromUri(Uri.file(cacheFile.path));
     } catch (_) {
       return null;
     }

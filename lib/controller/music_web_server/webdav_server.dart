@@ -52,11 +52,12 @@ class _WebDAVServer extends MusicWebServer {
 
     final serverPath = id; // -- already decoded
     final uri = _buildServerUri(serverPath);
+    // -- auth goes in the headers, the stream cache saves the url
+    final uriWithoutCredentials = uri.replace(userInfo: '');
 
     return WebStreamUriDetails.fromUri(
-      uri,
+      uriWithoutCredentials,
       headers: _serverAuthHeaders,
-      allowStreamCaching: false, // already cached
     );
   }
 

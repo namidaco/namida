@@ -484,26 +484,24 @@ class MusicWebServerAuthDetailsDemo {
 class WebStreamUriDetails {
   final Uri uri;
   final Map<String, String>? headers;
-  final bool allowStreamCaching;
 
   const WebStreamUriDetails({
     required this.uri,
     required this.headers,
-    required this.allowStreamCaching,
   });
 
   static WebStreamUriDetails? fromUri(
     Uri? uri, {
     Map<String, String>? headers,
-    bool allowStreamCaching = true,
   }) {
     if (uri == null) return null;
     return WebStreamUriDetails(
       uri: uri,
       headers: headers,
-      allowStreamCaching: allowStreamCaching,
     );
   }
+
+  bool get allowStreamCaching => uri.isScheme('http') || uri.isScheme('https');
 }
 
 class MusicWebServerAuthDetails {

@@ -3470,6 +3470,7 @@ UriSource _buildCacheableAVSource(
   required void Function(File cachedFile) onFetched,
 }) {
   final cacheConfig = HttpCacheManager.instance.createStreamConfig();
+  if (headers != null) cacheConfig.requestHeaders.addAll(headers);
   if (size != null && size > 0) {
     // -- usually required for yt new urls that enforces chunk streaming
     cacheConfig.requestHeaders['Range'] = 'bytes=0-${size - 1}';

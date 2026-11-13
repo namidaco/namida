@@ -25,7 +25,7 @@ class _SAFServer extends MusicWebServer {
     final playsContentUris = settings.player.internalPlayer.value.ensureResolved() != InternalPlayerType.mpv;
     if (playsContentUris) {
       final documentUri = Uri.parse(_documentUriOf(id));
-      return WebStreamUriDetails.fromUri(documentUri, allowStreamCaching: false);
+      return WebStreamUriDetails.fromUri(documentUri);
     }
 
     // -- mpv can't open android content uris
@@ -33,7 +33,7 @@ class _SAFServer extends MusicWebServer {
     final error = await _copyToFile(id, cacheFile);
     if (error != null) return null;
     onFetchedIfLocal?.call(cacheFile);
-    return WebStreamUriDetails.fromUri(Uri.file(cacheFile.path), allowStreamCaching: false);
+    return WebStreamUriDetails.fromUri(Uri.file(cacheFile.path));
   }
 
   @override
