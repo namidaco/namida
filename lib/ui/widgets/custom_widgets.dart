@@ -65,6 +65,7 @@ import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/baked_blur.dart';
 import 'package:namida/ui/widgets/custom_tooltip.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
@@ -3404,10 +3405,13 @@ class SubpageInfoContainer extends StatelessWidget {
                     onLongPress: _openAdvancedPlayDialog,
                   ),
                   if (customArtworkManager != null)
-                    NamidaButton(
-                      icon: Broken.gallery_edit,
-                      tooltip: () => lang.editArtwork,
-                      onTap: customArtworkManager.showEditDialog,
+                    CustomArtworkSourceMenu(
+                      manager: customArtworkManager,
+                      childBuilder: (openMenu) => NamidaButton(
+                        icon: Broken.gallery_edit,
+                        tooltip: () => lang.editArtwork,
+                        onTap: openMenu,
+                      ),
                     ),
                   if (onOpenMenu != null)
                     NamidaButton(
@@ -8807,7 +8811,7 @@ class _ResolvedFullscreenImage {
   final Uint8List? bytes;
   final ImageProvider provider;
 
-  _ResolvedFullscreenImage.file(File this.file) : bytes = null, provider = FileImage(file);
+  _ResolvedFullscreenImage.file(File this.file) : bytes = null, provider = ArtworkWidget.fileImageOf(file.path);
   _ResolvedFullscreenImage.bytes(Uint8List this.bytes) : file = null, provider = MemoryImage(bytes);
 
   Future<String> getSharablePath() async {

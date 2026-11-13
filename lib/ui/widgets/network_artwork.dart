@@ -27,6 +27,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/artwork_source_menu.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
@@ -34,11 +35,15 @@ class CustomArtworkManager {
   final File Function() getArtworkFile;
   final Future<void> Function(File? file, Uint8List? bytes) setArtworkFile;
   final Future<List<String>?> Function(CancelToken? cancelToken)? fetchPossibleArtworks;
+  final String? Function()? getLastfmPageUrl;
+  final String Function() getSearchQuery;
 
   const CustomArtworkManager({
     required this.getArtworkFile,
     required this.setArtworkFile,
     required this.fetchPossibleArtworks,
+    required this.getLastfmPageUrl,
+    required this.getSearchQuery,
   });
 
   static CustomArtworkManager playlist(String playlistName) {
@@ -46,6 +51,8 @@ class CustomArtworkManager {
       getArtworkFile: () => PlaylistController.inst.getArtworkFileForPlaylist(playlistName),
       setArtworkFile: (file, bytes) => PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: file, artworkBytes: bytes),
       fetchPossibleArtworks: null,
+      getLastfmPageUrl: null,
+      getSearchQuery: () => playlistName,
     );
   }
 
@@ -54,6 +61,8 @@ class CustomArtworkManager {
       getArtworkFile: () => SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylistWrapper.value),
       setArtworkFile: (file, bytes) => SmartPlaylistsController.inst.setArtworkForPlaylist(smartPlaylistWrapper.value, artworkFile: file, artworkBytes: bytes),
       fetchPossibleArtworks: null,
+      getLastfmPageUrl: null,
+      getSearchQuery: () => smartPlaylistWrapper.value.name,
     );
   }
 
@@ -64,8 +73,6 @@ class CustomArtworkManager {
     required Uint8List? artworkBytes,
     void Function()? onSuccess,
   }) async {
-    imageCache.clear();
-    imageCache.clearLiveImages();
     if (artworkFile != null) {
       await destinationFile.create(recursive: true);
       await artworkFile.copy(destinationFile.path);
@@ -75,6 +82,7 @@ class CustomArtworkManager {
     } else {
       await destinationFile.deleteIfExists();
     }
+    ArtworkWidget.refreshImageFiles([destinationFile.path]);
     onSuccess?.call();
   }
 }
@@ -454,6 +462,9 @@ final class _NetworkArtworkInfoAlbum extends NetworkArtworkInfo {
   }
 
   @override
+  String toSearchQuery() => ArtworkSourceMenu.buildSearchQuery(artist: artist, album: name, title: null, fallback: name);
+
+  @override
   int get hashCode => Object.hash(name, artist, fileIdentifier);
 
   @override
@@ -482,6 +493,9 @@ final class _NetworkArtworkInfoArtist extends NetworkArtworkInfo {
     final url = '${NetworkArtworkInfo._baseLastfmUrl}/$encodedArtist/+images';
     return url;
   }
+
+  @override
+  String toSearchQuery() => name;
 
   @override
   int get hashCode => name.hashCode;
@@ -515,6 +529,8 @@ sealed class NetworkArtworkInfo {
   static final _lastfmAnyImageRegexWithGif = RegExp('${_lastfmAnyImageRegex.pattern}(?=[^>]*?alt="gif")');
 
   String? toLastfmUrl();
+
+  String toSearchQuery();
 
   RxBaseCore<List<LibraryImageSource>> get settingsKey;
 
@@ -593,6 +609,8 @@ sealed class NetworkArtworkInfo {
         }
         return urls;
       },
+      getLastfmPageUrl: toLastfmUrl,
+      getSearchQuery: toSearchQuery,
     );
   }
 

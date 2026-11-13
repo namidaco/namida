@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:rhttp/rhttp.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/http_response_wrapper.dart';
@@ -24,7 +25,6 @@ import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/network_proxy_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
-import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
@@ -43,6 +43,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/artwork_source_menu.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
 import 'package:namida/ui/dialogs/chapters_sheet.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -1841,203 +1842,208 @@ class _ArtworkManager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaIconButton(
-      icon: Broken.gallery_edit,
-      tooltip: () => lang.editArtwork,
-      onPressed: customArtworkManager.showEditDialog,
+    return CustomArtworkSourceMenu(
+      manager: customArtworkManager,
+      childBuilder: (openMenu) => NamidaIconButton(
+        icon: Broken.gallery_edit,
+        tooltip: () => lang.editArtwork,
+        onPressed: openMenu,
+      ),
     );
   }
 }
 
-extension CustomArtworkManagerDialog on CustomArtworkManager {
+/// [ArtworkSourceMenu] for artworks set by the user (playlists, albums, artists), every choice is saved right away.
+class CustomArtworkSourceMenu extends StatelessWidget {
+  final CustomArtworkManager manager;
+  final Widget Function(VoidCallback openMenu) childBuilder;
+
+  const CustomArtworkSourceMenu({
+    super.key,
+    required this.manager,
+    required this.childBuilder,
+  });
+
   static final _lastfmImageSizeRegex = RegExp(r'\/i\/u\/(.+)\/');
 
-  Future<void> showEditDialog() async {
-    final alreadySetArtworkPossible = getArtworkFile();
-    final alreadySetArtworkGood = await alreadySetArtworkPossible.exists() && ((await alreadySetArtworkPossible.fileSize() ?? 0) > 0);
-    final alreadySetArtworkExisting = alreadySetArtworkGood ? alreadySetArtworkPossible : null;
-
-    void showSnackInfo([dynamic error]) {
-      if (error == null) {
-        snackyy(icon: Broken.gallery_edit, message: lang.succeeded, borderColor: Colors.green);
-      } else {
-        snackyy(icon: Broken.gallery_edit, message: "${lang.failed}:$error", borderColor: Colors.red);
-      }
+  Future<void> _setArtwork(File? file, Uint8List? bytes) async {
+    try {
+      await manager.setArtworkFile(file, bytes);
+      snackyy(icon: Broken.gallery_edit, message: lang.succeeded, borderColor: Colors.green);
+    } catch (e) {
+      snackyy(icon: Broken.gallery_edit, message: "${lang.failed}:$e", borderColor: Colors.red);
     }
+  }
 
-    Future<void> onEdit() async {
-      final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
-      if (artworkFile != null) {
-        try {
-          await setArtworkFile(artworkFile, null);
-          showSnackInfo();
-        } catch (e) {
-          showSnackInfo(e);
-        }
-      }
-    }
+  bool _hasArtwork() {
+    final artworkFile = manager.getArtworkFile();
+    final size = artworkFile.fileSizeSync() ?? 0;
+    return size > 0;
+  }
 
-    Future<void> onDelete() async {
-      try {
-        await setArtworkFile(null, null);
-        showSnackInfo();
-      } catch (e) {
-        showSnackInfo(e);
-      }
-    }
+  Future<Uint8List?> _getArtworkBytes() {
+    final artworkFile = manager.getArtworkFile();
+    return artworkFile.readAsBytes();
+  }
 
-    final fetchPossibleArtworksFn = fetchPossibleArtworks;
-    if (alreadySetArtworkExisting != null || fetchPossibleArtworksFn != null) {
-      final possibleArtworks = Rxn<List<String>>();
-      CancelToken? cancelToken;
-      final possibleArtworksLoading = false.obs;
+  void _showLastfmArtworksDialog(Future<List<String>?> Function(CancelToken? cancelToken) fetchPossibleArtworks) {
+    final possibleArtworks = Rxn<List<String>>();
+    final possibleArtworksLoading = true.obs;
+    final cancelToken = CancelToken();
 
-      if (fetchPossibleArtworksFn != null) {
-        possibleArtworksLoading.value = true;
-        cancelToken = CancelToken();
-        fetchPossibleArtworksFn(cancelToken).catchError((_) => null).then(
-          (value) {
-            possibleArtworks.value = value;
-            possibleArtworksLoading.value = false;
-          },
-        );
-      }
+    fetchPossibleArtworks(cancelToken).catchError((_) => null).then(
+      (value) {
+        possibleArtworks.value = value;
+        possibleArtworksLoading.value = false;
+      },
+    );
 
-      NamidaNavigator.inst.navigateDialog(
-        onDisposing: () {
-          cancelToken?.cancel();
-          possibleArtworks.close();
-          possibleArtworksLoading.close();
-        },
-        dialog: CustomBlurryDialog(
-          title: lang.configure,
-          actions: [
-            NamidaButton(
-              colorScheme: Colors.red,
-              text: lang.delete.toUpperCase(),
-              onTap: () async {
-                await onDelete();
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
-            NamidaButton(
-              text: lang.pickFromStorage.toUpperCase(),
-              onTap: () async {
-                await onEdit();
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
-          ],
-          child: ObxO(
-            rx: possibleArtworks,
-            builder: (context, urls) {
-              final extraCountText = fetchPossibleArtworksFn == null ? '' : " (${urls?.length ?? 0})";
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: NamidaText(
-                      lang.choose + extraCountText,
-                      style: NText.medium,
-                    ),
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        cancelToken.cancel();
+        possibleArtworks.close();
+        possibleArtworksLoading.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: 'Last.fm',
+        actions: const [
+          CancelButton(),
+        ],
+        child: ObxO(
+          rx: possibleArtworks,
+          builder: (context, urls) {
+            final extraCountText = " (${urls?.length ?? 0})";
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: NamidaText(
+                    lang.choose + extraCountText,
+                    style: NText.medium,
                   ),
-                  ObxO(
-                    rx: possibleArtworksLoading,
-                    builder: (context, loading) => SizedBox(
-                      height: fetchPossibleArtworksFn == null ? null : context.height * 0.4,
-                      width: context.width,
-                      child: loading
-                          ? Center(
-                              child: NBuilder(
-                                builder: (context, colors) => ThreeArchedCircle(
-                                  color: colors.onSurface.withOpacityExt(0.5),
-                                  size: 32.0,
-                                ),
+                ),
+                ObxO(
+                  rx: possibleArtworksLoading,
+                  builder: (context, loading) => SizedBox(
+                    height: context.height * 0.4,
+                    width: context.width,
+                    child: loading
+                        ? Center(
+                            child: NBuilder(
+                              builder: (context, colors) => ThreeArchedCircle(
+                                color: colors.onSurface.withOpacityExt(0.5),
+                                size: 32.0,
                               ),
-                            )
-                          : fetchPossibleArtworksFn == null
-                          ? null
-                          : urls == null || urls.isEmpty
-                          ? const Center(
-                              child: NoResultsWidget(),
-                            )
-                          : SmoothGridView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              scrollCacheExtent: const ScrollCacheExtent.viewport(3),
-                              itemCount: urls.length,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                mainAxisSpacing: 6.0,
-                                crossAxisSpacing: 4.0,
-                              ),
-                              itemBuilder: (context, index) {
-                                final url = urls[index];
-                                final proxySettings = NetworkProxyController.inst.rhttpSettings;
-                                return BorderRadiusClip(
-                                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                  child: FutureBuilder(
-                                    future: NamidaHttp.getBytes(
-                                      url,
-                                      settings: proxySettings,
-                                    ),
-                                    builder: (context, snapshot) {
-                                      final bytes = snapshot.data?.body;
-                                      return CustomAnimatedSwitcher(
-                                        layoutBuilder: (currentChild, previousChildren) {
-                                          return Stack(
-                                            alignment: Alignment.center,
-                                            children: <Widget>[
-                                              ...previousChildren,
-                                              if (currentChild != null) Positioned.fill(child: currentChild),
-                                            ],
-                                          );
-                                        },
-                                        duration: const Duration(milliseconds: 200),
-                                        child: bytes == null
-                                            ? const NColoredBox(
-                                                color: NColors.card,
-                                              )
-                                            : TapDetector(
-                                                onTap: () async {
-                                                  NamidaNavigator.inst.closeDialog();
-                                                  Uint8List? fullResbytes;
-                                                  try {
-                                                    final fullResUrl = url.replaceAll(_lastfmImageSizeRegex, '/i/u/ar0/');
-                                                    final res = await NamidaHttp.getBytes(
-                                                      fullResUrl,
-                                                      settings: proxySettings,
-                                                    );
-                                                    fullResbytes = res.body;
-                                                  } catch (_) {}
-
-                                                  try {
-                                                    await setArtworkFile(null, fullResbytes ?? bytes);
-                                                    showSnackInfo();
-                                                  } catch (e) {
-                                                    showSnackInfo(e);
-                                                  }
-                                                },
-                                                child: Image.memory(bytes),
-                                              ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
                             ),
-                    ),
+                          )
+                        : urls == null || urls.isEmpty
+                        ? const Center(
+                            child: NoResultsWidget(),
+                          )
+                        : SmoothGridView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            scrollCacheExtent: const ScrollCacheExtent.viewport(3),
+                            itemCount: urls.length,
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 6.0,
+                              crossAxisSpacing: 4.0,
+                            ),
+                            itemBuilder: (context, index) {
+                              final url = urls[index];
+                              final proxySettings = NetworkProxyController.inst.rhttpSettings;
+                              return BorderRadiusClip(
+                                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                child: FutureBuilder(
+                                  future: NamidaHttp.getBytes(
+                                    url,
+                                    settings: proxySettings,
+                                  ),
+                                  builder: (context, snapshot) {
+                                    final bytes = snapshot.data?.body;
+                                    return CustomAnimatedSwitcher(
+                                      layoutBuilder: (currentChild, previousChildren) {
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: <Widget>[
+                                            ...previousChildren,
+                                            if (currentChild != null) Positioned.fill(child: currentChild),
+                                          ],
+                                        );
+                                      },
+                                      duration: const Duration(milliseconds: 200),
+                                      child: bytes == null
+                                          ? const NColoredBox(
+                                              color: NColors.card,
+                                            )
+                                          : TapDetector(
+                                              onTap: () async {
+                                                NamidaNavigator.inst.closeDialog();
+                                                Uint8List? fullResbytes;
+                                                try {
+                                                  final fullResUrl = url.replaceAll(_lastfmImageSizeRegex, '/i/u/ar0/');
+                                                  final res = await NamidaHttp.getBytes(
+                                                    fullResUrl,
+                                                    settings: proxySettings,
+                                                  );
+                                                  fullResbytes = res.body;
+                                                } catch (_) {}
+
+                                                await _setArtwork(null, fullResbytes ?? bytes);
+                                              },
+                                              child: Image.memory(bytes),
+                                            ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
-      );
-    } else {
-      await onEdit();
-    }
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fetchPossibleArtworks = manager.fetchPossibleArtworks;
+    final getLastfmPageUrl = manager.getLastfmPageUrl;
+    final hasExtraItems = fetchPossibleArtworks != null || getLastfmPageUrl != null;
+    return ArtworkSourceMenu(
+      childBuilder: childBuilder,
+      onArtworkObtained: (imagePath) => _setArtwork(File(imagePath), null),
+      onRemove: () => _setArtwork(null, null),
+      canRemove: _hasArtwork,
+      canCrop: _hasArtwork,
+      getArtworkBytes: _getArtworkBytes,
+      getSearchQuery: manager.getSearchQuery,
+      getExtraItems: hasExtraItems
+          ? () {
+              final lastfmPageUrl = getLastfmPageUrl?.call();
+              return [
+                if (lastfmPageUrl != null)
+                  NamidaPopupItem(
+                    icon: Broken.global,
+                    title: '${lang.open}: Last.fm',
+                    onTap: () => NamidaLinkUtils.openLink(lastfmPageUrl, preferredMode: LaunchMode.externalApplication),
+                  ),
+                if (fetchPossibleArtworks != null)
+                  NamidaPopupItem(
+                    icon: Broken.gallery,
+                    title: 'Last.fm',
+                    onTap: () => _showLastfmArtworksDialog(fetchPossibleArtworks),
+                  ),
+              ];
+            }
+          : null,
+    );
   }
 }
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audio_service/audio_service.dart';
@@ -870,10 +869,6 @@ class Indexer<T extends Track> {
       TrackTileManager.rebuildTrackInfo(tr);
     }
 
-    if (updateArtwork) {
-      Indexer.clearMemoryImageCache();
-    }
-
     for (var _ in tracksMissing) {
       onProgress(false);
     }
@@ -914,6 +909,11 @@ class Indexer<T extends Track> {
       _addTrackToLists(trext, artwork);
     }
 
+    if (updateArtwork) {
+      final imagePaths = extracted.map((e) => e.$1.pathToImage).toFixedList();
+      Indexer.refreshArtworkFiles(imagePaths);
+    }
+
     _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
     Player.inst.refreshNotification();
     _sortAndRefreshTracks();
@@ -929,7 +929,8 @@ class Indexer<T extends Track> {
     final newTracks = <T>[];
 
     if (artworkWasEdited) {
-      Indexer.clearMemoryImageCache();
+      final imagePaths = tracksMap.keys.map((e) => e.pathToImage).toFixedList();
+      Indexer.refreshArtworkFiles(imagePaths);
     }
 
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
@@ -1301,9 +1302,10 @@ class Indexer<T extends Track> {
       final newAudios = audioFiles.toList();
       await extractAll(newAudios, isModified: false);
       if (modifiedFiles.isNotEmpty) {
-        Indexer.clearMemoryImageCache();
         final modifiedAudios = modifiedFiles.toList();
         await extractAll(modifiedAudios, isModified: true);
+        final modifiedImagePaths = modifiedAudios.map((path) => Track.orVideo(path).pathToImage).toFixedList();
+        Indexer.refreshArtworkFiles(modifiedImagePaths);
       }
 
       // -- after modified files, so kept tracks are checked with their new tags
@@ -2473,9 +2475,14 @@ class Indexer<T extends Track> {
     return SplitArtistGenreConfigsWrapper.settings();
   }
 
-  static void clearMemoryImageCache() {
-    imageCache.clear();
-    imageCache.clearLiveImages();
+  /// call after artwork files were written or deleted, every place showing them reloads.
+  static void refreshArtworkFiles(List<String> imagePaths) {
+    final indexer = Indexer.inst;
+    for (final imagePath in imagePaths) {
+      indexer.artworksBytesMap.remove(imagePath);
+      indexer.artworksFilesMap.remove(imagePath);
+    }
+    ArtworkWidget.refreshImageFiles(imagePaths);
     if (Platform.isAndroid) AudioService.evictArtworkCache();
   }
 }

@@ -23,6 +23,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 
 part 'filters/smart_playlists_date_time.dart';
 part 'filters/smart_playlists_number.dart';
@@ -146,6 +148,7 @@ class SmartPlaylistsController {
     if (alreadyExisting != null) {
       alreadyExisting.value = smartPlaylist;
     } else {
+      await _deleteArtwork(key); // -- older versions left it on delete/rename
       _add(smartPlaylist);
     }
     await saveToStorage(key);
@@ -154,17 +157,38 @@ class SmartPlaylistsController {
 
   Future<void> edit(SmartPlaylist oldSmartPlaylist, SmartPlaylist smartPlaylist) async {
     final oldKey = oldSmartPlaylist.key;
-    final alreadyExisting = oldKey == smartPlaylist.key ? null : smartPlaylistsMap.value.remove(oldKey);
+    final newKey = smartPlaylist.key;
+    final alreadyExisting = oldKey == newKey ? null : smartPlaylistsMap.value[oldKey];
     if (alreadyExisting == null) {
       await create(smartPlaylist);
       return;
     }
+    await _renameArtwork(oldKey, newKey);
+    smartPlaylistsMap.value.remove(oldKey);
     smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
     alreadyExisting.value = smartPlaylist;
-    smartPlaylistsMap.value[smartPlaylist.key] = alreadyExisting;
+    smartPlaylistsMap.value[newKey] = alreadyExisting;
     await _dBManager.delete(oldKey);
-    await saveToStorage(smartPlaylist.key);
+    await saveToStorage(newKey);
     await _saveOrder();
+  }
+
+  Future<void> _renameArtwork(SmartPlaylistKey oldKey, SmartPlaylistKey newKey) async {
+    final artworkFile = getArtworkFileForKey(oldKey);
+    final newArtworkFile = getArtworkFileForKey(newKey);
+    try {
+      await artworkFile.rename(newArtworkFile.path);
+    } catch (_) {
+      await _deleteArtwork(newKey); // -- none to move, older versions could leave one at the new name
+      return;
+    }
+    ArtworkWidget.refreshImageFiles([artworkFile.path, newArtworkFile.path]);
+  }
+
+  Future<void> _deleteArtwork(SmartPlaylistKey key) async {
+    final artworkFile = getArtworkFileForKey(key);
+    final didDelete = await artworkFile.deleteIfExists();
+    if (didDelete) ArtworkWidget.refreshImageFiles([artworkFile.path]);
   }
 
   /// pinning alone keeps the modified date, like playlists.
@@ -183,6 +207,7 @@ class SmartPlaylistsController {
     _refresh();
     _popPageIfCurrent(key);
     await _dBManager.delete(key);
+    await _deleteArtwork(key);
     if (removed != null) await _saveOrder();
   }
 
@@ -255,14 +280,21 @@ class SmartPlaylistsController {
       return lang.pleaseEnterAName;
     }
 
-    if (value == _orderRowKey || (value != oldKey && smartPlaylistsMap.value.containsKey(value))) {
+    if (value == oldKey) return null;
+
+    final badCharacters = DownloadTaskFilename.badCharactersIn(value);
+    if (badCharacters.isNotEmpty) return '${lang.nameContainsBadCharacter} $badCharacters';
+
+    if (value == _orderRowKey || smartPlaylistsMap.value.containsKey(value)) {
       return lang.pleaseEnterADifferentName;
     }
 
     return null;
   }
 
-  File getArtworkFileForPlaylist(SmartPlaylist smartPlaylist) => FileParts.join(AppDirs.SMART_PLAYLISTS_ARTWORKS, '${smartPlaylist.key}.png');
+  File getArtworkFileForPlaylist(SmartPlaylist smartPlaylist) => getArtworkFileForKey(smartPlaylist.key);
+
+  File getArtworkFileForKey(SmartPlaylistKey key) => FileParts.join(AppDirs.SMART_PLAYLISTS_ARTWORKS, '$key.png');
 
   Future<bool> setArtworkForPlaylist(SmartPlaylist smartPlaylist, {required File? artworkFile, required Uint8List? artworkBytes}) async {
     final didSet = await _setArtworkForPlaylist(
@@ -277,8 +309,6 @@ class SmartPlaylistsController {
   Future<bool> _setArtworkForPlaylist(SmartPlaylist smartPlaylist, {required File? artworkFile, required Uint8List? artworkBytes}) async {
     try {
       final destinationFile = getArtworkFileForPlaylist(smartPlaylist);
-      imageCache.clear();
-      imageCache.clearLiveImages();
       if (artworkFile != null) {
         await destinationFile.create(recursive: true);
         await artworkFile.copy(destinationFile.path);
@@ -288,6 +318,7 @@ class SmartPlaylistsController {
       } else {
         await destinationFile.delete();
       }
+      ArtworkWidget.refreshImageFiles([destinationFile.path]);
       _refresh();
       return true;
     } catch (_) {}

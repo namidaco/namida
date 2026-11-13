@@ -1,5 +1,5 @@
 // by claude
-part of 'edit_tags_dialog.dart';
+part of 'artwork_source_menu.dart';
 
 /// crop box in image pixels, moved or resized from one corner while the opposite corner stays.
 @visibleForTesting

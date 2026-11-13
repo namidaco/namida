@@ -6,6 +6,7 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -122,12 +123,15 @@ class QueueCard extends StatelessWidget {
     final queue = this.queue;
     final sourceText = queue?.toSourceText();
     File? existingArtworkFile;
-    if (queue?.source.s == QueueSourceEnum.playlist) {
-      final plName = queue?.source.title;
-      if (plName != null && plName.isNotEmpty) {
-        final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(plName);
-        if (artworkFile.existsSync()) existingArtworkFile = artworkFile;
-      }
+    final sourceType = queue?.source.s;
+    final sourceTitle = queue?.source.title;
+    if (sourceTitle != null && sourceTitle.isNotEmpty) {
+      final artworkFile = switch (sourceType) {
+        QueueSourceEnum.playlist => PlaylistController.inst.getArtworkFileForPlaylist(sourceTitle),
+        QueueSourceEnum.smartPlaylist => SmartPlaylistsController.inst.getArtworkFileForKey(sourceTitle),
+        _ => null,
+      };
+      if (artworkFile != null && artworkFile.existsSync()) existingArtworkFile = artworkFile;
     }
 
     final height = this.height;

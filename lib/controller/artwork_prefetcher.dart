@@ -52,7 +52,7 @@ class ArtworkPrefetcher {
   /// [precacheImage] needs a context, the player paints artwork through [ArtworkWidget.fullQualityImage]
   /// which ignores the configuration, so the empty one lands on the very same cache key.
   void _precacheFile(File file) {
-    final stream = ArtworkWidget.fullQualityImage(FileImage(file)).resolve(ImageConfiguration.empty);
+    final stream = ArtworkWidget.fullQualityImage(ArtworkWidget.fileImageOf(file.path)).resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     listener = ImageStreamListener(
       (image, synchronousCall) {

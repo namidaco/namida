@@ -37,6 +37,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
@@ -432,7 +433,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       }
     }
     if (namesToRemove.isNotEmpty) {
-      super.removePlaylists(namesToRemove); // -- keeps their metadata, the file could come back
+      super.removePlaylists(namesToRemove, deleteFiles: false); // -- keeps their metadata and artwork, the file could come back
     }
   }
 
@@ -1052,7 +1053,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
   }
 
   @override
-  Future<void> removePlaylists(List<String> names, {bool deleteM3UFiles = false}) async {
+  Future<void> removePlaylists(List<String> names, {bool deleteFiles = true, bool deleteM3UFiles = false}) async {
     final m3uPaths = <String>[];
     if (deleteM3UFiles) {
       for (final name in names) {
@@ -1060,7 +1061,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
         if (m3uPath != null) m3uPaths.add(m3uPath);
       }
     }
-    await super.removePlaylists(names);
+    await super.removePlaylists(names, deleteFiles: deleteFiles);
     names.loop(_m3uProperties.remove);
     for (final m3uPath in m3uPaths) {
       await File(m3uPath).deleteIfExists();
@@ -1070,6 +1071,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
 
   @override
   void onTagsFilterChanged() => SearchSortController.inst.refreshPlaylistsTagsFilter();
+
+  @override
+  void onArtworkFileChanged(String artworkPath) => ArtworkWidget.refreshImageFiles([artworkPath]);
 
   @override
   void onReadOnlyPlaylistError() {

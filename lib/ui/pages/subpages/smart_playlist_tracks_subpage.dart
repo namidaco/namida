@@ -121,6 +121,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         heroTag: '',
                         size: size,
                         tracks: _tracks.toImageTracks(),
+                        artworkFile: SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylist),
                       ),
                       tracksFn: () => _tracks,
                       bannerBuilder: (width, height) => ArtworkStripBanner(

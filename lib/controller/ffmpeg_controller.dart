@@ -390,6 +390,7 @@ class NamidaFFMPEG {
     int currentProgress = 0;
     int currentFailed = 0;
     final newOutputPaths = <String>[];
+    final replacedPaths = <String>[];
 
     for (final image in imagesToCompress) {
       final didUpdate = await _compressImage(
@@ -403,6 +404,8 @@ class NamidaFFMPEG {
         currentFailed++;
       } else if (image.outputPath != image.path) {
         newOutputPaths.add(image.outputPath);
+      } else {
+        replacedPaths.add(image.path);
       }
       currentProgress++;
       currentOperations[OperationType.imageCompress]!.value = OperationProgress(
@@ -416,7 +419,7 @@ class NamidaFFMPEG {
     NamidaChannel.inst.scanMediaFilesTry(newOutputPaths);
 
     if (hasAppDirs) {
-      Indexer.clearMemoryImageCache();
+      Indexer.refreshArtworkFiles(replacedPaths);
       Indexer.inst.calculateAllImageSizesInStorage();
     }
   }
