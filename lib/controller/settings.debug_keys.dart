@@ -224,6 +224,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     cacheArtworks,
     displayTrackNumberinAlbumPage,
     albumCardTopRightDate,
+    albumQuickPlayMode,
     forceSquaredTrackThumbnail,
     forceSquaredAlbumThumbnail,
     useAlbumStaggeredGridView,

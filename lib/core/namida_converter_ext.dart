@@ -3078,6 +3078,41 @@ extension FABTypeL10n on FABType {
   };
 }
 
+extension QuickPlayModeL10n on QuickPlayMode {
+  String toText() => switch (this) {
+    QuickPlayMode.play => lang.play,
+    QuickPlayMode.shuffle => lang.shuffle,
+    QuickPlayMode.playNext => lang.playNext,
+    // QuickPlayMode.playAfter => lang.playAfter,
+    QuickPlayMode.playLast => lang.playLast,
+  };
+
+  IconData toIcon() => switch (this) {
+    QuickPlayMode.play => Broken.play,
+    QuickPlayMode.shuffle => Broken.shuffle,
+    QuickPlayMode.playNext => Broken.next,
+    // QuickPlayMode.playAfter => Broken.hierarchy_square,
+    QuickPlayMode.playLast => Broken.play_cricle,
+  };
+}
+
+extension QuickPlayModeUtils on QuickPlayMode {
+  Future<void> execute(List<Selectable> tracks, QueueSourceBase source, {HomePageItems? homePageItem}) async {
+    switch (this) {
+      case QuickPlayMode.play:
+        await Player.inst.playOrPause(0, tracks, source, homePageItem: homePageItem);
+      case QuickPlayMode.shuffle:
+        await Player.inst.playOrPause(0, tracks, source, shuffle: true, homePageItem: homePageItem);
+      case QuickPlayMode.playNext:
+        await Player.inst.addToQueue(tracks, insertNext: true);
+      // case QuickPlayMode.playAfter:
+      //   await Player.inst.addToQueue(tracks, insertAfterLatest: true);
+      case QuickPlayMode.playLast:
+        await Player.inst.addToQueue(tracks);
+    }
+  }
+}
+
 extension YTHomeSourceL10n on YTHomeSource {
   String toText() => switch (this) {
     YTHomeSource.local => lang.local,

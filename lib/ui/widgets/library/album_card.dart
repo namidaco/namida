@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -58,6 +58,11 @@ class AlbumCard extends StatelessWidget {
     final itemImagePercentageMultiplier = imageSize * 0.015;
     double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
     final playIconBgOpacity = (imageSize / 200).clampDouble(0, 1);
+
+    void quickPlay(QuickPlayMode mode) {
+      final source = QueueSource.album(identifier, name);
+      mode.execute(album, source, homePageItem: homepageItem);
+    }
 
     String? topRightLine;
     String? secondLine;
@@ -150,23 +155,43 @@ class AlbumCard extends StatelessWidget {
                               child: NBuilder(
                                 builder: (context, colors) {
                                   final playIconBgColor = colors.card.withOpacityExt(playIconBgOpacity);
-                                  return NamidaInkWell(
-                                    decoration: BoxDecoration(
-                                      color: playIconBgColor,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          blurRadius: 6.0,
-                                          offset: const Offset(0.0, 2.0),
-                                          color: playIconBgColor.withOpacityExt(0.4),
+                                  return NamidaPopupWrapper(
+                                    openOnTap: false,
+                                    childrenDefault: () {
+                                      final activeMode = settings.albumQuickPlayMode.value;
+                                      return QuickPlayMode.values.map(
+                                        (mode) => NamidaPopupItem(
+                                          icon: mode.toIcon(),
+                                          title: mode.toText(),
+                                          selected: mode == activeMode,
+                                          onTap: () {
+                                            if (mode != activeMode) settings.albumQuickPlayMode.save(mode);
+                                            quickPlay(mode);
+                                          },
                                         ),
-                                      ],
-                                    ),
-                                    borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
-                                    padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
-                                    child: Icon(
-                                      Broken.play,
-                                      size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                                      );
+                                    },
+                                    child: NamidaInkWell(
+                                      decoration: BoxDecoration(
+                                        color: playIconBgColor,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            blurRadius: 6.0,
+                                            offset: const Offset(0.0, 2.0),
+                                            color: playIconBgColor.withOpacityExt(0.4),
+                                          ),
+                                        ],
+                                      ),
+                                      borderRadius: 8.0.withMaximum(imageSize * 0.07),
+                                      onTap: () => quickPlay(settings.albumQuickPlayMode.value),
+                                      padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+                                      child: ObxO(
+                                        rx: settings.albumQuickPlayMode,
+                                        builder: (context, mode) => Icon(
+                                          mode.toIcon(),
+                                          size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                                        ),
+                                      ),
                                     ),
                                   );
                                 },

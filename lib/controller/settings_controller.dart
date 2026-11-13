@@ -128,6 +128,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final cacheArtworks = _key('cacheArtworks', true, sync: false);
   late final displayTrackNumberinAlbumPage = _key('displayTrackNumberinAlbumPage', true);
   late final albumCardTopRightDate = _key('albumCardTopRightDate', true);
+  late final albumQuickPlayMode = _keyEnum('albumQuickPlayMode', QuickPlayMode.play, QuickPlayMode.values);
   late final forceSquaredTrackThumbnail = _key('forceSquaredTrackThumbnail', false);
   late final forceSquaredAlbumThumbnail = _key('forceSquaredAlbumThumbnail', false);
   late final useAlbumStaggeredGridView = _key('useAlbumStaggeredGridView', false);

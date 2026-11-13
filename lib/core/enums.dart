@@ -1235,6 +1235,15 @@ enum FABType {
   const FABType({this.isPlayback = false});
 }
 
+enum QuickPlayMode {
+  play,
+  shuffle,
+  playNext,
+  // playAfter, // icon looks goofy in ui
+  playLast,
+  ;
+}
+
 enum YTHomeSource {
   local,
   youtube(requiresAccount: true),
