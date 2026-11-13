@@ -126,6 +126,7 @@ class MIFormatTags {
   final int? bpm;
   final String? musicalKey;
   final double? rating;
+  final String? itunesAdvisory;
   final String? language;
   final String? artist;
   final String? album;
@@ -166,6 +167,7 @@ class MIFormatTags {
     required this.bpm,
     required this.musicalKey,
     required this.rating,
+    required this.itunesAdvisory,
     required this.language,
     required this.artist,
     required this.album,
@@ -202,14 +204,14 @@ class MIFormatTags {
     required this.sortInfo,
   });
 
-  static double? _extractRatingPercentage(Map<String, dynamic> map) {
-    final percent = _extractRatingPercent(map);
+  static double? _extractRatingPercentage(Map<String, dynamic> map, {required bool isMp4}) {
+    final percent = _extractRatingPercent(map, isMp4: isMp4);
     if (percent == null) return null;
     return percent / 100;
   }
 
-  static int? _extractRatingPercent(Map<String, dynamic> map) {
-    final ratingText = map.getOrUpperCase("rating");
+  static int? _extractRatingPercent(Map<String, dynamic> map, {required bool isMp4}) {
+    final ratingText = isMp4 ? map["RATING"] : map.getOrUpperCase("rating");
     final percent = _ratingPercentOfText(ratingText, field: TagRating.kDefaultField);
     if (percent != null) return percent;
 
@@ -231,17 +233,22 @@ class MIFormatTags {
   }
 
   factory MIFormatTags.fromMap(Map<String, dynamic> map) {
-    final ratingPercentage = _extractRatingPercentage(map);
+    final majorBrand = map.getOrUpperCase("major_brand");
+    // -- ffmpeg names the mp4 `rtng` atom `rating`, a freeform RATING atom keeps its case
+    final isMp4 = majorBrand != null;
+    final ratingPercentage = _extractRatingPercentage(map, isMp4: isMp4);
+    final mp4AdvisoryText = isMp4 ? map["rating"] : null;
     return MIFormatTags(
       date: map.getOrUpperCase("date") ?? map["Date"],
       bpm: MediaInfo.extractInt(map.getOrLowerCase("BPM")) ?? MediaInfo.extractInt(map.getOrLowerCase("TBPM")) ?? MediaInfo.extractNum(map.getOrLowerCase("FBPM"))?.round(),
       musicalKey: map.getOrLowerCase("INITIALKEY") ?? map.getOrLowerCase("TKEY") ?? map.getOrLowerCase("KEY"),
       rating: ratingPercentage,
+      itunesAdvisory: map.getOrLowerCase("ITUNESADVISORY") ?? mp4AdvisoryText,
       language: map.getOrLowerCase("LANGUAGE") ?? map["Language"],
       artist: map.getOrUpperCase("artist") ?? map["Artist"],
       album: map.getOrUpperCase("album") ?? map["Album"],
       composer: map.getOrUpperCase("composer") ?? map["Composer"],
-      majorBrand: map.getOrUpperCase("major_brand"),
+      majorBrand: majorBrand,
       description: map.getOrUpperCase("description") ?? map["Description"],
       remixer: map.getOrLowerCase("REMIXER") ?? map["Remixer"],
       synopsis: map.getOrUpperCase("synopsis") ?? map["Synopsis"],
@@ -279,6 +286,7 @@ class MIFormatTags {
     "BPM": bpm,
     "INITIALKEY": musicalKey,
     "rating": rating,
+    "ITUNESADVISORY": itunesAdvisory,
     "LANGUAGE": language,
     "artist": artist,
     "album": album,

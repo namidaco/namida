@@ -548,6 +548,7 @@ enum SnackbarMergeGroup {
   queueInsertVideos,
   playlistAddTracks,
   playlistAddVideos,
+  explicitTracksSkipped,
 }
 
 typedef _SnackbarMergeKey = (SnackbarMergeGroup, String);

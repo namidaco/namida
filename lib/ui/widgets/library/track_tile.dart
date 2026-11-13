@@ -352,8 +352,9 @@ class TrackTile extends StatelessWidget {
           cardColorOpacity: cardColorOpacity,
         );
 
+        final trExt = track.toTrackExtOrNull();
         Widget threeLinesColumn;
-        if (trackOrTwd.track.toTrackExtOrNull() == null) {
+        if (trExt == null) {
           threeLinesColumn = NamidaText(
             trackOrTwd.track.path.toShortDisplayPath(),
             style: NText.small,
@@ -411,13 +412,33 @@ class TrackTile extends StatelessWidget {
         final heroTag = this._heroTag;
 
         final topRightWidget = this.topRightWidget;
-        final videoIcon = track is Video
+        final isVideo = track is Video;
+        final isExplicit = trExt?.explicitStatus == ExplicitStatus.explicit;
+        final cornerIconBaseColor = isVideo || isExplicit ? textColor ?? NText.small.of(context).color : null;
+        final videoIcon = isVideo
             ? Icon(
                 Broken.video,
                 size: 12.0,
-                color: textColor?.withOpacityExt(0.39) ?? NText.small.of(context).color?.withOpacityExt(0.39),
+                color: cornerIconBaseColor?.withOpacityExt(0.39),
               )
             : null;
+        final explicitBadge = isExplicit
+            ? Icon(
+                Icons.explicit_rounded,
+                size: 13.0,
+                color: cornerIconBaseColor?.withOpacityExt(0.25),
+              )
+            : null;
+        final cornerIcon = videoIcon != null && explicitBadge != null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  explicitBadge,
+                  const SizedBox(width: 4.0),
+                  videoIcon,
+                ],
+              )
+            : videoIcon ?? explicitBadge;
 
         Widget? draggingTileWidget;
         if (properties.configs.draggableThumbnail) {
@@ -665,24 +686,24 @@ class TrackTile extends StatelessWidget {
                 color: Colors.transparent,
               ),
             ),
-            if (videoIcon != null && topRightWidget != null)
+            if (cornerIcon != null && topRightWidget != null)
               Positioned(
                 top: 0.0,
                 right: 0.0,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    videoIcon,
+                    cornerIcon,
                     const SizedBox(width: 2.0),
                     topRightWidget,
                   ],
                 ),
               )
-            else if (videoIcon != null)
+            else if (cornerIcon != null)
               Positioned(
                 top: 6.0,
                 right: 6.0,
-                child: videoIcon,
+                child: cornerIcon,
               )
             else if (topRightWidget != null)
               Positioned(

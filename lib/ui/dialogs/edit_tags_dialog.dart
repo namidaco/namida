@@ -380,6 +380,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       TagField.country => TextEditingController(text: tags.country ?? ''),
       TagField.bpm => TextEditingController(text: tags.bpm?.toString().toIf('', '0')),
       TagField.musicalKey => TextEditingController(text: tags.musicalKey ?? ''),
+      TagField.explicit => TextEditingController(text: tags.itunesAdvisory ?? ''),
 
       // -- in tag editor we aint knowing local db shi
       TagField.mood => TextEditingController(text: tags.mood ?? ''),
@@ -417,6 +418,12 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
     onTagChanged(TagField.bpm, scaledText);
   }
 
+  void onExplicitStatusPick(String value) {
+    final controller = tagsControllers[TagField.explicit]!;
+    controller.text = value;
+    onTagChanged(TagField.explicit, value);
+  }
+
   Future<void> onRhythmAnalyze(TagField tag) async {
     try {
       final analysis = await RhythmController.inst.analyzeTrackNow(track);
@@ -446,10 +453,18 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   Widget getTagTextField(TagField tag) {
     final isBpm = tag == TagField.bpm;
     final isRhythmAnalyzable = (isBpm || tag == TagField.musicalKey) && RhythmController.inst.isSupported;
+    final controller = tagsControllers[tag]!;
+    final explicitMenuButton = tag == TagField.explicit
+        ? _ExplicitStatusMenuButton(
+            controller: controller,
+            onPick: onExplicitStatusPick,
+          )
+        : null;
     return _TagTextField(
       tag: tag,
-      controller: tagsControllers[tag]!,
+      controller: controller,
       suggestionsProvider: suggestionsProvider,
+      suffixIcon: explicitMenuButton,
       onChanged: (value) => onTagChanged(tag, value),
       onBpmScale: isBpm ? onBpmScale : null,
       onRhythmAnalyze: isRhythmAnalyzable ? () => onRhythmAnalyze(tag) : null,
@@ -2243,6 +2258,7 @@ class _TagTextField extends StatelessWidget {
     final validator = switch (tag) {
       TagField.rating => _ratingsValidator,
       TagField.bpm => _bpmValidator,
+      TagField.explicit => _explicitValidator,
       _ => null,
     };
     return CustomTagTextField(
@@ -2503,7 +2519,8 @@ class _MultiTagFieldMenuButton extends StatelessWidget {
       childrenDefault: () {
         final currentText = field.controller.text;
         final countStyle = NText.small.of(context);
-        final values = field.hasMultipleValues ? field.nonEmptyValuesByCount : const <MapEntry<String, int>>[];
+        final isExplicit = field.tag == TagField.explicit;
+        final values = field.hasMultipleValues && !isExplicit ? field.nonEmptyValuesByCount : const <MapEntry<String, int>>[];
         final emptyValuesCount = field.hasMultipleValues ? field.valuesCounts[''] : null;
         final replaceRule = field.replaceRuleRx.value;
         final findReplaceRule = replaceRule is _FindReplaceRule ? replaceRule : null;
@@ -2558,6 +2575,13 @@ class _MultiTagFieldMenuButton extends StatelessWidget {
               selected: field.fillEmptyOnlyRx.value,
               onTap: field.toggleFillEmptyOnly,
             ),
+          if (isExplicit)
+            ..._ExplicitStatusMenuButton.buildItems(
+              currentText: currentText,
+              onPick: field.apply,
+              valuesCounts: field.valuesCounts,
+              countStyle: countStyle,
+            ),
           ...values
               .take(_maxValuesShown)
               .map(
@@ -2587,26 +2611,100 @@ class _MultiTagFieldMenuButton extends StatelessWidget {
             ),
         ];
       },
-      child: Container(
-        color: Colors.transparent,
-        height: 42.0,
-        padding: const EdgeInsets.only(left: 6.0, right: 14.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Broken.arrow_down_2,
-              size: 16.0,
-            ),
-            const SizedBox(
-              width: 8.0,
-            ),
-            Icon(
-              field.tag.toIcon(),
-              size: 18.0,
-            ),
-          ],
-        ),
+      child: _TagFieldMenuIcon(icon: field.tag.toIcon()),
+    );
+  }
+}
+
+class _ExplicitStatusMenuButton extends StatelessWidget {
+  final TextEditingController controller;
+  final void Function(String value) onPick;
+
+  const _ExplicitStatusMenuButton({
+    required this.controller,
+    required this.onPick,
+  });
+
+  static Iterable<NamidaPopupItem> buildItems({
+    required String currentText,
+    required void Function(String value) onPick,
+    Map<String, int>? valuesCounts,
+    TextStyle? countStyle,
+  }) {
+    final icon = TagField.explicit.toIcon();
+    return ExplicitStatus.values.map(
+      (e) {
+        final value = e.toTagValue();
+        final count = valuesCounts?[value];
+        final countText = count == null
+            ? null
+            : Text(
+                '$count',
+                style: countStyle,
+              );
+        return NamidaPopupItem(
+          icon: icon,
+          title: e.toText(),
+          subtitle: value,
+          trailing: countText,
+          selected: value == currentText,
+          onTap: () => onPick(value),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      openOnLongPress: false,
+      childrenDefault: () {
+        final currentText = controller.text;
+        return [
+          NamidaPopupItem(
+            icon: Broken.eraser,
+            title: lang.clear,
+            subtitle: '<${lang.emptyValue}>',
+            enabled: currentText.isNotEmpty,
+            onTap: () => onPick(''),
+          ),
+          ...buildItems(
+            currentText: currentText,
+            onPick: onPick,
+          ),
+        ];
+      },
+      child: _TagFieldMenuIcon(icon: TagField.explicit.toIcon()),
+    );
+  }
+}
+
+class _TagFieldMenuIcon extends StatelessWidget {
+  final IconData icon;
+
+  const _TagFieldMenuIcon({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.transparent,
+      height: 42.0,
+      padding: const EdgeInsets.only(left: 6.0, right: 14.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Broken.arrow_down_2,
+            size: 16.0,
+          ),
+          const SizedBox(
+            width: 8.0,
+          ),
+          Icon(
+            icon,
+            size: 18.0,
+          ),
+        ],
       ),
     );
   }
@@ -2897,6 +2995,12 @@ String? _bpmValidator(String? value) {
   return null;
 }
 
+String? _explicitValidator(String? value) {
+  if (value == null || value.isEmpty || value == '0') return null;
+  if (ExplicitStatus.fromTagValue(value) == null) return '0, 1, 2';
+  return null;
+}
+
 /// lyrics first, titles are a weaker hint. local lyrics are read only here, when the language field is actually focused.
 String _buildLanguageHintText(Map<TagField, TextEditingController?> tagsControllers, LrcSearchUtilsSelectable lrcUtils) {
   final buffer = StringBuffer();
@@ -2943,6 +3047,7 @@ extension _TagFieldMultiEdit on TagField {
     TagField.releaseType => trExt.releaseType,
     TagField.bpm => _emptyIfZero(trExt.bpm ?? 0),
     TagField.musicalKey => trExt.musicalKey,
+    TagField.explicit => trExt.explicitStatus?.toTagValue() ?? '',
     TagField.rating => _emptyIfZero(trExt.effectiveRating),
     TagField.tags => trExt.originalTags ?? '',
     TagField.titleSort => trExt.sortInfo?.title ?? '',

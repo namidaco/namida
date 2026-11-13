@@ -286,6 +286,14 @@ class PlaybackSettings extends SettingSubpageProvider {
     [
       autoPlayOnNextPrev,
       infinityQueueOnNextPrev,
+      SettingToggle(
+        settings.player.skipExplicitTracks,
+        leading: const StackedIcon(
+          baseIcon: Broken.forward,
+          secondaryIcon: Icons.explicit_rounded,
+        ),
+        title: () => lang.skipExplicitTracks,
+      ),
       SettingExpansion(
         icon: Broken.volume_slash,
         title: () => lang.onVolumeZero,

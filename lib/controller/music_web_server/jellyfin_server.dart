@@ -299,6 +299,7 @@ class _JellyfinServer extends MusicWebServer {
       releaseType: '',
       bpm: null,
       musicalKey: '',
+      explicitStatus: null,
       rating: rating,
       originalTags: originalTags,
       gainData: gainData,

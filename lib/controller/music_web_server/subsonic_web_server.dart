@@ -530,6 +530,7 @@ class _SubsonicWebServer extends MusicWebServer {
       releaseType: releaseType,
       bpm: validBpm,
       musicalKey: '',
+      explicitStatus: ExplicitStatus.fromOpenSubsonic(media.explicitStatus),
       rating: (media.userRating ?? 0) / 5.0,
       originalTags: null,
       gainData: gainData,

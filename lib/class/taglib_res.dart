@@ -252,6 +252,7 @@ class TagLibRes {
         releaseType: info.releaseType,
         bpm: bpm,
         musicalKey: info.musicalKey,
+        itunesAdvisory: info.itunesAdvisory,
         mbAlbumId: info.MUSICBRAINZ_ALBUMID,
         mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
         gainData: ReplayGainData.fromTagLibMap(properties),
@@ -394,6 +395,7 @@ class TagLibPropertiesWrapper {
   String? get musicalKey => _getPropertyFirstFallbacks(_TagLibFieldsFallback.musicalKey);
   String? get sampleRate => _getPropertyFirst(TagLibField.sampleRate);
   String? get tempo => _getPropertyFirst(TagLibField.tempo);
+  String? get itunesAdvisory => _getPropertyFirst(TagLibField.itunesAdvisory);
   String? get mixer => _getPropertyFirst(TagLibField.mixer);
   String? get djmixer => _getPropertyFirst(TagLibField.djmixer);
 
@@ -555,6 +557,7 @@ class TagLibField {
   static const djmixer = 'DJMIXER';
   static const bpm = 'BPM';
   static const initialKey = 'INITIALKEY';
+  static const itunesAdvisory = 'ITUNESADVISORY';
   static const key = 'KEY';
   static const length = 'LENGTH';
   static const channels = 'CHANNELS';

@@ -406,6 +406,7 @@ extension FAudioModelExtensions on FAudioModel {
         releaseType: original.tags.releaseType ?? this.tags.releaseType,
         bpm: original.tags.bpm ?? this.tags.bpm,
         musicalKey: original.tags.musicalKey ?? this.tags.musicalKey,
+        itunesAdvisory: original.tags.itunesAdvisory ?? this.tags.itunesAdvisory,
         mbAlbumId: original.tags.mbAlbumId ?? this.tags.mbAlbumId,
         mbAlbumArtistId: original.tags.mbAlbumArtistId ?? this.tags.mbAlbumArtistId,
         ratingPercentage: original.tags.ratingPercentage ?? this.tags.ratingPercentage,
@@ -468,6 +469,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
         releaseType: info?.releaseType,
         bpm: info?.bpm,
         musicalKey: info?.musicalKey,
+        itunesAdvisory: info?.itunesAdvisory,
         mbAlbumId: info?.mbAlbumId,
         mbAlbumArtistId: info?.mbAlbumArtistId,
         gainData: info?.gainData,
@@ -2596,6 +2598,7 @@ extension TagFieldL10n on TagField {
     TagField.musicalKey => lang.musicalKey,
     TagField.rating => lang.rating,
     TagField.tags => lang.tags,
+    TagField.explicit => lang.explicit,
     TagField.titleSort => '${lang.title} (${lang.sortBy})',
     TagField.albumSort => '${lang.album} (${lang.sortBy})',
     TagField.albumArtistSort => '${lang.albumArtist} (${lang.sortBy})',
@@ -2631,11 +2634,19 @@ extension TagFieldL10n on TagField {
     TagField.musicalKey => Broken.musicnote,
     TagField.rating => MediaType.rating.toIcon(),
     TagField.tags => MediaType.tag.toIcon(),
+    TagField.explicit => Icons.explicit_rounded,
     TagField.titleSort => Broken.music,
     TagField.albumSort => MediaType.album.toIcon(),
     TagField.albumArtistSort => MediaType.albumArtist.toIcon(),
     TagField.artistSort => MediaType.artist.toIcon(),
     TagField.composerSort => MediaType.composer.toIcon(),
+  };
+}
+
+extension ExplicitStatusL10n on ExplicitStatus {
+  String toText() => switch (this) {
+    ExplicitStatus.explicit => lang.explicit,
+    ExplicitStatus.clean => lang.clean,
   };
 }
 

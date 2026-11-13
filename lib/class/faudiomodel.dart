@@ -99,6 +99,10 @@ class FTags {
   final String? releaseType;
   final int? bpm;
   final String? musicalKey;
+
+  /// `ITUNESADVISORY`, `1` explicit and `2` clean. empty clears it when writing.
+  final String? itunesAdvisory;
+
   final String? mbAlbumId;
   final String? mbAlbumArtistId;
 
@@ -147,6 +151,7 @@ class FTags {
     required this.releaseType,
     required this.bpm,
     required this.musicalKey,
+    this.itunesAdvisory,
     this.mbAlbumId,
     this.mbAlbumArtistId,
     required this.ratingPercentage,
@@ -190,6 +195,7 @@ class FTags {
     this.releaseType,
     this.bpm,
     this.musicalKey,
+    this.itunesAdvisory,
     this.mbAlbumId,
     this.mbAlbumArtistId,
     this.ratingPercentage,
@@ -303,6 +309,7 @@ class FTags {
       releaseType: _listToString(map["releaseType"]) ?? map["RELEASETYPE"],
       bpm: MediaInfo.extractInt(map["bpm"]),
       musicalKey: map["musicalKey"],
+      itunesAdvisory: map["itunesAdvisory"] ?? map["ITUNESADVISORY"],
       mbAlbumId: map["mbAlbumId"] ?? map["MUSICBRAINZ_ALBUMID"] ?? map["MusicBrainz Album Id"],
       mbAlbumArtistId: map["mbAlbumArtistId"] ?? map["MUSICBRAINZ_ALBUMARTISTID"] ?? map["MusicBrainz Album Artist Id"],
       ratingPercentage: ratingToPercentage(ratingString),
@@ -345,6 +352,7 @@ class FTags {
       "releaseType": releaseType,
       "bpm": bpm,
       "musicalKey": musicalKey,
+      "itunesAdvisory": itunesAdvisory,
       "language": language,
       "mbAlbumId": mbAlbumId,
       "mbAlbumArtistId": mbAlbumArtistId,
@@ -358,6 +366,13 @@ class FTags {
 
   Map<String, List<String>> toTagLibMap() {
     final bpmText = bpm == 0 ? '' : bpm?.toString();
+    final itunesAdvisory = this.itunesAdvisory;
+    // -- no values removes the tag, an empty text would be written as `0` in mp4
+    final itunesAdvisoryList = itunesAdvisory == null
+        ? null
+        : itunesAdvisory.isEmpty
+        ? const <String>[]
+        : [itunesAdvisory];
     return <String, List<String>>{
       TagLibField.title: ?_createList(title),
       TagLibField.album: ?_createList(album),
@@ -386,6 +401,7 @@ class FTags {
       TagLibField.tempo: ?_createList(tempo),
       TagLibField.bpm: ?_createList(bpmText),
       TagLibField.initialKey: ?_createList(musicalKey),
+      TagLibField.itunesAdvisory: ?itunesAdvisoryList,
       TagLibField.mixer: ?_createList(mixer),
       TagLibField.djmixer: ?_createList(djmixer),
       TagLibField.titleSort: ?_createList(sortInfo?.title),

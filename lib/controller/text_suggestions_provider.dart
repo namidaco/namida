@@ -11,6 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/iso639.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 class TextSuggestionsProvider {
   /// lyrics & titles of the track being edited, the languages written in their scripts are suggested first.
@@ -39,6 +40,7 @@ class TextSuggestionsProvider {
     TextSuggestionsSource.playlistTags => _buildPlaylistTags(),
 
     TextSuggestionsSource.language => _buildLanguages(languageHintText?.call()),
+    TextSuggestionsSource.explicit => _buildExplicit(),
 
     // -- no library grouping for these, a single pass is required.
     TextSuggestionsSource.recordLabel => _buildFromTracks((trExt) => trExt.label),
@@ -48,6 +50,15 @@ class TextSuggestionsProvider {
     TextSuggestionsSource.channels => _buildFromTracks((trExt) => trExt.channels),
     TextSuggestionsSource.extension => _buildFromTracks((trExt) => trExt.path.getExtension),
   };
+
+  /// tag values are inserted while names are shown.
+  static TextSuggestionsValues _buildExplicit() {
+    const statuses = ExplicitStatus.values;
+    final values = statuses.map((e) => e.toTagValue()).toFixedList();
+    final labels = statuses.map((e) => '${e.toText()} (${e.toTagValue()})').toFixedList();
+    final searchTexts = labels.map((e) => e.toLowerCase()).toFixedList();
+    return TextSuggestionsValues(values, values, labels: labels, searchTexts: searchTexts);
+  }
 
   static List<MapEntry<String, String>>? _languagesSortedByName;
 
@@ -400,6 +411,7 @@ enum TextSuggestionsSource {
   mood,
   tags,
   language,
+  explicit,
   recordLabel,
   releaseType,
   musicalKey,
@@ -420,6 +432,7 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.mood ||
     TextSuggestionsSource.tags ||
     TextSuggestionsSource.language => true,
+    TextSuggestionsSource.explicit ||
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
@@ -440,6 +453,7 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.genre || TextSuggestionsSource.style => settings.trackGenresSeparators.value,
     TextSuggestionsSource.mood || TextSuggestionsSource.tags => GeneralSplitConfig.buildSeparatorsSet().toList(),
     TextSuggestionsSource.language => Iso639.separators,
+    TextSuggestionsSource.explicit ||
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
@@ -469,6 +483,7 @@ extension TagFieldSuggestionsUtils on TagField {
     TagField.recordLabel => TextSuggestionsSource.recordLabel,
     TagField.releaseType => TextSuggestionsSource.releaseType,
     TagField.musicalKey => TextSuggestionsSource.musicalKey,
+    TagField.explicit => TextSuggestionsSource.explicit,
     TagField.title ||
     TagField.year ||
     TagField.trackNumber ||

@@ -60,6 +60,7 @@ final class SmartPlaylistRuleBoolean extends SmartPlaylistRuleBase<Null, Null, S
       SmartPlaylistRuleFilterBooleanSource.isLossless => _booleanFn(track.isLossless),
       SmartPlaylistRuleFilterBooleanSource.isFavourite => _booleanFn(track.isFavourite),
       SmartPlaylistRuleFilterBooleanSource.isSingle => _booleanFn(track.albumsIdentifiersModified.any((albumIdentifier) => albumIdentifier.isSingle())),
+      SmartPlaylistRuleFilterBooleanSource.isExplicit => _booleanFn(track.explicitStatus?.isExplicit()),
     };
   }
 
@@ -121,6 +122,7 @@ enum SmartPlaylistRuleFilterBooleanSource with SmartPlaylistRuleFilterSource {
   isLossless,
   isFavourite,
   isSingle,
+  isExplicit,
   ;
 
   const SmartPlaylistRuleFilterBooleanSource();
@@ -139,6 +141,7 @@ enum SmartPlaylistRuleFilterBooleanSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterBooleanSource.isLossless => lang.lossless,
     SmartPlaylistRuleFilterBooleanSource.isFavourite => lang.favourite,
     SmartPlaylistRuleFilterBooleanSource.isSingle => lang.single,
+    SmartPlaylistRuleFilterBooleanSource.isExplicit => lang.explicit,
   };
 
   @override
@@ -146,5 +149,6 @@ enum SmartPlaylistRuleFilterBooleanSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterBooleanSource.isLossless => Broken.voice_cricle,
     SmartPlaylistRuleFilterBooleanSource.isFavourite => Broken.heart,
     SmartPlaylistRuleFilterBooleanSource.isSingle => Broken.music_square,
+    SmartPlaylistRuleFilterBooleanSource.isExplicit => Icons.explicit_outlined,
   };
 }

@@ -937,12 +937,34 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   FutureOr<ItemPrepareConfig<Q, UriSource>?> prepareItem(Q item, int index) async {
     return await item.executeAsync(
       selectable: (finalItem) async {
+        if (_shouldSkipExplicit(finalItem)) return null;
         return _itemToPrepareConfigSelectable(item, finalItem, index, null);
       },
       youtubeID: (finalItem) async {
         return _itemToPrepareConfigYoutubeID(item, finalItem, index);
       },
     );
+  }
+
+  bool _shouldSkipExplicit(Selectable item) => settings.player.skipExplicitTracks.value && item.track.toTrackExt().explicitStatus == ExplicitStatus.explicit;
+
+  /// pauses when there is nothing left to skip to, otherwise the previous item would keep playing under this one.
+  Future<void> _skipExplicitItem(Q item, Function skipItem) async {
+    String toMessage(int total) => '${lang.skippedExplicitTracks}: $total';
+    snackyy(
+      icon: TagField.explicit.toIcon(),
+      message: toMessage(1),
+      top: false,
+      displayDuration: SnackDisplayDuration.mediumLow,
+      animationDurationMS: 400,
+      merge: SnackbarMerge(
+        group: .explicitTracksSkipped,
+        count: 1,
+        toMessage: toMessage,
+      ),
+    );
+    await skipItem();
+    if (currentItem.value == item) await pause();
   }
 
   @override
@@ -1156,6 +1178,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
     required Duration? requestedStartPosition,
   }) async {
+    if (_shouldSkipExplicit(item)) return _skipExplicitItem(pi, skipItem);
     final tr = item.track;
     videoPlayerInfo.value = null;
     Lyrics.inst.resetLyrics(hide: false);

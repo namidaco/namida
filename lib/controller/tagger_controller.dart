@@ -326,6 +326,7 @@ class NamidaTaggerController {
       country: editedTags[TagField.country],
       bpm: _bpmStringToInt(editedTags[TagField.bpm]),
       musicalKey: editedTags[TagField.musicalKey],
+      itunesAdvisory: editedTags[TagField.explicit],
       tags: editedTags[TagField.tags],
       ratingPercentage: () {
         final ratingString = editedTags[TagField.rating];

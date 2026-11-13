@@ -32,6 +32,7 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final crossfadeMode = _keyEnum('crossfadeMode', CrossfadeMode.standard, CrossfadeMode.values);
   late final playOnNextPrev = _key('playOnNextPrev', isKuru ? false : true);
   late final skipSilenceEnabled = _key('skipSilenceEnabled', false);
+  late final skipExplicitTracks = _key('skipExplicitTracks', false);
   late final pauseOnVolume0 = _key('pauseOnVolume0', true);
   late final jumpToFirstTrackAfterFinishingQueue = _key('jumpToFirstTrackAfterFinishingQueue', false);
   late final repeatMode = _keyEnum('repeatMode', PlayerRepeatMode.none, PlayerRepeatMode.values, sync: false);

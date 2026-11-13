@@ -1390,6 +1390,7 @@ extension TrackUtils on Track {
   int get sampleRate => toTrackExt().sampleRate;
   int get bits => toTrackExt().bits;
   bool? get isLossless => toTrackExt().isLossless;
+  ExplicitStatus? get explicitStatus => toTrackExt().explicitStatus;
   String get format => toTrackExt().format;
   String get channels => toTrackExt().channels;
   int get discNo => toTrackExt().discNo;

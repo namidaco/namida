@@ -94,6 +94,7 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     crossfadeMode,
     playOnNextPrev,
     skipSilenceEnabled,
+    skipExplicitTracks,
     pauseOnVolume0,
     jumpToFirstTrackAfterFinishingQueue,
     repeatMode,

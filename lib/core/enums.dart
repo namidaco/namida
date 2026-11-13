@@ -749,6 +749,37 @@ enum TagFieldMultiEdit {
   hidden,
 }
 
+/// the `ITUNESADVISORY` tag, `rtng` atom in mp4.
+enum ExplicitStatus {
+  explicit,
+  clean,
+  ;
+
+  bool isExplicit() => switch (this) {
+    ExplicitStatus.explicit => true,
+    ExplicitStatus.clean => false,
+  };
+
+  /// `4` is an old explicit value some taggers still write.
+  static ExplicitStatus? fromTagValue(String? value) => switch (value?.trim()) {
+    '1' || '4' => ExplicitStatus.explicit,
+    '2' => ExplicitStatus.clean,
+    _ => null,
+  };
+
+  /// OpenSubsonic `explicitStatus`.
+  static ExplicitStatus? fromOpenSubsonic(String? value) => switch (value) {
+    'explicit' => ExplicitStatus.explicit,
+    'clean' => ExplicitStatus.clean,
+    _ => null,
+  };
+
+  String toTagValue() => switch (this) {
+    ExplicitStatus.explicit => '1',
+    ExplicitStatus.clean => '2',
+  };
+}
+
 enum WakelockMode {
   none,
   expanded,
