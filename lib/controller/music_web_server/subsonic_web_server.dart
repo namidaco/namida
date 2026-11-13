@@ -295,6 +295,7 @@ class _SubsonicWebServer extends MusicWebServer {
       albums: albums,
       splitConfig: splitConfig,
       indexedTracks: indexedTracks,
+      includeVideos: settings.includeVideos.value,
     );
 
     await for (final trExt in stream) {
@@ -337,6 +338,7 @@ class _SubsonicWebServer extends MusicWebServer {
       }
 
       final playlists = res.response.data?.playlists ?? [];
+      final includeVideos = settings.includeVideos.value;
       final result = <WebServerPlaylist>[];
       for (final pl in playlists) {
         final createdMS = pl.created?.millisecondsSinceEpoch;
@@ -349,7 +351,8 @@ class _SubsonicWebServer extends MusicWebServer {
           if (detail.response.error != null) {
             _checkResError(authDetails.dir, detail);
           } else {
-            final songs = detail.response.data?.songs ?? [];
+            final allSongs = detail.response.data?.songs ?? [];
+            final songs = includeVideos ? allSongs : allSongs.where((s) => s.isVideo != true);
             tracks = songs.map(
               (s) => _mediaModelToTrackExtended(
                 s,
@@ -399,6 +402,7 @@ class _SubsonicWebServer extends MusicWebServer {
     required List<AlbumModel> albums,
     required SplitArtistGenreConfigsWrapper splitConfig,
     required Map<String, TrackExtended>? indexedTracks,
+    required bool includeVideos,
   }) async* {
     const subBatchSize = 10;
     for (var i = 0; i < albums.length; i += subBatchSize) {
@@ -410,6 +414,7 @@ class _SubsonicWebServer extends MusicWebServer {
         final album = albumDetail.response.data;
         final songs = album?.song ?? [];
         for (final s in songs) {
+          if (!includeVideos && s.isVideo == true) continue;
           final path = _serverTrackPath(serverUriParsed, s.id);
           final lyrics = indexedTracks?[path]?.lyrics ?? '';
           yield _mediaModelToTrackExtended(
@@ -541,6 +546,7 @@ class _SubsonicWebServer extends MusicWebServer {
       isVideo: media.isVideo ?? false,
       server: server,
       serverFolder: serverFolder,
+      serverVideos: null,
       hasNoEmbeddedArtwork: false,
     );
   }

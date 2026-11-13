@@ -67,7 +67,7 @@ class ServerCacheController {
     return File(p.normalize(p.join(AppDirs.SERVERS_CACHE, type.name, username, cleanId)));
   }
 
-  bool isKept(Track track) => keptPaths.value.contains(track.path);
+  bool isKept(String serverItemPath) => keptPaths.value.contains(serverItemPath);
 
   Future<void> cacheTracks(Iterable<Track> tracks) async {
     await initialize();

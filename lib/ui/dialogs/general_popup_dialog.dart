@@ -688,7 +688,7 @@ Future<void> showGeneralPopupDialog(
 
   final networkTracksToCache = <Track>[];
   for (final t in tracks) {
-    if (t.isNetwork && !ServerCacheController.inst.isKept(t)) networkTracksToCache.add(t);
+    if (t.isNetwork && !ServerCacheController.inst.isKept(t.path)) networkTracksToCache.add(t);
   }
 
   final Widget? serverCacheListTile = networkTracksToCache.isEmpty

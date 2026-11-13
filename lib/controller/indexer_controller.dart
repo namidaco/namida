@@ -671,6 +671,7 @@ class Indexer<T extends Track> {
         hashKey: null,
         server: server,
         serverFolder: null,
+        serverVideos: null,
         hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
       );
 
@@ -2278,7 +2279,8 @@ class Indexer<T extends Track> {
   Future<DirsFileFilterResult> _listAudioFiles({bool strictNoMedia = true, required bool withStats}) async {
     tracksExcludedByNoMedia.value = 0;
 
-    final extensions = _includeVideosAsTracks ? NamidaFileExtensionsWrapper.audioAndVideo : NamidaFileExtensionsWrapper.audio;
+    final includeVideos = _includeVideosAsTracks;
+    final extensions = includeVideos ? NamidaFileExtensionsWrapper.audioAndVideo : NamidaFileExtensionsWrapper.audio;
     final m3uExtensions = settings.enableM3USyncStartup.value ? NamidaFileExtensionsWrapper.m3u : null;
     final dirsFilterer = DirsFileFilter(
       extensions: extensions,
@@ -2287,6 +2289,7 @@ class Indexer<T extends Track> {
       blacklistExtensions: settings.extensionsBlacklist.value,
       strictNoMedia: strictNoMedia,
       withStats: withStats,
+      skipSameNameVideos: includeVideos,
     );
     final result = await dirsFilterer.filter();
     if (m3uExtensions != null) unawaited(PlaylistController.inst.importListedM3UFiles(result.m3uPaths));
@@ -2377,6 +2380,7 @@ class Indexer<T extends Track> {
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
         server: null,
         serverFolder: null,
+        serverVideos: null,
         hasNoEmbeddedArtwork: false,
       );
       tracks.add(trext);

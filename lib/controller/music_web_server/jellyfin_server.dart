@@ -310,6 +310,7 @@ class _JellyfinServer extends MusicWebServer {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      serverVideos: null,
       hasNoEmbeddedArtwork: false,
     );
   }
@@ -652,7 +653,7 @@ class _JellyfinClientWrapper {
       checkResError: checkResError,
     );
     if (items == null) return null;
-    final allowedKinds = _JellyfinItemKind.values.map((e) => e.value).toSet();
+    final allowedKinds = _JellyfinItemKind.indexedKinds().map((e) => e.value).toSet();
     items.retainWhere((item) => item.type == null || allowedKinds.contains(item.type));
     return items;
   }
@@ -697,7 +698,7 @@ class _JellyfinClientWrapper {
 
   Future<int?> fetchAllMediaCount() async {
     if (!await ensureAuthenticated()) return null;
-    final itemTypes = _JellyfinItemKind.values.map((e) => e.value).join(',');
+    final itemTypes = _JellyfinItemKind.indexedKinds().map((e) => e.value).join(',');
     try {
       final res = await _api.dio.get<Map<String, dynamic>>(
         '/Items',
@@ -729,7 +730,7 @@ class _JellyfinClientWrapper {
           queryParameters: {
             'UserId': _userId,
             if (_libraryId != null) 'ParentId': _libraryId,
-            'IncludeItemTypes': _JellyfinItemKind.values.map((e) => e.value).join(','),
+            'IncludeItemTypes': _JellyfinItemKind.indexedKinds().map((e) => e.value).join(','),
             'Recursive': true,
             'StartIndex': offset,
             'Limit': batchSize,

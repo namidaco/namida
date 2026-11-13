@@ -17,12 +17,19 @@ enum _JellyfinImageType {
 }
 
 enum _JellyfinItemKind {
-  audio('Audio'),
-  video('Video'),
-  musicVideo('MusicVideo');
+  audio('Audio', isVideo: false),
+  video('Video', isVideo: true),
+  musicVideo('MusicVideo', isVideo: true),
+  ;
 
-  const _JellyfinItemKind(this.value);
+  const _JellyfinItemKind(this.value, {required this.isVideo});
   final String value;
+  final bool isVideo;
+
+  static Iterable<_JellyfinItemKind> indexedKinds() {
+    final includeVideos = settings.includeVideos.value;
+    return includeVideos ? values : values.where((e) => !e.isVideo);
+  }
 }
 
 enum _JellyfinItemField {

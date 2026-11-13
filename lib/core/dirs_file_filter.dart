@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/search_matcher.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -25,6 +26,9 @@ class DirsFileFilter {
   final bool withStats;
   final bool useNativeLister;
 
+  /// videos named after an audio file next to them, see [SameNameVideosMatcher].
+  final bool skipSameNameVideos;
+
   final List<DirectoryIndex> _directoriesToScan;
   final List<DirectoryIndex> _directoriesToExclude;
   final bool _respectNoMedia;
@@ -37,6 +41,7 @@ class DirsFileFilter {
     this.strictNoMedia = true,
     this.withStats = false,
     this.useNativeLister = true,
+    this.skipSameNameVideos = false,
   }) : _directoriesToScan = settings.directoriesToScan.value,
        _directoriesToExclude = settings.directoriesToExclude.value,
        _respectNoMedia = settings.respectNoMedia.value;
@@ -98,6 +103,7 @@ abstract class _DirsWalker {
     final statsBuilder = _statsBuilder;
     final fillFolderCovers = collector.fillFolderCovers;
     final strictNoMedia = _parameters.strictNoMedia;
+    final skipSameNameVideos = _parameters.skipSameNameVideos;
 
     while (pendingDirs.isNotEmpty) {
       final dir = pendingDirs.removeLast();
@@ -110,8 +116,11 @@ abstract class _DirsWalker {
 
       final folder = fillFolderCovers ? Folder.explicit(dir.path) : null;
       final listedDir = _ListedDir(folder, noMediaDirPath);
+      final sameNameVideos = skipSameNameVideos ? collector.findSameNameVideos(dirFilesPaths) : null;
       for (int i = 0; i < dirFilesPaths.length; i++) {
-        final didAdd = collector.addFile(dirFilesPaths[i], listedDir);
+        final path = dirFilesPaths[i];
+        if (sameNameVideos != null && sameNameVideos.containsKey(path)) continue;
+        final didAdd = collector.addFile(path, listedDir);
         if (didAdd && statsBuilder != null) _addFileStats(statsBuilder, i);
       }
       dirFilesPaths.clear();
@@ -276,6 +285,10 @@ class _DirsFilesCollector {
     }
 
     return allPaths.add(path);
+  }
+
+  Map<String, String>? findSameNameVideos(List<String> dirFilesPaths) {
+    return SameNameVideosMatcher.matchFolder(dirFilesPaths, (path) => path, trackExtensions: _extensions);
   }
 
   DirsFileFilterResult toResult(FilesStats? stats) {

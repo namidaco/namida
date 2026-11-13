@@ -183,6 +183,8 @@ extension NamidaVideoUtils on NamidaVideo {
 
   bool get hasSaneFramerate => framerate <= maxSaneFramerate;
 
+  bool get isNetwork => path.startsWith('http');
+
   String framerateText([int displayAbove = 30]) {
     final videoFramerate = framerate;
     return videoFramerate > displayAbove && videoFramerate <= maxSaneFramerate ? videoFramerate.toString() : '';

@@ -78,6 +78,7 @@ abstract class _FileTransferServer extends MusicWebServer {
       extractArtwork: Indexer.inst.isNetworkArtworkCachingEnabled,
       diffState: forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback),
       baseSegments: _splitRemotePath(_basePath),
+      includeVideos: settings.includeVideos.value,
     );
     try {
       await for (final trExt in _walk(_basePath, scan, isRoot: true)) {
@@ -113,8 +114,12 @@ abstract class _FileTransferServer extends MusicWebServer {
       }
     }
 
+    final folderMedia = _ServerFolderMedia.split(mediaFiles, (e) => e.name, includeVideos: scan.includeVideos);
+    final trackFiles = folderMedia.tracks;
+    NamidaVideo toServerVideo(_RemoteEntry video) => _ServerFolderMedia.buildServerVideo(scan.serverUriParsed, video.path, size: video.size, creationMS: null);
+
     final tracksByNameWOExt = lrcFiles.isEmpty ? null : <String, TrackExtended>{};
-    final total = mediaFiles.length;
+    final total = trackFiles.length;
     if (total > 0) {
       // -- a sliding window, a new file starts as soon as any finishes instead of each batch waiting for its slowest
       final processed = StreamController<(int, TrackExtended?)>();
@@ -122,7 +127,9 @@ abstract class _FileTransferServer extends MusicWebServer {
       Future<void> worker() async {
         while (nextIndex < total) {
           final index = nextIndex++;
-          final trExt = await _processFile(mediaFiles[index], scan);
+          final entry = trackFiles[index];
+          final serverVideos = folderMedia.serverVideosOf(entry, toServerVideo);
+          final trExt = await _processFile(entry, scan, serverVideos: serverVideos);
           processed.add((index, trExt));
         }
       }
@@ -133,7 +140,7 @@ abstract class _FileTransferServer extends MusicWebServer {
       await for (final (index, trExt) in processed.stream) {
         if (trExt == null) continue;
         yield trExt;
-        tracksByNameWOExt?[mediaFiles[index].name.getFilenameWOExt] = trExt;
+        tracksByNameWOExt?[trackFiles[index].name.getFilenameWOExt] = trExt;
       }
     }
 
@@ -155,14 +162,14 @@ abstract class _FileTransferServer extends MusicWebServer {
     }
   }
 
-  Future<TrackExtended?> _processFile(_RemoteEntry entry, _FileTransferScan scan) async {
+  Future<TrackExtended?> _processFile(_RemoteEntry entry, _FileTransferScan scan, {required List<NamidaVideo>? serverVideos}) async {
     final path = entry.path;
     final modifiedMS = entry.modifiedMS;
     final serverFolder = _serverFolderOf(path, baseSegments: scan.baseSegments);
     final diffState = scan.diffState;
     if (diffState != null) {
       final remoteModified = modifiedMS == null ? null : DateTime.fromMillisecondsSinceEpoch(modifiedMS);
-      final canSkip = diffState.checkCanSkipScanAndMarkExists(path, remoteModified, serverFolder: serverFolder);
+      final canSkip = diffState.checkCanSkipScanAndMarkExists(path, remoteModified, serverFolder: serverFolder, serverVideos: serverVideos);
       if (canSkip) return null;
     }
 
@@ -199,7 +206,7 @@ abstract class _FileTransferServer extends MusicWebServer {
           'd': path,
         },
       );
-      return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder);
+      return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder, serverVideos: serverVideos);
     } catch (_) {
       return null;
     }
@@ -277,6 +284,7 @@ class _FileTransferScan {
   final bool extractArtwork;
   final _ServerDiffManager? diffState;
   final List<String> baseSegments;
+  final bool includeVideos;
 
   const _FileTransferScan({
     required this.server,
@@ -287,5 +295,6 @@ class _FileTransferScan {
     required this.extractArtwork,
     required this.diffState,
     required this.baseSegments,
+    required this.includeVideos,
   });
 }

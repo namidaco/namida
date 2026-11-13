@@ -103,6 +103,7 @@ class _WebDAVServer extends MusicWebServer {
     final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
+    final includeVideos = settings.includeVideos.value;
 
     final diffState = _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback);
 
@@ -118,6 +119,7 @@ class _WebDAVServer extends MusicWebServer {
         identifiersSet: identifiersSet,
         minDur: minDur,
         minSize: minSize,
+        includeVideos: includeVideos,
         diffState: diffState,
       );
 
@@ -144,8 +146,20 @@ class _WebDAVServer extends MusicWebServer {
     required Set<AlbumIdentifier> identifiersSet,
     required int minDur,
     required int minSize,
+    required bool includeVideos,
     required _ServerDiffManager diffState,
   }) async* {
+    final mediaFiles = files.where((file) {
+      final path = file.path;
+      return file.isDir != true && path != null && NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path);
+    }).toFixedList();
+    final folderMedia = _ServerFolderMedia.split(mediaFiles, (file) => file.path!, includeVideos: includeVideos);
+    final trackFiles = folderMedia.tracks.toSet();
+    NamidaVideo toServerVideo(webdav.File video) {
+      final creationMS = video.cTime?.millisecondsSinceEpoch;
+      return _ServerFolderMedia.buildServerVideo(serverUriParsed, video.path!, size: video.size, creationMS: creationMS);
+    }
+
     final imageFiles = <webdav.File>[];
     final lrcFiles = <(webdav.File, bool)>[];
     final lrcFilesInfoToExtractLater = <String, TrackExtended>{};
@@ -163,7 +177,7 @@ class _WebDAVServer extends MusicWebServer {
         } else {
           final path = file.path;
           if (path != null) {
-            if (NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path)) {
+            if (trackFiles.contains(file)) {
               subfiles.add(file);
             } else if (NamidaFileExtensionsWrapper.image.isPathValid(path)) {
               imageFiles.add(file);
@@ -182,7 +196,8 @@ class _WebDAVServer extends MusicWebServer {
           if (serverPath == null) return null;
 
           final serverFolder = _serverFolderOf(serverPath);
-          final canSkip = diffState.checkCanSkipScanAndMarkExists(serverPath, file.mTime, serverFolder: serverFolder);
+          final serverVideos = folderMedia.serverVideosOf(file, toServerVideo);
+          final canSkip = diffState.checkCanSkipScanAndMarkExists(serverPath, file.mTime, serverFolder: serverFolder, serverVideos: serverVideos);
           if (canSkip) return null;
 
           final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet, artworksToExtractLater);
@@ -222,7 +237,7 @@ class _WebDAVServer extends MusicWebServer {
               },
             );
             final newPath = newUri.toString();
-            final newTrExt = trExt.copyWith(generatePathHash: true, path: newPath, serverFolder: serverFolder);
+            final newTrExt = trExt.copyWith(generatePathHash: true, path: newPath, serverFolder: serverFolder, serverVideos: serverVideos);
 
             final serverPathWOExt = p.basenameWithoutExtension(serverPath);
             lrcFilesInfoToExtractLater[serverPathWOExt] = newTrExt;
@@ -255,6 +270,7 @@ class _WebDAVServer extends MusicWebServer {
               identifiersSet: identifiersSet,
               minDur: minDur,
               minSize: minSize,
+              includeVideos: includeVideos,
               diffState: diffState,
             );
           } catch (_) {

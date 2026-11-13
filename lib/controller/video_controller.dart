@@ -457,7 +457,7 @@ class VideoController {
       final localPaths = possibleVideos.where((e) => e.ytID == null).map((e) => e.path);
       final sureLocalPaths = FilePathMatcher.getSureTrackVideos(videoPaths: localPaths, trackFilenameWOExt: trackFilenameWOExt, trackYTID: trackYTID);
       int getPickPriority(NamidaVideo video) {
-        if (sureLocalPaths.contains(video.path)) return 2;
+        if (video.isNetwork || sureLocalPaths.contains(video.path)) return 2;
         if (video.ytID != null) return 1;
         return 0;
       }
@@ -473,7 +473,7 @@ class VideoController {
           (e) => e.frameratePrecise,
         ],
       );
-      erabaretaVideo = await possibleVideos.firstWhereEffAsync((element) => File(element.path).exists());
+      erabaretaVideo = await possibleVideos.firstWhereEffAsync((element) => element.isNetwork ? true : File(element.path).exists());
     }
 
     configToUpdate.currentVideo.value = erabaretaVideo;
@@ -516,11 +516,13 @@ class VideoController {
     final v = cacheIdAndPath != null ? _videoCacheIDMap[cacheIdAndPath.$1]?.firstWhereEff((e) => e.path == cacheIdAndPath.$2) : video;
     if (v != null) {
       currentVideo.value = v;
+      final source = await v.toVideoSource();
+      if (!_canExecuteForCurrentTrackOnly(track)) return;
       await Player.inst.setVideo(
-        source: AudioVideoSource.file(v.path),
+        source: source,
         loopingAnimation: canLoopVideo(v, track.durationMS),
         sourceDurationMS: v.durationMS,
-        isFile: true,
+        isFile: !v.isNetwork,
         videoOnly: track is Video,
         startOffsetMS: getVideoStartOffsetMS(track),
       );
@@ -881,7 +883,16 @@ class VideoController {
     }
 
     final possibleLocal = local.isEmpty ? const <NamidaVideo?>[] : await Future.wait(local.map(resolveLocal));
-    return [...possibleCached, ...possibleLocal.nonNulls];
+    final serverVideos = track.isNetwork ? _getServerVideos(track) : null;
+    return [...possibleCached, ...possibleLocal.nonNulls, ...?serverVideos];
+  }
+
+  Iterable<NamidaVideo>? _getServerVideos(Track track) {
+    final serverVideos = track.toTrackExt().serverVideos;
+    return serverVideos?.map((v) {
+      final playerFilledInfo = _videoPathsInfoMap[v.path];
+      return playerFilledInfo != null && playerFilledInfo.sizeInBytes == v.sizeInBytes ? playerFilledInfo : v;
+    });
   }
 
   Future<void> initialize() async {

@@ -22,10 +22,12 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/replay_gain_data.dart';
+import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -313,7 +315,7 @@ class _ServerDiffManager {
 
   static const _millisecondsAllowance = 1000;
 
-  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified, {required String? serverFolder}) {
+  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified, {required String? serverFolder, required List<NamidaVideo>? serverVideos}) {
     final uri = serverUriParsed.replace(
       queryParameters: {
         ...serverUriParsed.queryParameters,
@@ -321,23 +323,37 @@ class _ServerDiffManager {
       },
     );
     final uriString = uri.toString();
-    final canSkip = _checkCanSkipScan(uriString, remoteDateModified) && _canSkipForServerFolder(uriString, serverFolder);
+    final canSkip = _checkCanSkipScan(uriString, remoteDateModified) && _canSkipForListingInfo(uriString, serverFolder, serverVideos);
 
     existingLibraryMapSoonToBeRemoved.remove(uriString); // mark exist
 
     return canSkip;
   }
 
-  /// tracks indexed before [TrackExtended.serverFolder] existed get it without a rescan.
-  bool _canSkipForServerFolder(String fullPath, String? serverFolder) {
+  /// info that comes from the listing and not the file is filled without a rescan: [TrackExtended.serverFolder] for tracks indexed before it existed, and [TrackExtended.serverVideos].
+  bool _canSkipForListingInfo(String fullPath, String? serverFolder, List<NamidaVideo>? serverVideos) {
     final trExt = Indexer.inst.allTracksMappedByPath[fullPath];
     if (trExt == null) return true;
     final storedServerFolder = trExt.serverFolder;
-    if (storedServerFolder == serverFolder) return true;
-    if (storedServerFolder != null || serverFolder == null) return false;
+    final isSameServerFolder = storedServerFolder == serverFolder;
+    if (!isSameServerFolder && (storedServerFolder != null || serverFolder == null)) return false;
+    final isSameServerVideos = _isSameServerVideos(trExt.serverVideos, serverVideos);
+    if (isSameServerFolder && isSameServerVideos) return true;
+    final serverVideosOrNone = serverVideos ?? const <NamidaVideo>[];
     // -- same path keeps the artwork hash key
-    final updatedTrExt = trExt.copyWith(path: fullPath, serverFolder: serverFolder, generatePathHash: false);
+    final updatedTrExt = trExt.copyWith(path: fullPath, serverFolder: serverFolder, serverVideos: serverVideosOrNone, generatePathHash: false);
     onTrackUpdated(updatedTrExt);
+    return true;
+  }
+
+  static bool _isSameServerVideos(List<NamidaVideo>? stored, List<NamidaVideo>? listed) {
+    if (stored == null || listed == null) return stored == listed;
+    if (stored.length != listed.length) return false;
+    for (int i = 0; i < stored.length; i++) {
+      final storedVideo = stored[i];
+      final listedVideo = listed[i];
+      if (storedVideo.path != listedVideo.path || storedVideo.sizeInBytes != listedVideo.sizeInBytes) return false;
+    }
     return true;
   }
 
@@ -354,6 +370,51 @@ class _ServerDiffManager {
     }
 
     return false;
+  }
+}
+
+// by claude
+/// one server folder's media files split into tracks and the videos named after them, see [SameNameVideosMatcher.matchFolder].
+class _ServerFolderMedia<E> {
+  final List<E> tracks;
+  final Map<E, List<E>> _videosByTrack;
+
+  const _ServerFolderMedia._(this.tracks, this._videosByTrack);
+
+  /// a video named after no track is a track itself only when [includeVideos].
+  factory _ServerFolderMedia.split(List<E> media, String Function(E entry) nameOf, {required bool includeVideos}) {
+    final trackByVideo = SameNameVideosMatcher.matchFolder(media, nameOf, trackExtensions: NamidaFileExtensionsWrapper.audio);
+    if (trackByVideo == null && includeVideos) return _ServerFolderMedia._(media, const {});
+
+    final tracks = <E>[];
+    final videosByTrack = <E, List<E>>{};
+    for (final entry in media) {
+      final track = trackByVideo?[entry];
+      if (track != null) {
+        videosByTrack.addForce(track, entry);
+      } else if (includeVideos || !nameOf(entry).isVideo()) {
+        tracks.add(entry);
+      }
+    }
+    return _ServerFolderMedia._(tracks, videosByTrack);
+  }
+
+  List<NamidaVideo>? serverVideosOf(E track, NamidaVideo Function(E video) toServerVideo) {
+    final videos = _videosByTrack[track];
+    return videos?.map(toServerVideo).toFixedList();
+  }
+
+  static NamidaVideo buildServerVideo(Uri serverUriParsed, String id, {required int? size, required int? creationMS}) {
+    return NamidaVideo(
+      path: _serverTrackPath(serverUriParsed, id),
+      height: 0,
+      width: 0,
+      sizeInBytes: size ?? 0,
+      frameratePrecise: 0,
+      creationTimeMS: creationMS ?? 0,
+      durationMS: 0,
+      bitrate: 0,
+    );
   }
 }
 
@@ -671,6 +732,7 @@ class _MusicWebServerAuthManager {
     final warningText = lang.someWebServersRequireAuthentication;
 
     NamidaNavigator.inst.navigateDialog(
+      shouldBlockTapsOnOpen: true,
       dialogBuilder: (theme) => CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,

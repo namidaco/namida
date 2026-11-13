@@ -1623,6 +1623,7 @@ final kDummyExtendedTrack = TrackExtended(
   isVideo: false,
   server: null,
   serverFolder: null,
+  serverVideos: null,
   hasNoEmbeddedArtwork: false,
 );
 

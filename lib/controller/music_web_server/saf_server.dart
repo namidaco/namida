@@ -69,15 +69,32 @@ class _SAFServer extends MusicWebServer {
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
     final diffState = forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback);
 
-    final mediaIndices = <int>[];
+    final mediaIndicesByDir = <int, List<int>>{};
     final lrcIndices = <int>[];
     final total = listing.length;
     for (int i = 0; i < total; i++) {
       final name = listing.names[i];
       if (NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(name)) {
-        mediaIndices.add(i);
+        mediaIndicesByDir.addForce(listing.dirIndices[i], i);
       } else if (NamidaFileExtensionsWrapper.lrc.isPathValid(name) || NamidaFileExtensionsWrapper.txt.isPathValid(name)) {
         lrcIndices.add(i);
+      }
+    }
+
+    NamidaVideo toServerVideo(int index) {
+      final size = listing.sizes[index];
+      return _ServerFolderMedia.buildServerVideo(serverUriParsed, listing.ids[index], size: size >= 0 ? size : null, creationMS: null);
+    }
+
+    final includeVideos = settings.includeVideos.value;
+    final trackIndices = <int>[];
+    final serverVideosByIndex = <int, List<NamidaVideo>>{};
+    for (final dirMediaIndices in mediaIndicesByDir.values) {
+      final folderMedia = _ServerFolderMedia.split(dirMediaIndices, (index) => listing.names[index], includeVideos: includeVideos);
+      for (final index in folderMedia.tracks) {
+        trackIndices.add(index);
+        final serverVideos = folderMedia.serverVideosOf(index, toServerVideo);
+        if (serverVideos != null) serverVideosByIndex[index] = serverVideos;
       }
     }
 
@@ -88,9 +105,10 @@ class _SAFServer extends MusicWebServer {
       final modifiedMS = listing.modifiedMS[index];
       final dirPath = listing.dirPaths[listing.dirIndices[index]];
       final serverFolder = dirPath.isEmpty ? null : dirPath;
+      final serverVideos = serverVideosByIndex[index];
       if (diffState != null) {
         final remoteModified = modifiedMS >= 0 ? DateTime.fromMillisecondsSinceEpoch(modifiedMS) : null;
-        final canSkip = diffState.checkCanSkipScanAndMarkExists(docId, remoteModified, serverFolder: serverFolder);
+        final canSkip = diffState.checkCanSkipScanAndMarkExists(docId, remoteModified, serverFolder: serverFolder, serverVideos: serverVideos);
         if (canSkip) return null;
       }
 
@@ -138,7 +156,7 @@ class _SAFServer extends MusicWebServer {
             'd': docId,
           },
         );
-        return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder);
+        return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder, serverVideos: serverVideos);
       } catch (_) {
         return null;
       } finally {
@@ -148,19 +166,19 @@ class _SAFServer extends MusicWebServer {
 
     final tracksBySibling = <String, TrackExtended>{};
     const batchSize = 4;
-    final mediaCount = mediaIndices.length;
-    for (int i = 0; i < mediaCount; i += batchSize) {
-      final end = (i + batchSize).withMaximum(mediaCount);
+    final tracksCount = trackIndices.length;
+    for (int i = 0; i < tracksCount; i += batchSize) {
+      final end = (i + batchSize).withMaximum(tracksCount);
       final futures = <Future<TrackExtended?>>[];
       for (int j = i; j < end; j++) {
-        futures.add(processMedia(mediaIndices[j]));
+        futures.add(processMedia(trackIndices[j]));
       }
       final results = await Future.wait(futures);
       for (int j = 0; j < results.length; j++) {
         final trExt = results[j];
         if (trExt == null) continue;
         callback(trExt);
-        if (lrcIndices.isNotEmpty) tracksBySibling[siblingKey(mediaIndices[i + j])] = trExt;
+        if (lrcIndices.isNotEmpty) tracksBySibling[siblingKey(trackIndices[i + j])] = trExt;
       }
     }
 

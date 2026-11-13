@@ -451,6 +451,9 @@ class TrackExtended {
   /// `/` separated, relative to [server].
   final String? serverFolder;
 
+  /// videos named after this track next to it on the server, they aren't tracks of their own. null when it has none.
+  final List<NamidaVideo>? serverVideos;
+
   /// set while indexing, false also means unknown.
   final bool hasNoEmbeddedArtwork;
 
@@ -517,8 +520,9 @@ class TrackExtended {
     required this.isVideo,
     required this.server,
     required this.serverFolder,
+    required List<NamidaVideo>? serverVideos,
     required this.hasNoEmbeddedArtwork,
-  });
+  }) : serverVideos = serverVideos == null || serverVideos.isEmpty ? null : serverVideos;
 
   late final String yearPreferyyyyMMdd = _computeYearPreferyyyyMMdd();
 
@@ -678,6 +682,7 @@ class TrackExtended {
     required bool isVideo,
     required String? server,
     required String? serverFolder,
+    required List<NamidaVideo>? serverVideos,
     required bool hasNoEmbeddedArtwork,
   }) {
     final artistsConfig = splitConfig.artistsConfig;
@@ -753,6 +758,7 @@ class TrackExtended {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      serverVideos: serverVideos,
       hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
     );
   }
@@ -822,8 +828,14 @@ class TrackExtended {
       isVideo: json['v'] ?? false,
       server: json['server'],
       serverFolder: json['serverFolder'],
+      serverVideos: _serverVideosFromJson(json['serverVideos']),
       hasNoEmbeddedArtwork: json['noArt'] ?? false,
     );
+  }
+
+  static List<NamidaVideo>? _serverVideosFromJson(dynamic json) {
+    if (json is! List || json.isEmpty) return null;
+    return json.map((e) => NamidaVideo.fromJson((e as Map).cast<String, dynamic>())).toFixedList();
   }
 
   static Map<String, String>? _extraTagsFromJson(dynamic json) {
@@ -878,6 +890,7 @@ class TrackExtended {
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
       if (serverFolder != null) 'serverFolder': serverFolder,
+      'serverVideos': ?serverVideos?.map((e) => e.toJson()).toFixedList(),
       if (hasNoEmbeddedArtwork) 'noArt': hasNoEmbeddedArtwork,
     };
   }
@@ -1163,6 +1176,7 @@ extension TrackExtUtils on TrackExtended {
       hashKey: newHashKey,
       server: server ?? this.server,
       serverFolder: serverFolder,
+      serverVideos: serverVideos,
     );
   }
 
@@ -1217,6 +1231,7 @@ extension TrackExtUtils on TrackExtended {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      serverVideos: serverVideos,
       hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
     );
   }
@@ -1278,6 +1293,7 @@ extension TrackExtUtils on TrackExtended {
     required bool generatePathHash,
     String? server,
     String? serverFolder,
+    List<NamidaVideo>? serverVideos,
     bool? hasNoEmbeddedArtwork,
   }) {
     final newPath = path ?? this.path;
@@ -1338,6 +1354,7 @@ extension TrackExtUtils on TrackExtended {
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,
       serverFolder: serverFolder ?? this.serverFolder,
+      serverVideos: serverVideos ?? this.serverVideos,
       hasNoEmbeddedArtwork: hasNoEmbeddedArtwork ?? this.hasNoEmbeddedArtwork,
     );
   }

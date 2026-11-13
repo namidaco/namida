@@ -1152,7 +1152,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
                 )
               : null
         : VideoSourceOptions(
-            source: AudioVideoSource.file(initialVideo.path),
+            source: await initialVideo.toVideoSource(),
             loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
             videoOnly: isVideo,
             durationMS: initialVideo.durationMS,
@@ -3374,10 +3374,19 @@ extension TrackToAudioSourceMediaItem on Selectable {
   }
 }
 
+extension NamidaVideoToVideoSource on NamidaVideo {
+  FutureOr<UriSource> toVideoSource() {
+    if (isNetwork) {
+      return _buildServerItemSource(path, serverFileSize: sizeInBytes, onFetched: (_) {});
+    }
+    return AudioVideoSource.file(path);
+  }
+}
+
 extension YoutubeIDToMediaItem on YoutubeID {
   String toMediaItemId() => id;
 
-  Future<MediaItem> toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) async {
+  Future<MediaItem> toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration, bool? isFavourite) async {
     final id = this.id.isNotEmpty ? this.id : videoInfo?.id ?? videoId;
     final videoTitle = videoInfo?.title ?? await YoutubeInfoController.utils.getVideoName(videoId);
     final artistAndTitle = videoTitle?.splitArtistAndTitle();
@@ -3511,19 +3520,11 @@ UriSource _buildCacheableAVSource(
   void disposeStream() => cacheStream.dispose(force: true);
   return AudioVideoSource.uri(
     cacheUrl,
-    headers: headers,
     onDispose: disposeStream,
   );
 }
 
-Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
-  final uri = Uri.parse(tr.path);
-  final res = MediaUrlParseResult.parseFromUri(uri);
-  final id = res.id;
-  if (id == null || id.isEmpty) return AudioVideoSource.file('');
-
-  final cacheFile = ServerCacheController.cacheFileFor(res.type, res.username, id);
-
+Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) {
   bool stillPlaying(String path) {
     final current = Player.inst.currentItem.value;
     return current is Selectable && path == current.track.path;
@@ -3539,9 +3540,20 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
     }
   }
 
+  return _buildServerItemSource(tr.path, serverFileSize: tr.size, onFetched: onFetched);
+}
+
+Future<UriSource> _buildServerItemSource(String serverItemPath, {required int serverFileSize, required void Function(File cachedFile) onFetched}) async {
+  final uri = Uri.parse(serverItemPath);
+  final res = MediaUrlParseResult.parseFromUri(uri);
+  final id = res.id;
+  if (id == null || id.isEmpty) return AudioVideoSource.file('');
+
+  final cacheFile = ServerCacheController.cacheFileFor(res.type, res.username, id);
+
   if (await cacheFile.exists()) {
     // -- kept files stay playable offline even if the server file changed since
-    if (ServerCacheController.inst.isKept(tr) || await cacheFile.fileSize() == tr.size) {
+    if (ServerCacheController.inst.isKept(serverItemPath) || await cacheFile.fileSize() == serverFileSize) {
       onFetched(cacheFile);
       return AudioVideoSource.file(cacheFile.path);
     } else {
@@ -3550,7 +3562,7 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
   }
 
   final uriDDLInfo = await MusicWebServer.baseUrlToActualUrl(
-    tr.path,
+    serverItemPath,
     uri: uri,
     onFetchedIfLocal: onFetched,
   );
