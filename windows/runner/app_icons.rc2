@@ -3,9 +3,13 @@
 
 IDI_APP_ICON_CUTSIE ICON "resources\\app_icon_cutsie.ico"
 IDI_APP_ICON_JELLYDA ICON "resources\\app_icon_jellyda.ico"
+IDI_APP_ICON_CUTSIEDA ICON "resources\\app_icon_cutsieda.ico"
+IDI_APP_ICON_KYUNDA ICON "resources\\app_icon_kyunda.ico"
+IDI_APP_ICON_DOKIDA ICON "resources\\app_icon_dokida.ico"
 IDI_APP_ICON_NAMIWEEN ICON "resources\\app_icon_namiween.ico"
 IDI_APP_ICON_EDDY ICON "resources\\app_icon_eddy.ico"
 IDI_APP_ICON_NAMICHIN ICON "resources\\app_icon_namichin.ico"
+IDI_APP_ICON_TETODA ICON "resources\\app_icon_tetoda.ico"
 IDI_APP_ICON_SPACE ICON "resources\\app_icon_space.ico"
 IDI_APP_ICON_RETRO ICON "resources\\app_icon_retro.ico"
 IDI_APP_ICON_OOKAMI ICON "resources\\app_icon_ookami.ico"

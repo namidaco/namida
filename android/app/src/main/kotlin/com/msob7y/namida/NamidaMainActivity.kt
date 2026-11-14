@@ -337,6 +337,7 @@ class NamidaMainActivity : FlutterActivity() {
             "namiween" -> LauncherIcon.NAMIWEEN
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
+            "tetoda" -> LauncherIcon.TETODA
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI

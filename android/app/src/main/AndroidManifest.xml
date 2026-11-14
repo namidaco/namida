@@ -85,6 +85,51 @@
 
         <activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.CutsiedaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_cutsieda"
+            android:roundIcon="@mipmap/ic_launcher_cutsieda"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.KyundaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_kyunda"
+            android:roundIcon="@mipmap/ic_launcher_kyunda"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.DokidaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_dokida"
+            android:roundIcon="@mipmap/ic_launcher_dokida"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.NamiweenIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_namiween"
@@ -119,6 +164,21 @@
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_namichin"
             android:roundIcon="@mipmap/ic_launcher_namichin"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.TetodaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_tetoda"
+            android:roundIcon="@mipmap/ic_launcher_tetoda"
             android:exported="true">
 
             <intent-filter>

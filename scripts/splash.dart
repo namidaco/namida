@@ -292,6 +292,30 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
+    'cutsieda',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      const _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      const _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
+    'kyunda',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      const _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      const _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
+    'dokida',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      const _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      const _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
     'namiween',
     ext: _ImgExtension.webp,
     authorInfos: [
@@ -311,6 +335,13 @@ final _appIcons = [
     ext: _ImgExtension.webp,
     authorInfos: [
       const _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'tetoda',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      const _AuthorInfo('𝙆𝙖𝙢𝙨𝙘', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
 
