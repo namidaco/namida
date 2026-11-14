@@ -163,6 +163,7 @@ class _AmbientViewState extends State<_AmbientView> {
     }
     return RepaintBoundary(
       child: CustomPaint(
+        size: Size.infinite,
         painter: _painter,
       ),
     );

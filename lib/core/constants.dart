@@ -560,17 +560,17 @@ enum AppPathsBackupEnum {
   // ================= User Data =================
   HISTORY_PLAYLIST(true),
   PLAYLISTS(true),
-  PLAYLISTS_ARTWORKS(true),
-  SMART_PLAYLISTS_ARTWORKS(true),
+  PLAYLISTS_ARTWORKS(true, true),
+  SMART_PLAYLISTS_ARTWORKS(true, true),
   PLAYLISTS_METADATA(true),
   QUEUES(true),
-  ARTWORKS(true),
-  ARTWORKS_ARTISTS(true),
-  ARTWORKS_ALBUMS(true),
+  ARTWORKS(true, true),
+  ARTWORKS_ARTISTS(true, true),
+  ARTWORKS_ALBUMS(true, true),
   PALETTES(true),
   VIDEOS_CACHE(true),
   AUDIOS_CACHE(true),
-  THUMBNAILS(true),
+  THUMBNAILS(true, true),
   LYRICS(true),
   M3UBackup(true),
   RECENTLY_DELETED(true),
@@ -580,11 +580,11 @@ enum AppPathsBackupEnum {
   YOUTIPIE_CACHE(true),
 
   YT_PLAYLISTS(true),
-  YT_PLAYLISTS_ARTWORKS(true),
+  YT_PLAYLISTS_ARTWORKS(true, true),
   YT_PLAYLISTS_METADATA(true),
   YT_HISTORY_PLAYLIST(true),
-  YT_THUMBNAILS(true),
-  YT_THUMBNAILS_CHANNELS(true),
+  YT_THUMBNAILS(true, true),
+  YT_THUMBNAILS_CHANNELS(true, true),
 
   YT_STATS(true),
   YT_PALETTES(true),
@@ -592,7 +592,8 @@ enum AppPathsBackupEnum {
   ;
 
   final bool isDir;
-  const AppPathsBackupEnum([this.isDir = false]);
+  final bool hasImages;
+  const AppPathsBackupEnum([this.isDir = false, this.hasImages = false]);
 
   /// whether this item supports being synced across devices.
   /// true: supported

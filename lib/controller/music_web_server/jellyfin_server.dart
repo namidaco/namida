@@ -153,7 +153,8 @@ class _JellyfinServer extends MusicWebServer {
       '/Audio/$id/stream',
       {
         'UserId': ?_wrapper._userId,
-        'api_key': ?_wrapper._token,
+        'ApiKey': ?_wrapper._token,
+        'api_key': ?_wrapper._token, // -- old servers might not know ApiKey
         'static': 'true',
       },
     );
@@ -509,13 +510,21 @@ class _JellyfinClientWrapper {
   String? _token;
   String? _deviceId;
   String? _version;
-  Completer<bool>? _authCompleter;
+  Completer<MusicWebServerError?>? _authCompleter;
+
+  bool get _isAuthenticated => _token != null && _userId != null;
 
   Future<bool> ensureAuthenticated() async {
-    if (_token != null && _userId != null) return true;
+    if (_isAuthenticated) return true;
+    final authError = await _authenticateIfNeeded();
+    return authError == null;
+  }
+
+  Future<MusicWebServerError?> _authenticateIfNeeded() async {
+    if (_isAuthenticated) return null;
     if (_authCompleter != null) return _authCompleter!.future;
 
-    _authCompleter = Completer<bool>();
+    _authCompleter = Completer<MusicWebServerError?>();
     try {
       _deviceId = await NamidaDeviceInfo.fetchDeviceId() ?? 'namida';
       _version = VersionWrapper.current?.name ?? '1.0.0';
@@ -538,21 +547,23 @@ class _JellyfinClientWrapper {
         );
       }
 
-      final success = _token != null && _userId != null;
-      _authCompleter!.complete(success);
-      return success;
-    } on DioException catch (_) {
-      _authCompleter!.complete(false);
-      return false;
+      final authError = _isAuthenticated ? null : const MusicWebServerError(code: 0, message: 'Jellyfin authentication failed');
+      _authCompleter!.complete(authError);
+      return authError;
+    } on DioException catch (e) {
+      final code = e.response?.statusCode ?? 0;
+      final message = e.response?.statusMessage ?? e.message ?? 'Unknown error';
+      final authError = MusicWebServerError(code: code, message: message);
+      _authCompleter!.complete(authError);
+      return authError;
     } finally {
       _authCompleter = null;
     }
   }
 
   Future<MusicWebServerError?> ping() async {
-    if (!await ensureAuthenticated()) {
-      return const MusicWebServerError(code: 0, message: 'Jellyfin authentication failed');
-    }
+    final authError = await _authenticateIfNeeded();
+    if (authError != null) return authError;
     try {
       await _api.getSystemInfo();
       return null;

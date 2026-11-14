@@ -90,6 +90,25 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     return (hasSharedTimestamps: hasSharedTimestamps, needsRomanization: needsRomanization);
   }
 
+  /// max lines of each secondary line: one each, then every extra line goes to the one with the most characters per line so far.
+  @visibleForTesting
+  static List<int> splitSecondaryLinesBudget(int budget, List<int> textLengths) {
+    final count = textLengths.length;
+    final linesCounts = List.filled(count, 1);
+    if (count == 0) return linesCounts;
+    var extraLinesLeft = budget - count;
+    while (extraLinesLeft > 0) {
+      var neediestIndex = 0;
+      for (var i = 1; i < count; i++) {
+        final isNeedier = textLengths[i] * linesCounts[neediestIndex] > textLengths[neediestIndex] * linesCounts[i];
+        if (isNeedier) neediestIndex = i;
+      }
+      linesCounts[neediestIndex]++;
+      extraLinesLeft--;
+    }
+    return linesCounts;
+  }
+
   @override
   State<SimpleLyricsLineWidget> createState() => _SimpleLyricsLineWidgetState();
 }
@@ -137,11 +156,13 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       return;
     }
 
+    final paintedHeightBehavior = widget.karaoke ? LyricsKaraokeText.textHeightBehavior : null;
     final painter = TextPainter(
       textDirection: direction,
       textAlign: widget.textAlign,
       textScaler: scaler,
       locale: locale,
+      textHeightBehavior: paintedHeightBehavior,
     );
     bool fits(TextStyle? style, int lines) {
       painter
@@ -164,7 +185,8 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
         _fitResultHeight = painter.height;
       } else {
         _fitResultMaxLines = maxLines + 1;
-        _fitResultHeight = scaler.scale(fontSize) * SimpleLyricsLineWidget._lineHeightFactor * _fitResultMaxLines;
+        final lineHeightPx = scaler.scale(fontSize) * SimpleLyricsLineWidget._lineHeightFactor;
+        _fitResultHeight = painter.height + lineHeightPx;
       }
     }
     painter.dispose();
@@ -402,9 +424,8 @@ class _LinesBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (secondaryLines.isEmpty) return primary;
-    final secondaryCount = secondaryLines.length;
-    final linesPerSecondary = secondaryLinesBudget ~/ secondaryCount;
-    final extraLinesCount = secondaryLinesBudget % secondaryCount;
+    final textLengths = secondaryLines.map((e) => e.readableText.length).toFixedList();
+    final linesCounts = SimpleLyricsLineWidget.splitSecondaryLinesBudget(secondaryLinesBudget, textLengths);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -413,12 +434,11 @@ class _LinesBlock extends StatelessWidget {
         ...secondaryLines.indexed.map(
           (e) {
             final (index, secondaryLine) = e;
-            final maxLines = index < extraLinesCount ? linesPerSecondary + 1 : linesPerSecondary;
             return _SecondaryLine(
               line: secondaryLine,
               baseStyle: baseStyle,
               textAlign: textAlign,
-              maxLines: maxLines.withMinimum(1),
+              maxLines: linesCounts[index],
             );
           },
         ),

@@ -256,6 +256,9 @@ class _NamidaWaveBarsPainter extends CustomPainter {
     required this.jelly,
   }) : super(repaint: jelly);
 
+  // -- true only on impeller
+  static final _isImpeller = ui.ImageFilter.isShaderFilterSupported;
+
   @override
   void paint(Canvas canvas, Size size) {
     final count = waveList.length;
@@ -289,7 +292,9 @@ class _NamidaWaveBarsPainter extends CustomPainter {
     if (jellyStretch != null && jellyStretch.length != count) jellyStretch = null;
     if (jellyStretch != null) maxLeft += halfBarWidth * _WaveformJelly.maxExtraWidth; // -- squashed bars widen past the played edge
     double left = gap;
-    final barsPath = Path();
+    // -- one draw for all bars, impeller gives each drawRRect its own render pass
+    // -- skia merges same-paint drawRRects into one draw, a many-contour path is heavier there
+    final barsPath = _isImpeller ? Path() : null;
     for (int i = 0; i < count; i++) {
       if (left > maxLeft) break;
       var barHeight = (heightPercentage * waveList[i]).clampDouble(barMinHeight, barMaxHeight);
@@ -305,11 +310,14 @@ class _NamidaWaveBarsPainter extends CustomPainter {
       }
       final halfHeight = barHeight / 2;
       final barRRect = RRect.fromLTRBR(barLeft, centerY - halfHeight, barRight, centerY + halfHeight, barRadius);
-      barsPath.addRRect(barRRect);
+      if (barsPath != null) {
+        barsPath.addRRect(barRRect);
+      } else {
+        canvas.drawRRect(barRRect, paint);
+      }
       left += barPitch;
     }
-    // -- one draw for all bars, impeller gives each drawRRect its own render pass
-    canvas.drawPath(barsPath, paint);
+    if (barsPath != null) canvas.drawPath(barsPath, paint);
   }
 
   @override

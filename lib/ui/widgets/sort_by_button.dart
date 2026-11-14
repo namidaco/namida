@@ -222,39 +222,42 @@ class SortByMenuGenres with SortByMenuBase {
   const SortByMenuGenres();
 
   @override
-  List<Widget> children(BuildContext context) => [
-    _SortAdvancedHeader(
-      onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(settings.activeGenreType.value),
-    ),
-    Obx(
-      (context) {
-        final sorting = settings.groupSortingOfR(MediaType.genre);
-        final isReversed = sorting.reverse;
-        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
-        return SortOptionsCards(
-          isReversed: isReversed,
-          onReverseTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !isReversed),
-          withSortKeyOptions: true,
-          prefixFilters: prefixFilters,
-        );
-      },
-    ),
-    ...GroupSortType.forGenres().map(
-      (e) => Obx(
+  List<Widget> children(BuildContext context) {
+    final genreType = settings.activeGenreType.value;
+    return [
+      _SortAdvancedHeader(
+        onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(settings.activeGenreType.value),
+      ),
+      Obx(
         (context) {
           final sorting = settings.groupSortingOfR(MediaType.genre);
-          return SmallListTile(
-            borderRadius: 12.0,
-            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-            title: e.toText(),
-            trailingIcon: e.toIcon(),
-            active: sorting.firstType == e,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSorting: sorting.withSingle(e)),
+          final isReversed = sorting.reverse;
+          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
+          return SortOptionsCards(
+            isReversed: isReversed,
+            onReverseTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !isReversed),
+            withSortKeyOptions: true,
+            prefixFilters: prefixFilters,
           );
         },
       ),
-    ),
-  ];
+      ...GroupSortType.forGenres(genreType).map(
+        (e) => Obx(
+          (context) {
+            final sorting = settings.groupSortingOfR(MediaType.genre);
+            return SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+              title: e.toText(),
+              trailingIcon: e.toIcon(),
+              active: sorting.firstType == e,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSorting: sorting.withSingle(e)),
+            );
+          },
+        ),
+      ),
+    ];
+  }
 }
 
 class SortByMenuLanguages with SortByMenuBase {
@@ -651,6 +654,7 @@ extension _SortTypeIgnorePrefix on SortType {
     SortType.albumArtist || SortType.albumArtistSort => TrackSearchFilter.albumartist,
     SortType.artistsList || SortType.artistSort => TrackSearchFilter.artist,
     SortType.genresList => TrackSearchFilter.genre,
+    SortType.stylesList => TrackSearchFilter.style,
     SortType.composer || SortType.composerSort => TrackSearchFilter.composer,
     SortType.filename => TrackSearchFilter.filename,
     SortType.year ||
@@ -681,6 +685,7 @@ extension _GroupSortTypeIgnorePrefix on GroupSortType {
     GroupSortType.albumArtist || GroupSortType.albumArtistSort => TrackSearchFilter.albumartist,
     GroupSortType.artistsList || GroupSortType.artistSort => TrackSearchFilter.artist,
     GroupSortType.genresList => TrackSearchFilter.genre,
+    GroupSortType.stylesList => TrackSearchFilter.style,
     GroupSortType.composer || GroupSortType.composerSort => TrackSearchFilter.composer,
     GroupSortType.title ||
     GroupSortType.year ||

@@ -33,6 +33,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -408,11 +409,13 @@ class BackupController {
 
       if (_kRestoreByOverwriting) {
         await extractBackup(backupzip);
+        ArtworkWidget.refreshAllImageFiles();
         Indexer.inst.calculateAllImageSizesInStorage();
         // Indexer.inst.updateColorPalettesSizeInStorage();
         await _reloadAllFromStorage();
       } else {
         final failedItems = await mergeBackup(backupzip);
+        ArtworkWidget.refreshAllImageFiles();
         if (failedItems.isNotEmpty) {
           final failedNames = failedItems.map((e) => e.name).join(', ');
           snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: failedNames, isError: true);

@@ -50,6 +50,8 @@ finish-args:
   - --system-talk-name=org.freedesktop.NetworkManager
   # mpv needs the C locale for number parsing
   - --env=LC_NUMERIC=C
+  # runtime font config minus the host font caches, flutter hangs on entries from them (#1403)
+  - --env=FONTCONFIG_FILE=/app/etc/fonts/fonts.conf
 
 cleanup:
   - /include
@@ -149,6 +151,18 @@ modules:
           project-id: 5348
           stable-only: true
           url-template: https://github.com/mpv-player/mpv/archive/v$version.tar.gz
+
+  # ------------------------------------------------------------------ fonts
+  - name: fontconfig-no-host-caches
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/etc/fonts/conf.d
+      - ln -s /etc/fonts/conf.d/* /app/etc/fonts/conf.d/
+      - rm /app/etc/fonts/conf.d/50-flatpak.conf
+      - grep -v -e /run/host/fonts-cache -e /run/host/user-fonts-cache /etc/fonts/conf.d/50-flatpak.conf > /app/etc/fonts/conf.d/50-flatpak.conf
+      - sed 's|>[^<]*conf\.d</include>|>/app/etc/fonts/conf.d</include>|' /etc/fonts/fonts.conf > /app/etc/fonts/fonts.conf
+      - grep -q '>/app/etc/fonts/conf.d</include>' /app/etc/fonts/fonts.conf
+      - '! grep -Rq -e /run/host/fonts-cache -e /run/host/user-fonts-cache /app/etc/fonts'
 
   # ------------------------------------------------------------------ the app
   - name: namida

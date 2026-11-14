@@ -92,6 +92,7 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
       artUrl: mediaItem.artUri?.toString(),
       lyrics: lyrics,
       url: _getMediaUrl(mediaItem),
+      isFavourite: mediaItem.rating?.hasHeart(),
     );
     mpris?.metadata = metadata;
   }
@@ -432,6 +433,7 @@ class _CustomMPRISService extends MPRISService {
 
 class _NamidaMPRISMetadata extends Metadata {
   final String? url;
+  final bool? isFavourite;
 
   _NamidaMPRISMetadata({
     required super.trackId,
@@ -443,15 +445,18 @@ class _NamidaMPRISMetadata extends Metadata {
     super.albumName,
     super.albumArtist,
     required this.url,
+    required this.isFavourite,
   });
 
   @override
   DBusValue toValue() {
     final value = super.toValue();
     final url = this.url;
-    if (url == null) return value;
+    final isFavourite = this.isFavourite;
+    if (url == null && isFavourite == null) return value;
     final entries = value.asStringVariantDict();
-    entries['xesam:url'] = DBusString(url);
+    if (url != null) entries['xesam:url'] = DBusString(url);
+    if (isFavourite != null) entries['xesam:userRating'] = DBusDouble(isFavourite ? 1.0 : 0.0);
     return DBusDict.stringVariant(entries);
   }
 }

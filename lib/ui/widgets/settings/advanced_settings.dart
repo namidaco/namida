@@ -728,26 +728,27 @@ class _ClearImageCacheListTile extends StatefulWidget {
 }
 
 class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
-  final mainDirs = {
+  static final _mainDirs = {
     AppDirs.ARTWORKS,
     AppDirs.THUMBNAILS,
     AppDirs.ARTWORKS_ARTISTS,
     AppDirs.ARTWORKS_ALBUMS,
-    AppDirs.YT_THUMBNAILS,
-    AppDirs.YT_THUMBNAILS_CHANNELS,
+    StorageCacheManager.trimmedImageDirs.videos,
+    StorageCacheManager.trimmedImageDirs.channels,
   };
 
   final dirsMapRx = <String, int>{}.obs;
-  final totalBytesRx = (-1).obs;
+  final usedBytesRx = Rxn<({int trimmedBytes, int otherBytes})>();
 
   final dirsChoosen = <String>[].obs;
 
   @override
   void initState() {
     super.initState();
+    final trimmedDirs = StorageCacheManager.trimmedImageDirs;
     dirsChoosen.addAll([
-      AppDirs.YT_THUMBNAILS,
-      AppDirs.YT_THUMBNAILS_CHANNELS,
+      trimmedDirs.videos,
+      trimmedDirs.channels,
     ]);
     _fillSizes();
   }
@@ -755,14 +756,27 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   @override
   void dispose() {
     dirsMapRx.close();
+    usedBytesRx.close();
     dirsChoosen.close();
     super.dispose();
   }
 
   void _fillSizes() async {
-    final res = await _fillSizesIsolate.thready(mainDirs);
+    final res = await _fillSizesIsolate.thready(_mainDirs);
+    if (!mounted) return;
     dirsMapRx.value = res;
-    totalBytesRx.value = res.values.fold(0, (previousValue, element) => previousValue + element);
+    final trimmedDirs = StorageCacheManager.trimmedImageDirs;
+    int trimmedBytes = 0;
+    int otherBytes = 0;
+    for (final e in res.entries) {
+      final dirPath = e.key;
+      if (dirPath == trimmedDirs.videos || dirPath == trimmedDirs.channels) {
+        trimmedBytes += e.value;
+      } else {
+        otherBytes += e.value;
+      }
+    }
+    usedBytesRx.value = (trimmedBytes: trimmedBytes, otherBytes: otherBytes);
   }
 
   static Map<String, int> _fillSizesIsolate(Set<String> dirs) {
@@ -776,9 +790,10 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: totalBytesRx,
-      builder: (context, totalBytes) {
-        final usedText = totalBytes < 0 ? '?' : totalBytes.fileSizeFormatted;
+      rx: usedBytesRx,
+      builder: (context, usedBytes) {
+        final trimmedText = usedBytes?.trimmedBytes.fileSizeFormatted ?? '?';
+        final otherText = usedBytes?.otherBytes.fileSizeFormatted ?? '?';
         return CustomListTile(
           bgColor: widget.bgColor,
           leading: const StackedIcon(
@@ -786,7 +801,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
             secondaryIcon: Broken.close_circle,
           ),
           title: lang.clearImageCache,
-          subtitle: '${lang.used}: $usedText',
+          subtitle: '${lang.used}: $trimmedText (+$otherText)',
           trailing: _CacheLimitWheel(
             setting: settings.imagesMaxCacheInMB,
             stepper: 8 * 4,
@@ -827,7 +842,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                   rx: dirsMapRx,
                   builder: (context, dirsMap) => Column(
                     children: [
-                      ...mainDirs.map(
+                      ..._mainDirs.map(
                         (e) {
                           final bytes = dirsMap[e] ?? 0;
                           final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';

@@ -46,7 +46,6 @@ void showSetTrackStatsDialog({
                 lastError = error ?? lastError;
               }
             },
-            keepFileDates: true,
             displayFFmpegFallbackWarning: false,
           )
           .ignoreError();
@@ -124,7 +123,6 @@ void showSetTrackStatsDialogSimple({
               snackyy(title: lang.warning, message: msg, isError: true);
             }
           },
-          keepFileDates: true,
           displayFFmpegFallbackWarning: false,
         )
         .ignoreError();

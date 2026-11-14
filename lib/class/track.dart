@@ -430,6 +430,7 @@ class TrackExtended {
   final String releaseType;
   final int? bpm;
   final String musicalKey;
+  final ExplicitStatus? explicitStatus;
   final double rating;
   final String? originalTags;
   final List<String> tagsList;
@@ -507,6 +508,7 @@ class TrackExtended {
     required this.releaseType,
     required this.bpm,
     required this.musicalKey,
+    required this.explicitStatus,
     required this.rating,
     required this.originalTags,
     required this.tagsList,
@@ -671,6 +673,7 @@ class TrackExtended {
     required String releaseType,
     required int? bpm,
     required String musicalKey,
+    required ExplicitStatus? explicitStatus,
     required double rating,
     required String? originalTags,
     required ReplayGainData? gainData,
@@ -739,6 +742,7 @@ class TrackExtended {
       releaseType: releaseType,
       bpm: bpm,
       musicalKey: musicalKey,
+      explicitStatus: explicitStatus,
       rating: rating,
       originalTags: originalTags,
       tagsList: Indexer.splitGeneral(originalTags, tagged: multiValues?.tags, config: generalConfig),
@@ -817,6 +821,7 @@ class TrackExtended {
       releaseType: json['releaseType'] ?? '',
       bpm: json['bpm'] as int?,
       musicalKey: json['musicalKey'] ?? '',
+      explicitStatus: ExplicitStatus.values.getEnum(json['explicit']),
       rating: json['rating'] ?? 0.0,
       originalTags: json['originalTags'],
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
@@ -879,6 +884,7 @@ class TrackExtended {
       if (releaseType.isNotEmpty) 'releaseType': releaseType,
       if (bpm != null && bpm! > 0) 'bpm': bpm,
       if (musicalKey.isNotEmpty) 'musicalKey': musicalKey,
+      'explicit': ?explicitStatus?.name,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': ?gainData?.toMap(),
@@ -1122,6 +1128,8 @@ extension TrackExtUtils on TrackExtended {
 
     final yearText = tag.year;
     final year = yearText == null ? this.year : TrackExtended.enforceYearFormat(yearText) ?? 0;
+    final itunesAdvisory = tag.itunesAdvisory;
+    final explicitStatus = itunesAdvisory == null ? this.explicitStatus : ExplicitStatus.fromTagValue(itunesAdvisory);
     final firstWrapper = albumsIdentifiersWrappers.firstOrNull;
 
     return TrackExtended.derive(
@@ -1153,6 +1161,7 @@ extension TrackExtUtils on TrackExtended {
       releaseType: tag.releaseType ?? releaseType,
       bpm: tag.bpm ?? bpm,
       musicalKey: tag.musicalKey ?? musicalKey,
+      explicitStatus: explicitStatus,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
       gainData: tag.gainData ?? gainData,
@@ -1220,6 +1229,7 @@ extension TrackExtUtils on TrackExtended {
       releaseType: releaseType,
       bpm: bpm,
       musicalKey: musicalKey,
+      explicitStatus: explicitStatus,
       rating: rating,
       originalTags: originalTags,
       gainData: gainData,
@@ -1341,6 +1351,7 @@ extension TrackExtUtils on TrackExtended {
       releaseType: releaseType ?? this.releaseType,
       bpm: bpm ?? this.bpm,
       musicalKey: musicalKey ?? this.musicalKey,
+      explicitStatus: this.explicitStatus,
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,

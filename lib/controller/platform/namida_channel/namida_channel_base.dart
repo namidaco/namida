@@ -134,10 +134,11 @@ abstract class NamidaChannel {
 
   Future<void> logPreviousAbnormalExits() async {}
 
-  /// wether the media command (play, next, etc) that woke the app was sent by us (home widget/quick settings tile).
+  /// wether the media command (play, next, etc) that woke the app was sent by us (home widget/quick settings tile)
+  /// or by an app browsing the library (android auto, wear).
   /// external commands (bluetooth, system media resumption, etc) can be sent without user intention,
   /// so they shouldn't start playback on a cold start.
-  Future<bool> consumeSelfSentMediaCommand() async => true;
+  Future<bool> consumeTrustedMediaCommand() async => true;
 
   final _onResume = <FutureOr<void> Function()>[];
   final _onSuspending = <FutureOr<void> Function()>[];

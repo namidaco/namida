@@ -63,6 +63,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
       }
       if (videos.length >= 50) break;
     }
+    videos.remove('');
     return videos.values;
   }
 
@@ -161,8 +162,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
               builder: (context, isImportingPlaylists) => CustomListTile(
                 title: lang.import,
                 icon: Broken.import_2,
-                subtitle:
-                    'Import takeout playlists. pick a single playlists directory, or a directory with multiple takeouts (folders/zips). duplicate playlists will be merged and video-sorted by date added',
+                subtitle: 'Import takeout playlists. pick a single playlists directory, or a directory with multiple takeouts (folders/zips). duplicate playlists will be merged and video-sorted by date added',
                 enabled: !isImportingPlaylists,
                 trailing: NamidaIconButton(
                   tooltip: () => lang.open,
@@ -277,14 +277,17 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                 builder: (context, currentMostPlayedTimeRange) => ObxO(
                   rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
                   builder: (context, listensMap) {
+                    final totalVideosCount = listensMap.length;
                     final videos = listensMap.keysSortedByValue
+                        .where((e) => e.isNotEmpty)
+                        .take(100)
                         .map(
                           (e) => YoutubeID(
                             id: e,
                             playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
                           ),
                         )
-                        .toList();
+                        .toFixedList();
                     return _HorizontalSliverList(
                       queueSource: QueueSourceYoutubeID.ytMostPlayed,
                       title: lang.mostPlayed,
@@ -295,14 +298,14 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       subHeader: (scrollToStart) => YTMostPlayedVideosPage.getChipRow(context, onTimeRangeChanged: scrollToStart),
                       playlistName: '',
                       playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
-                      totalVideosCountInMainList: videos.length,
+                      totalVideosCountInMainList: totalVideosCount,
                       displayShimmer: totalLength == -1,
                       listensMap: listensMap,
                       playlistInfo: () => PlaylistBasicInfo(
                         id: '',
                         title: lang.mostPlayed,
-                        videosCountText: videos.length.displayVideoKeyword,
-                        videosCount: videos.length,
+                        videosCountText: totalVideosCount.displayVideoKeyword,
+                        videosCount: totalVideosCount,
                         thumbnails: [],
                       ),
                     );

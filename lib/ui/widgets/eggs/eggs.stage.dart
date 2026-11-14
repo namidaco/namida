@@ -22,22 +22,26 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
   // -- where Curves.bounceOut first touches the ground
   static const _kLandingPoint = 1 / 2.75;
 
-  late final _revealController = AnimationController(vsync: this);
+  late final _revealController = AnimationController(vsync: this, animationBehavior: AnimationBehavior.preserve);
   late final _waveController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1200),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final _wiggleController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 550),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final _gainController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final _sixSevenController = AnimationController(
     vsync: this,
     duration: _SixSevenGesture._kDuration,
+    animationBehavior: AnimationBehavior.preserve,
   );
 
   final _shown = <NamidaEgg>{};
@@ -491,6 +495,7 @@ class _PoppingEggState extends State<_PoppingEgg> with TickerProviderStateMixin 
   late final _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
+    animationBehavior: AnimationBehavior.preserve,
   );
   AnimationController? _sixSevenController;
 
@@ -505,6 +510,7 @@ class _PoppingEggState extends State<_PoppingEgg> with TickerProviderStateMixin 
     final sixSevenController = AnimationController(
       vsync: this,
       duration: _SixSevenGesture._kDuration,
+      animationBehavior: AnimationBehavior.preserve,
     );
     _sixSevenController = sixSevenController;
     popped.then((_) => sixSevenController.forward());

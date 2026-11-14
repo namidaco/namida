@@ -55,6 +55,9 @@ object NamidaFileUtils {
             for (sp in storagePaths) {
               if (sp.endsWith("/$volumeId") && File(buildPath(sp)).exists()) return buildPath(sp)
             }
+            // -- some volumes are mounted there without being listed (#199)
+            val volumePath = buildPath("/storage/$volumeId")
+            if (File(volumePath).exists()) return volumePath
           }
           // -- this only to handle when same file path exists in 2 storages
           // -- we check manually if primary storage selected

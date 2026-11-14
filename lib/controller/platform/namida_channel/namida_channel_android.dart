@@ -122,12 +122,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
-  Future<bool> consumeSelfSentMediaCommand() async {
+  Future<bool> consumeTrustedMediaCommand() async {
     try {
-      final res = await _channel.invokeMethod<bool?>('consumeSelfSentMediaCommand');
+      final res = await _channel.invokeMethod<bool?>('consumeTrustedMediaCommand');
       return res ?? false;
     } catch (_) {
-      // -- no activity (ex: service started by external command)
       return false;
     }
   }

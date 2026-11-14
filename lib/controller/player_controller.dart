@@ -1339,8 +1339,8 @@ class Player {
   static AVPlayer createTempPlayer({bool disableVideo = true}) {
     return NamidaAudioVideoHandler.createPlayer(
       disableVideo: disableVideo,
-      exoplayerCreator: () => AudioPlayer(preferSWDecoders: false),
-      exoplayerSWCreator: () => AudioPlayer(preferSWDecoders: true),
+      exoplayerCreator: () => AudioPlayer(preferSWDecoders: false, isMainPlayer: false),
+      exoplayerSWCreator: () => AudioPlayer(preferSWDecoders: true, isMainPlayer: false),
     );
   }
 }

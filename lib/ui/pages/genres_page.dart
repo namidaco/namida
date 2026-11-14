@@ -86,7 +86,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
             final sort = sorting.entries.first.type;
             final sortReverse = sorting.reverse;
 
-            final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
+            final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.stylesList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
             final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGenresExtraTextResolver(genreType, sort);
 
             final String Function({required int count}) countToText = switch (genreType) {

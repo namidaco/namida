@@ -710,6 +710,8 @@ class CustomBlurryDialog extends StatelessWidget {
           backgroundColor: ctxth.dialogTheme.backgroundColor,
           surfaceTintColor: Colors.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
+          // -- the keyboard space has to exist in the same frame the focused field asks to be revealed
+          insetAnimationDuration: Duration.zero,
           clipBehavior: Clip.antiAlias,
           child: _DialogContentNoSystemPadding(
             child: ConstrainedBox(

@@ -558,7 +558,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final lyricsIntegrations = _keySet<LyricsIntegration>('lyricsIntegrations', const {}, item: LyricsIntegration.values.asCodec(), sync: false);
   late final proxyUrl = _key('proxyUrl', '', sync: false);
 
-  static const _kDefaultWebhookEvents = {WebhookEvent.trackChanged, WebhookEvent.play, WebhookEvent.pause};
+  static const _kDefaultWebhookEvents = {WebhookEvent.trackChanged, WebhookEvent.play, WebhookEvent.pause, WebhookEvent.favouriteChanged};
 
   bool didSupportNamida = false;
   late final eggs = _keyObject<EggsData>('eggs', const EggsData(), EggsData.fromJson, (v) => v.toJson());

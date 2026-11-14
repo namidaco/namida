@@ -43,21 +43,6 @@ class SelectedTracksController {
 
   NamidaRoute? get _currentRoute => NamidaNavigator.inst.currentRoute;
 
-  Iterable<Selectable> getCurrentAllTracks({bool fallbackToQueue = true}) {
-    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      return SearchSortController.inst.trackSearchTemp.value;
-    }
-
-    final tracks = this._currentRoute?.tracksInside();
-    if (tracks != null) return tracks;
-
-    if (fallbackToQueue && MiniPlayerController.inst.isInQueue) {
-      return Player.inst.currentQueue.value.whereType<Selectable>();
-    }
-
-    return [];
-  }
-
   final isMenuMinimized = true.obs;
   final isPressed = false.obs;
 
@@ -161,7 +146,7 @@ class SelectedTracksController {
     bottomPadding.value = 0.0;
   }
 
-  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList() {
+  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) getCurrentActiveTracksList() {
     if (MiniPlayerController.inst.isInQueue && !Dimensions.inst.miniplayerIsWideScreen) {
       final queue = Player.inst.currentQueue.value;
       final searchResults = MiniPlayerController.inst.queueSearch.results.value;
@@ -182,7 +167,7 @@ class SelectedTracksController {
   }
 
   void selectAllTracks({(int, int)? range}) {
-    final currentInfo = _getCurrentActiveTracksList();
+    final currentInfo = getCurrentActiveTracksList();
     final tracks = currentInfo.$1;
     final routeTracks = currentInfo.$3;
 

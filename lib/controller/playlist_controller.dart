@@ -1046,6 +1046,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     return await super.writePlaylistToStorage(playlist);
   }
 
+  /// m3u playlists stay bound to their file by path, saving under [newName] writes the new properties.
+  @override
+  Future<bool> renamePlaylistInStorage(LocalPlaylist playlist, String newName) async {
+    final m3uPath = playlist.m3uPath;
+    final isM3U = m3uPath != null && m3uPath.isNotEmpty;
+    if (isM3U) {
+      _m3uProperties.remove(playlist.name);
+      return true;
+    }
+    return await super.renamePlaylistInStorage(playlist, newName);
+  }
+
   @override
   Future<void> removePlaylist(LocalPlaylist playlist) async {
     await super.removePlaylist(playlist);

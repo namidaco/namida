@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 
 import 'package:audio_service/audio_service.dart';
@@ -197,6 +198,9 @@ class Indexer<T extends Track> {
     int? size,
   }) async {
     if (imagePath == null && track == null) return FArtwork.dummy();
+
+    // -- custom artwork paths must never get the track art written into them
+    if (track != null && imagePath != null && imagePath != track.pathToImage) track = null;
 
     final strategy = _getArtworkStrategy(
       imagePath: imagePath,
@@ -598,7 +602,8 @@ class Indexer<T extends Track> {
       FileStatsAdv? fileStat;
       try {
         fileStat = stats ?? FileStatsAdv.fromFileStat(await File(trackPath).stat());
-        if (minSize > 0 && (fileStat.size ?? 0) < minSize) {
+        final size = fileStat.size;
+        if (minSize > 0 && size != null && size < minSize) {
           return onMinSizeTrigger();
         }
       } catch (_) {}
@@ -688,6 +693,13 @@ class Indexer<T extends Track> {
   }
 
   static final _emptyTags = FTags.edit(path: '', artwork: FArtwork.dummy());
+
+  @visibleForTesting
+  static bool isIndexedTrackFiltered({required int sizeInB, required int durationMS, required int minSize, required int minDurMS}) {
+    final isTooSmall = sizeInB != 0 && sizeInB < minSize;
+    final isTooShort = durationMS != 0 && durationMS < minDurMS;
+    return isTooSmall || isTooShort;
+  }
 
   Future<TrackExtended?> getTrackInfo({
     required String trackPath,
@@ -1321,8 +1333,14 @@ class Indexer<T extends Track> {
     /// removes tracks after changing `duration` or `size`.
     final replacedDuplicatePaths = duplicatesResolver?.replacedPaths;
     int networkTracksRemoved = 0;
+    final minDurMS = minDur * 1000;
     tracksInfoList.removeWhere((tr) {
-      final isFiltered = (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
+      final isFiltered = isIndexedTrackFiltered(
+        sizeInB: tr.size,
+        durationMS: tr.durationMS,
+        minSize: minSize,
+        minDurMS: minDurMS,
+      );
       final isReplacedDuplicate = replacedDuplicatePaths?.contains(tr.path) == true;
       final remove = isFiltered || isReplacedDuplicate || networkTrackMapsToRemove.any((map) => map.containsKey(tr.path));
       if (remove) {

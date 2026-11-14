@@ -184,28 +184,33 @@ extension TracksUtils on List<Track> {
   }
 
   int get yearOldest {
-    int oldest = 0;
+    final oldestIndex = _indexOfOldestYear();
+    if (oldestIndex == -1) return 0;
+    return this[oldestIndex].year;
+  }
+
+  int yearOldestPreferyyyyMMdd() {
+    final oldestIndex = _indexOfOldestYear();
+    if (oldestIndex == -1) return 0;
+    return _yearAsyyyyMMdd(this[oldestIndex].year);
+  }
+
+  int _indexOfOldestYear() {
+    int oldestIndex = -1;
     int oldestAsyyyyMMdd = 0;
     for (int i = 0; i < length; i++) {
       final y = this[i].year;
       if (y == 0) continue;
-      final asyyyyMMdd = y < 10000 ? y * 10000 + 101 : y;
-      if (oldest == 0 || asyyyyMMdd < oldestAsyyyyMMdd) {
-        oldest = y;
+      final asyyyyMMdd = _yearAsyyyyMMdd(y);
+      if (oldestIndex == -1 || asyyyyMMdd < oldestAsyyyyMMdd) {
+        oldestIndex = i;
         oldestAsyyyyMMdd = asyyyyMMdd;
       }
     }
-    return oldest;
+    return oldestIndex;
   }
 
-  String get yearPreferyyyyMMdd {
-    if (isEmpty) return '';
-    for (int i = length - 1; i >= 0; i--) {
-      final y = this[i].yearPreferyyyyMMdd;
-      if (y != '') return y;
-    }
-    return '';
-  }
+  static int _yearAsyyyyMMdd(int year) => year < 10000 ? year * 10000 + 101 : year;
 
   /// should be upgraded to check if image file exist, but performance...
   String get pathToImage {
@@ -284,6 +289,7 @@ extension TracksUtils on List<Track> {
 
   String get originalArtist => _firstNonEmpty((e) => e.originalArtist);
   String get originalGenre => _firstNonEmpty((e) => e.originalGenre);
+  String get originalStyle => _firstNonEmpty((e) => e.originalStyle);
   String get composer => _firstNonEmpty((e) => e.composer);
   String get recordLabel => _firstNonEmpty((e) => e.label);
   String get releaseType => _firstNonEmpty((e) => e.releaseType);

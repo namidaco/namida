@@ -2271,6 +2271,7 @@ extension SortTypeL10n on SortType {
     SortType.path => lang.path,
     SortType.duration => lang.duration,
     SortType.genresList => lang.genres,
+    SortType.stylesList => lang.styles,
     SortType.sampleRate => lang.sampleRate,
     SortType.bitDepth => lang.bitDepth,
     SortType.bpm => 'BPM',
@@ -2296,6 +2297,7 @@ extension SortTypeL10n on SortType {
     SortType.artistsList => MediaType.artist.toIcon(),
     SortType.albumArtist => MediaType.albumArtist.toIcon(),
     SortType.genresList => MediaType.genre.toIcon(),
+    SortType.stylesList => MediaType.style.toIcon(),
     SortType.composer => MediaType.composer.toIcon(),
     SortType.trackNo => Broken.hashtag,
     SortType.discNo => Broken.hashtag,
@@ -2368,6 +2370,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.albumArtist => lang.albumArtist,
     GroupSortType.artistsList => lang.artist,
     GroupSortType.genresList => lang.genres,
+    GroupSortType.stylesList => lang.styles,
     GroupSortType.composer => lang.composer,
     GroupSortType.label => lang.recordLabel,
     GroupSortType.releaseType => lang.releaseType,
@@ -2399,6 +2402,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.artistsList => MediaType.artist.toIcon(),
     GroupSortType.albumArtist => MediaType.albumArtist.toIcon(),
     GroupSortType.genresList => MediaType.genre.toIcon(),
+    GroupSortType.stylesList => MediaType.style.toIcon(),
     GroupSortType.composer => MediaType.composer.toIcon(),
     GroupSortType.numberOfTracks => Broken.hashtag,
     GroupSortType.year => Broken.calendar,
@@ -3077,15 +3081,13 @@ extension FABTypeL10n on FABType {
   String toText() => switch (this) {
     FABType.none => lang.none,
     FABType.search => lang.search,
-    FABType.shuffle => lang.shuffle,
-    FABType.play => lang.play,
+    FABType.play || FABType.shuffle || FABType.playNext || FABType.playLast => quickPlayMode!.toText(),
   };
 
   IconData toIcon() => switch (this) {
     FABType.none => Broken.status,
     FABType.search => Broken.search_normal,
-    FABType.shuffle => Broken.shuffle,
-    FABType.play => Broken.play_cricle,
+    FABType.play || FABType.shuffle || FABType.playNext || FABType.playLast => quickPlayMode!.toIcon(),
   };
 }
 
@@ -3496,6 +3498,7 @@ extension WebhookEventL10n on WebhookEvent {
     WebhookEvent.trackChanged => 'Track changed',
     WebhookEvent.play => lang.play,
     WebhookEvent.pause => lang.pause,
+    WebhookEvent.favouriteChanged => lang.favourite,
   };
 }
 
@@ -3504,6 +3507,7 @@ extension WebhookEventUtils on WebhookEvent {
     WebhookEvent.trackChanged => Broken.music,
     WebhookEvent.play => Broken.play,
     WebhookEvent.pause => Broken.pause,
+    WebhookEvent.favouriteChanged => Broken.heart,
   };
 }
 

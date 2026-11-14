@@ -11,7 +11,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-class MultiArtworkContainer extends StatelessWidget {
+class MultiArtworkContainer extends StatefulWidget {
   final double size;
   final Widget? child;
   final Widget? onTopWidget;
@@ -41,18 +41,55 @@ class MultiArtworkContainer extends StatelessWidget {
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
   });
 
+  @override
+  State<MultiArtworkContainer> createState() => _MultiArtworkContainerState();
+}
+
+class _MultiArtworkContainerState extends State<MultiArtworkContainer> {
+  late bool _hasCustomArtwork = _checkCustomArtwork();
+
+  bool _checkCustomArtwork() => widget.artworkFile?.existsSync() == true;
+
+  void _onArtworkFileChanged() => refreshState(() => _hasCustomArtwork = _checkCustomArtwork());
+
+  @override
+  void initState() {
+    super.initState();
+    final artworkPath = widget.artworkFile?.path;
+    if (artworkPath != null) ArtworkWidget.addImageFileListener(artworkPath, _onArtworkFileChanged);
+  }
+
+  @override
+  void didUpdateWidget(MultiArtworkContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldArtworkPath = oldWidget.artworkFile?.path;
+    final artworkPath = widget.artworkFile?.path;
+    if (oldArtworkPath == artworkPath) return;
+    if (oldArtworkPath != null) ArtworkWidget.removeImageFileListener(oldArtworkPath, _onArtworkFileChanged);
+    if (artworkPath != null) ArtworkWidget.addImageFileListener(artworkPath, _onArtworkFileChanged);
+    _hasCustomArtwork = _checkCustomArtwork();
+  }
+
+  @override
+  void dispose() {
+    final artworkPath = widget.artworkFile?.path;
+    if (artworkPath != null) ArtworkWidget.removeImageFileListener(artworkPath, _onArtworkFileChanged);
+    super.dispose();
+  }
+
   bool _isFanCollage(ArtworkCollageStyle collageStyle, bool hasCustomArtwork) {
     if (collageStyle != ArtworkCollageStyle.fanStack) return false;
     if (hasCustomArtwork) return false;
-    final tracksCount = tracks?.length ?? 0;
+    final tracksCount = widget.tracks?.length ?? 0;
     return tracksCount >= 2;
   }
 
   @override
   Widget build(BuildContext context) {
     final scope = ArtworkContainerScope.maybeOf(context);
-    final artworkFile = this.artworkFile;
-    final hasCustomArtwork = artworkFile != null && artworkFile.existsSync();
+    final artworkFile = widget.artworkFile;
+    final tracks = widget.tracks;
+    final hasCustomArtwork = _hasCustomArtwork;
     final existingArtworkFile = hasCustomArtwork ? artworkFile : null;
     return ObxO(
       rx: settings.artworkCollageStyle,
@@ -77,10 +114,10 @@ class MultiArtworkContainer extends StatelessWidget {
               );
         final framePadding = isBare ? EdgeInsets.zero : const EdgeInsets.all(3.0);
         final frameInset = isBare ? 0.0 : 6.0;
-        final frameMargin = isBare ? EdgeInsets.zero : margin ?? const EdgeInsets.symmetric(horizontal: 12.0);
+        final frameMargin = isBare ? EdgeInsets.zero : widget.margin ?? const EdgeInsets.symmetric(horizontal: 12.0);
         return LayoutBuilder(
           builder: (context, constraints) {
-            final size = this.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
+            final size = widget.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
             final drawnSize = size * fanScale;
             final innerSize = drawnSize - frameInset;
             final container = NContainer(
@@ -91,8 +128,8 @@ class MultiArtworkContainer extends StatelessWidget {
               height: drawnSize,
               decoration: frameDecoration,
               child: NamidaHero(
-                enabled: enableHero,
-                tag: heroTag,
+                enabled: widget.enableHero,
+                tag: widget.heroTag,
                 flightBorderRadius: isBare ? null : frameRadius,
                 child: Container(
                   clipBehavior: isBare ? Clip.none : Clip.antiAlias,
@@ -109,18 +146,18 @@ class MultiArtworkContainer extends StatelessWidget {
                           if (artworkFile != null || tracks != null)
                             MultiArtworks(
                               disableHero: true,
-                              heroTag: heroTag,
+                              heroTag: widget.heroTag,
                               tracks: tracks!,
                               thumbnailSize: innerSize,
-                              fallbackToFolderCover: fallbackToFolderCover,
-                              reduceQuality: reduceQuality,
+                              fallbackToFolderCover: widget.fallbackToFolderCover,
+                              reduceQuality: widget.reduceQuality,
                               existingArtworkFile: existingArtworkFile,
-                              fallbackIcon: fallbackIcon,
-                              fadeMilliSeconds: fadeMilliSeconds,
+                              fallbackIcon: widget.fallbackIcon,
+                              fadeMilliSeconds: widget.fadeMilliSeconds,
                               opensInFullscreen: scope?.opensInFullscreen ?? false,
                             ),
-                          ?child,
-                          ?onTopWidget,
+                          ?widget.child,
+                          ?widget.onTopWidget,
                         ],
                       ),
                     ),

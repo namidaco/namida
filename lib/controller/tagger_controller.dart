@@ -21,8 +21,6 @@ class NamidaTaggerController {
 
   final _extractor = TagsExtractor.platform();
 
-  bool get _defaultKeepFileDates => settings.editTagsKeepFileDates.value;
-
   // RxDMap<int, String> get currentPathsBeingExtracted => _extractor.currentPathsBeingExtracted;
 
   Future<void> updateLogsPath() => _extractor.updateLogsPath();
@@ -112,7 +110,6 @@ class NamidaTaggerController {
     String commentToInsert = '',
     void Function(bool didUpdate, String? error, Track track)? onEdit,
     void Function()? onUpdatingTracksStart,
-    bool? keepFileDates,
     void Function(TrackStats newStats)? onStatsEdit,
     bool displayFFmpegFallbackWarning = true,
   }) async {
@@ -149,6 +146,7 @@ class NamidaTaggerController {
 
     await _extractor.initializeForWrite();
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
+    final keepFileDates = settings.editTagsKeepFileDates.value;
     final tracksMap = <Track, TrackExtended>{};
     for (final track in tracks) {
       String? error;
@@ -227,7 +225,7 @@ class NamidaTaggerController {
               onStatsEdit?.call(newStats);
             }
           },
-          keepStats: keepFileDates ?? _defaultKeepFileDates,
+          keepStats: keepFileDates,
         );
 
         final newTrExt = tracksMap[track];
@@ -260,13 +258,14 @@ class NamidaTaggerController {
     }
   }
 
-  /// writes each [FTags] only into a file holding none of its fields yet, file dates are kept.
+  /// writes each [FTags] only into a file holding none of its fields yet.
   Future<void> writeTagsIfMissing({
     required Map<Track, FTags> tagsPerTrack,
     required void Function(Track track, WriteIfMissingResult result) onTrack,
   }) async {
     await _extractor.initializeForWrite();
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
+    final keepFileDates = settings.editTagsKeepFileDates.value;
     final tracksMap = <Track, TrackExtended>{};
     for (final e in tagsPerTrack.entries) {
       final track = e.key;
@@ -274,7 +273,7 @@ class NamidaTaggerController {
       final file = File(track.path);
       final res = await file.executeAndKeepStats(
         () => _extractor.writeTagsIfMissing(path: track.path, newTags: newTags),
-        keepStats: true,
+        keepStats: keepFileDates,
       );
       onTrack(track, res);
       if (!res.didWrite || res.error != null) continue;

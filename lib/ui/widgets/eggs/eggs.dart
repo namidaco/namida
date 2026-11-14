@@ -106,10 +106,12 @@ class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
   late final _finaleController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2600),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final _blushController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
+    animationBehavior: AnimationBehavior.preserve,
   );
   bool _isCelebrating = false;
   int _beatsPlayed = 0;

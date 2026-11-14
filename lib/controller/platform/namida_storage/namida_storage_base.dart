@@ -37,6 +37,9 @@ abstract class NamidaStorage {
 
   Future<String?> pickDirectory({String? note, String? initialDirectory});
 
+  /// like [pickDirectory], but a folder without a file path comes back as its document tree uri instead of failing.
+  Future<String?> pickDirectoryOrTree({String? note, String? initialDirectory}) => pickDirectory(note: note, initialDirectory: initialDirectory);
+
   /// runs once the user data folders exist, before anything reads them. ex: rewrites stored paths whose folder moved since the last launch.
   Future<void> prepareUserData() async {}
 

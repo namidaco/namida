@@ -480,7 +480,7 @@ class QueueController {
   Future<void> _prepareLatestQueueAsync() async {
     final (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
     if (latestQueue.isEmpty) return;
-    final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeSelfSentMediaCommand();
+    final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeTrustedMediaCommand();
     _assignLatestQueue(latestQueue, originalIndices, startPlaying: startPlaying, updateQueue: false);
   }
 

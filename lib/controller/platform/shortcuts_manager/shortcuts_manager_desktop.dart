@@ -341,7 +341,6 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
                     snackyy(title: lang.warning, message: msg, isError: true);
                   }
                 },
-                keepFileDates: true,
                 displayFFmpegFallbackWarning: false,
               );
             } catch (e) {

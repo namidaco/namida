@@ -25,6 +25,7 @@ enum SortType {
   year,
   artistsList,
   genresList,
+  stylesList,
   dateAdded,
   dateModified,
   bitrate,
@@ -61,6 +62,7 @@ enum SortType {
     SortType.albumArtist,
     SortType.composer,
     SortType.genresList,
+    SortType.stylesList,
     SortType.year,
     SortType.dateAdded,
     SortType.dateModified,
@@ -100,6 +102,7 @@ enum GroupSortType {
   year,
   artistsList(isArtistLevel: true),
   genresList,
+  stylesList,
   dateAdded,
   dateModified,
   composer,
@@ -145,6 +148,8 @@ enum GroupSortType {
     GroupSortType.dateModified,
     GroupSortType.artistsList,
     GroupSortType.composer,
+    GroupSortType.genresList,
+    GroupSortType.stylesList,
     GroupSortType.label,
     GroupSortType.releaseType,
     GroupSortType.bpm,
@@ -171,6 +176,7 @@ enum GroupSortType {
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
     GroupSortType.genresList,
+    GroupSortType.stylesList,
     GroupSortType.album,
     GroupSortType.year,
     GroupSortType.dateAdded,
@@ -180,8 +186,11 @@ enum GroupSortType {
     GroupSortType.shuffleDaily,
   ];
 
-  static List<GroupSortType> forGenres() => [
-    GroupSortType.genresList,
+  /// the name sort of the genres page, which shows genres or styles.
+  static GroupSortType genresNameOf(MediaType genreType) => genreType == MediaType.style ? GroupSortType.stylesList : GroupSortType.genresList;
+
+  static List<GroupSortType> forGenres(MediaType genreType) => [
+    genresNameOf(genreType),
     GroupSortType.duration,
     GroupSortType.numberOfTracks,
     GroupSortType.lastPlayed,
@@ -729,6 +738,7 @@ enum TagField {
   musicalKey(TagFieldMultiEdit.whenHasValues),
   rating(TagFieldMultiEdit.hidden, isNumeric: true), // -- edited by TrackStatsEditSections
   tags(TagFieldMultiEdit.hidden), // -- edited by TrackStatsEditSections
+  explicit(TagFieldMultiEdit.whenHasValues, isNumeric: true),
 
   titleSort(TagFieldMultiEdit.hidden),
   albumSort(TagFieldMultiEdit.whenHasValues),
@@ -1064,7 +1074,6 @@ enum HomePageItems {
 enum PinnedItemType {
   playlist,
   smartPlaylist,
-  ;
 }
 
 enum MixesItems {
@@ -1256,14 +1265,18 @@ enum SettingSubpageEnum {
 
 enum FABType {
   none,
-  play(isPlayback: true),
-  shuffle(isPlayback: true),
+  play(quickPlayMode: QuickPlayMode.play),
+  shuffle(quickPlayMode: QuickPlayMode.shuffle),
+  playNext(quickPlayMode: QuickPlayMode.playNext),
+  playLast(quickPlayMode: QuickPlayMode.playLast),
   search,
   ;
 
-  final bool isPlayback;
+  final QuickPlayMode? quickPlayMode;
 
-  const FABType({this.isPlayback = false});
+  bool get isPlayback => quickPlayMode != null;
+
+  const FABType({this.quickPlayMode});
 }
 
 enum QuickPlayMode {
@@ -1272,7 +1285,6 @@ enum QuickPlayMode {
   playNext,
   // playAfter, // icon looks goofy in ui
   playLast,
-  ;
 }
 
 enum YTHomeSource {
@@ -1606,6 +1618,7 @@ enum WebhookEvent {
   trackChanged,
   play,
   pause,
+  favouriteChanged,
 }
 
 enum DiscordPresenceStatus {
@@ -1619,7 +1632,6 @@ enum PipContent {
   video,
   lyrics,
   artwork,
-  ;
 }
 
 enum LyricsIntegration {

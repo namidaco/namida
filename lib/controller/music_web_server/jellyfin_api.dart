@@ -306,7 +306,7 @@ class _JellyfinApi {
       ..write(', DeviceId="$deviceId"')
       ..write(', Version="$version"');
     if (token != null) buf.write(', Token="$token"');
-    dio.options.headers['X-Emby-Authorization'] = buf.toString();
+    dio.options.headers['Authorization'] = buf.toString();
   }
 
   Future<({String accessToken, String userId})?> authenticate({

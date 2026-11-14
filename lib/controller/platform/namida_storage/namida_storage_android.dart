@@ -83,11 +83,21 @@ class _NamidaStorageAndroid extends NamidaStorage {
   }
 
   @override
-  Future<String?> pickDirectory({String? note, String? initialDirectory}) async {
+  Future<String?> pickDirectory({String? note, String? initialDirectory}) {
+    return _pickDirectory(note: note, initialDirectory: initialDirectory, allowTreeUri: false);
+  }
+
+  @override
+  Future<String?> pickDirectoryOrTree({String? note, String? initialDirectory}) {
+    return _pickDirectory(note: note, initialDirectory: initialDirectory, allowTreeUri: true);
+  }
+
+  Future<String?> _pickDirectory({String? note, String? initialDirectory, required bool allowTreeUri}) async {
     try {
       final res = await _channel.invokeListMethod<String?>('pickDirectory', {
         'note': note,
         'initialDirectory': initialDirectory,
+        'allowTreeUri': allowTreeUri,
       });
       return res?.firstOrNull;
     } catch (e) {

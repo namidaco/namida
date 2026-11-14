@@ -227,6 +227,12 @@ sealed class DirectoryIndex {
     return DirectoryIndexLocal(source);
   }
 
+  /// android gives a document tree uri for folders without a file path (usb drives, other apps).
+  factory DirectoryIndex.fromPicker(String pickedPath) {
+    if (pickedPath.startsWith('content://')) return DirectoryIndexServer.saf(pickedPath);
+    return DirectoryIndexLocal(pickedPath);
+  }
+
   bool existsSync();
   Future<bool> exists();
   bool hasNoMedia();

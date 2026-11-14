@@ -87,10 +87,12 @@ class NamidaFileBrowser {
   static Future<List<Directory>> pickDirectories({
     String note = '',
     String? initialDirectory,
+    bool allowTreeUri = false,
   }) async {
     return _NamidaFileBrowserBase.pickDirectories(
       note: note,
       initialDirectory: initialDirectory,
+      allowTreeUri: allowTreeUri,
       onNavigate: _onNavigate,
       onPop: _onPop,
     );
@@ -126,6 +128,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   final NamidaFileExtensionsWrapper? allowedExtensions;
   final NamidaStorageFileMemeType memeType;
   final bool allowMultiple;
+  final bool allowTreeUri;
   final _NamidaFileBrowserPopCallback onPop;
 
   const _NamidaFileBrowserBase({
@@ -136,6 +139,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
     this.allowedExtensions,
     this.memeType = _defaultMemeType,
     required this.allowMultiple,
+    this.allowTreeUri = false,
     required this.onPop,
   });
 
@@ -203,13 +207,13 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
       ),
     );
     final all = await completer.future;
-    if (all.isEmpty) return null;
-    return _fixSDCardDirectory(all[0]);
+    return all.firstOrNull;
   }
 
   static Future<List<Directory>> pickDirectories({
     String note = '',
     String? initialDirectory,
+    required bool allowTreeUri,
     required _NamidaFileBrowserNavigationCallback onNavigate,
     required _NamidaFileBrowserPopCallback onPop,
   }) async {
@@ -220,17 +224,11 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
         initialDirectory: initialDirectory,
         onSelect: completer,
         allowMultiple: true,
+        allowTreeUri: allowTreeUri,
         onPop: onPop,
       ),
     );
-    final res = await completer.future;
-    return res.map((e) => _fixSDCardDirectory(e)).toList();
-  }
-
-  static final _sdDirRegex = RegExp(r'/tree/(\w{4}-\w{4}):');
-  static Directory _fixSDCardDirectory(Directory dir) {
-    final replaced = dir.path.replaceFirstMapped(_sdDirRegex, (match) => '/storage/${match.group(1)}/');
-    return Directory(replaced);
+    return completer.future;
   }
 
   @override
@@ -736,10 +734,9 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       final files = res.map((e) => File(e)).toList();
       if (files.isNotEmpty) _onSelectionComplete(files as List<T>);
     } else if (T == Directory) {
-      final res = await NamidaStorage.inst.pickDirectory(
-        note: note,
-        initialDirectory: widget.initialDirectory,
-      );
+      final res = widget.allowTreeUri
+          ? await NamidaStorage.inst.pickDirectoryOrTree(note: note, initialDirectory: widget.initialDirectory)
+          : await NamidaStorage.inst.pickDirectory(note: note, initialDirectory: widget.initialDirectory);
       if (res != null) _onSelectionComplete([Directory(res) as T]);
     }
   }

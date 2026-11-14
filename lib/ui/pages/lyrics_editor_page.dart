@@ -286,6 +286,9 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
       if (!_ticker.isActive) _ticker.start();
       return;
     }
+    // -- playWhenReady stays on for internal pauses, ex: seeking a cached yt item
+    final isPlayLineStopped = !_isCurrentItem.value || !Player.inst.playWhenReady.value;
+    if (isPlayLineStopped) _playLineEndMS = null;
     if (_ticker.isActive) _ticker.stop();
     if (_isCurrentItem.value) _updatePosition(Player.inst.getExactPositionMS());
   }
@@ -329,7 +332,6 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
       _playItem();
       return;
     }
-    _playLineEndMS = null;
     if (Player.inst.playWhenReady.value) {
       Player.inst.pause(fadeMillis: 0);
     } else {
@@ -343,19 +345,22 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     _seekTo(positionMS);
   }
 
-  Future<void> _seekTo(int positionMS) async {
+  /// playback pauses at [playLineEndMS], any other seek drops the one left by [_playLine].
+  Future<void> _seekTo(int positionMS, {int? playLineEndMS}) async {
     if (!_isCurrentItem.value) return;
+    _playLineEndMS = playLineEndMS;
     final finalPositionMS = positionMS.withMinimum(0);
     await Player.inst.seek(Duration(milliseconds: finalPositionMS));
     if (mounted && !_ticker.isActive) _updatePosition(Player.inst.getExactPositionMS());
   }
 
+  /// pauses where the next line starts, for previewing a single line.
   void _playLine(int index) {
     if (!_isCurrentItem.value) return;
     final startMS = _doc.lines[index].startMS;
     if (startMS == null) return;
-    _playLineEndMS = _doc.nextStartAfter(startMS) ?? startMS + _kPlayLineFallbackMS;
-    _seekTo(startMS);
+    final playLineEndMS = _doc.nextStartAfter(startMS) ?? startMS + _kPlayLineFallbackMS;
+    _seekTo(startMS, playLineEndMS: playLineEndMS);
     Player.inst.play();
   }
 
@@ -508,6 +513,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     final selectedIndex = _selectedIndex.value;
     final index = _doc.stampableIndexFrom(selectedIndex);
     if (index < 0) return;
+    _playLineEndMS = null;
     if (index != selectedIndex) _select(index);
     final positionMS = _stampPositionMS();
     VibratorController.verylight();

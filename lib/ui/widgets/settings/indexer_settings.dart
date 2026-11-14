@@ -296,7 +296,6 @@ class IndexerSettings extends SettingSubpageProvider {
     }
   }
 
-  /// saved with empty credentials so it goes through the same server flow as the others.
   void _pickSafFolder(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) async {
     final treeUri = await NamidaStorage.inst.safPickTree(note: lang.addFolder);
 
@@ -307,7 +306,12 @@ class IndexerSettings extends SettingSubpageProvider {
 
     final dir = DirectoryIndexServer.saf(treeUri);
     onSuccessChoose([dir]);
+    await _saveSafFolderAuth(dir);
+    _maybeShowRefreshPromptDialog(true);
+  }
 
+  /// saved with empty credentials so it goes through the same server flow as the others.
+  Future<void> _saveSafFolderAuth(DirectoryIndexServer dir) {
     final authInfo = MusicWebServerAuthDetails.create(
       dir: dir,
       password: '',
@@ -315,19 +319,22 @@ class IndexerSettings extends SettingSubpageProvider {
       subdir: null,
       legacyAuth: true,
     );
-    await authInfo.saveToDb(dir);
-    _maybeShowRefreshPromptDialog(true);
+    return authInfo.saveToDb(dir);
   }
 
   void _pickLocalFolder(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) async {
-    final folders = await NamidaFileBrowser.pickDirectories(note: lang.addFolder);
+    final folders = await NamidaFileBrowser.pickDirectories(note: lang.addFolder, allowTreeUri: true);
 
     if (folders.isEmpty) {
       snackyy(title: lang.note, message: lang.noFolderChosen);
       return;
     }
 
-    onSuccessChoose(folders.map((e) => DirectoryIndexLocal(e.path)).toList());
+    final dirs = folders.map((e) => DirectoryIndex.fromPicker(e.path)).toFixedList();
+    onSuccessChoose(dirs);
+    for (final dir in dirs) {
+      if (dir is DirectoryIndexServer) await _saveSafFolderAuth(dir);
+    }
     _maybeShowRefreshPromptDialog(true);
   }
 

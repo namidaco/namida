@@ -48,6 +48,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final artistSinglesExpanded = _key('artistSinglesExpanded', false); // cuz no space
   late final artistEpsExpanded = _key('artistEpsExpanded', false);
   late final artistsMapGraphLayout = _key('artistsMapGraphLayout', true);
+  late final homePinnedType = _key<PinnedItemType?>('homePinnedType', null, codec: PinnedItemType.values.asCodec());
 
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);
 

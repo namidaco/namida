@@ -590,6 +590,18 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
     _queuesReloadTimer = Timer(const Duration(seconds: 1), QueueController.inst.prepareAllQueuesFile);
   }
 
+  static Timer? _imageFilesRefreshTimer;
+  static final _imageFilesToRefresh = <String>{};
+
+  static void _refreshImageFileSoon(String path) {
+    _imageFilesToRefresh.add(path);
+    _imageFilesRefreshTimer?.cancel();
+    _imageFilesRefreshTimer = Timer(const Duration(seconds: 1), () {
+      ArtworkWidget.refreshImageFiles(_imageFilesToRefresh);
+      _imageFilesToRefresh.clear();
+    });
+  }
+
   /// the rule both sides use to tell whether the incoming copy replaces the existing one: newer wins,
   /// same sized copies with mtimes within [_kMtimeToleranceMS] are the same file.
   /// [isNamedByContent] (see [_DirFilesSyncUtils.isNamedByContent]) makes any same sized copy the same file.
@@ -672,6 +684,7 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
 
       if (subtype == AppPathsBackupEnum.AUDIOS_CACHE) AudioCacheController.inst.addFileToCacheMap(file);
       if (isQueue) _reloadQueuesSoon();
+      if (subtype.hasImages) _refreshImageFileSoon(file.path);
 
       final info = this.info;
       if (info != null && subtype == AppPathsBackupEnum.VIDEOS_CACHE) VideoController.inst.importSyncedCacheVideoInfo(fileName, info);

@@ -146,7 +146,10 @@ class SyncSender extends RxNotifier {
   Future<void> resendFingerprints(String deviceId) {
     final sending = _fingerprintsSendings[deviceId];
     if (sending != null) return sending;
-    final newSending = _sendFingerprints(deviceId).whenComplete(() => _fingerprintsSendings.remove(deviceId));
+    final newSending = _sendFingerprints(deviceId).whenComplete(() {
+      // -- no arrow, it would return this same future and whenComplete would wait on itself forever
+      _fingerprintsSendings.remove(deviceId);
+    });
     _fingerprintsSendings[deviceId] = newSending;
     return newSending;
   }

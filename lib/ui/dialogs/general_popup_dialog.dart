@@ -723,6 +723,7 @@ Future<void> showGeneralPopupDialog(
           builder: (context, colorDelightened) => SmallListTile(
             color: colorDelightened,
             compact: true,
+            dense: true,
             title: lang.removeFromPlaylist,
             subtitle: getRemoveFromPlaylistSubtitle(playlistName!),
             icon: Broken.box_remove,
@@ -892,7 +893,7 @@ Future<void> showGeneralPopupDialog(
   if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
 
   final artworkFile = customArtworkManager?.getArtworkFile();
-  final artworkFileGood = artworkFile != null && artworkFile.existsSync() && (artworkFile.fileSizeSync() ?? 0) > 0;
+  final hasCollageFallback = customArtworkManager != null && networkArtworkInfo == null;
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -1005,14 +1006,14 @@ Future<void> showGeneralPopupDialog(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const SizedBox(width: 16.0),
-                            if (forceSingleArtwork! || artworkFileGood)
+                            if (forceSingleArtwork! && !hasCollageFallback)
                               NamidaHero(
                                 tag: heroTag,
                                 child: NetworkArtwork.orLocal(
                                   key: Key(tracks.pathToImage),
                                   fadeMilliSeconds: 0,
                                   track: tracks.trackOfImage,
-                                  path: artworkFileGood ? artworkFile.path : tracks.pathToImage,
+                                  path: tracks.pathToImage,
                                   info: networkArtworkInfo,
                                   thumbnailSize: 60,
                                   forceSquared: forceSquared,

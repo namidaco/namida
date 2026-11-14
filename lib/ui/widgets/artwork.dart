@@ -196,10 +196,15 @@ class ArtworkWidget extends StatefulWidget {
   /// bumped per path when its file is replaced, so the next provider misses the stale decoded image.
   static final _imageFilesVersions = <String, int>{};
 
+  /// version of every path missing from [_imageFilesVersions], bumped when files were replaced in bulk.
+  static int _allImageFilesVersion = 0;
+  static int _latestImageFilesVersion = 0;
+
   static FileImage fileImageOf(String path) {
     final file = File(path);
-    final version = _imageFilesVersions.isEmpty ? null : _imageFilesVersions[path];
-    return version == null ? FileImage(file) : _VersionedFileImage(file, version);
+    final allVersion = _allImageFilesVersion;
+    final version = _imageFilesVersions.isEmpty ? allVersion : _imageFilesVersions[path] ?? allVersion;
+    return version == 0 ? FileImage(file) : _VersionedFileImage(file, version);
   }
 
   /// reloads every artwork showing one of [paths], call after these files were written or deleted.
@@ -207,13 +212,51 @@ class ArtworkWidget extends StatefulWidget {
     final pathsSet = paths.toSet();
     if (pathsSet.isEmpty) return;
     for (final path in pathsSet) {
-      _imageFilesVersions[path] = (_imageFilesVersions[path] ?? 0) + 1;
+      _imageFilesVersions[path] = ++_latestImageFilesVersion;
       _ArtworkWidgetState._latestInvalidImagePath.remove(path);
     }
     for (final state in _ArtworkWidgetState._mountedStates) {
       final isShowingPath = pathsSet.contains(state.widget.path) || pathsSet.contains(state._imagePath);
       if (isShowingPath) state._onImageFileChanged();
     }
+    if (_imageFileListeners.isEmpty) return;
+    for (final path in pathsSet) {
+      final listeners = _imageFileListeners[path];
+      if (listeners == null) continue;
+      for (final listener in listeners) {
+        listener();
+      }
+    }
+  }
+
+  /// reloads every artwork, call after image files were replaced in bulk, ex: a backup restore.
+  static void refreshAllImageFiles() {
+    _imageFilesVersions.clear();
+    _allImageFilesVersion = ++_latestImageFilesVersion;
+    _ArtworkWidgetState._latestInvalidImagePath.clear();
+    PaintingBinding.instance.imageCache.clear();
+    for (final state in _ArtworkWidgetState._mountedStates) {
+      state._onImageFileChanged();
+    }
+    for (final listeners in _imageFileListeners.values) {
+      for (final listener in listeners) {
+        listener();
+      }
+    }
+  }
+
+  static final _imageFileListeners = <String, Set<VoidCallback>>{};
+
+  static void addImageFileListener(String path, VoidCallback listener) {
+    final listeners = _imageFileListeners[path] ??= <VoidCallback>{};
+    listeners.add(listener);
+  }
+
+  static void removeImageFileListener(String path, VoidCallback listener) {
+    final listeners = _imageFileListeners[path];
+    if (listeners == null) return;
+    listeners.remove(listener);
+    if (listeners.isEmpty) _imageFileListeners.remove(path);
   }
 
   @override

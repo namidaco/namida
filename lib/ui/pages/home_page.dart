@@ -119,6 +119,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   String? getItemTitle(E item);
   int getItemDateAdded(E item);
   bool isItemFavourite(E item);
+  int getItemRating(E item);
   List<E> getFavouritesSample(int count);
 
   void removeInvalidMixesItems(List<MapEntry<String, List<E>>> mixes) {}
@@ -276,18 +277,6 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       // -- Random --
       if (_randomItems.isEmpty) _randomItems.addAll(NamidaGeneratorBase.getRandomItems(_allItemsInLibrary, min: 25, max: 26, random: newRandom()));
 
-      final int mostRecentAdded7DaysMSSE = timeNow.subtract(const Duration(days: 7)).millisecondsSinceEpoch;
-      final int mostRecentListened14DaysMSSE = timeNow.subtract(const Duration(days: 14)).millisecondsSinceEpoch;
-      final underrated = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
-        if (isItemFavourite(item)) return false; // alr favourited
-        final listens = topTracksMapListens[item];
-        if (listens == null || listens.isEmpty) return false; // never listened, not underrated
-        if (listens.length > 8) return false; // alr listened enough
-        if (getItemDateAdded(item) > mostRecentAdded7DaysMSSE) return false; // its very recently added
-        if (listens.last > mostRecentListened14DaysMSSE) return false; // recently listened
-        return true;
-      }, newRandom());
-
       // -- averaged over what actually exists (previously hardcoded 20)
       int topListensTotal = 0;
       int topListensEntries = 0;
@@ -299,7 +288,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       final topListensRatio = LogScaledRatio(avgTopListensCount);
       final timeNowMSSE = timeNow.millisecondsSinceEpoch;
       final int within1MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 1)).millisecondsSinceEpoch;
-      final int within3MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 3)).millisecondsSinceEpoch;
+      // final int within3MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 3)).millisecondsSinceEpoch;
       // final int within6MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 6)).millisecondsSinceEpoch;
       final int within12MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 12)).millisecondsSinceEpoch;
       await _yieldFrame();
@@ -343,22 +332,27 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
 
       await _yieldFrame();
       if (generation != _fillGeneration) return;
-      // -- items with little to no listens in the past n days
+      bool isItemLiked(E item) => isItemFavourite(item) || getItemRating(item) >= 60;
+
+      final int mostRecentAdded7DaysMSSE = timeNow.subtract(const Duration(days: 7)).millisecondsSinceEpoch;
+      final int mostRecentListened14DaysMSSE = timeNow.subtract(const Duration(days: 14)).millisecondsSinceEpoch;
+      final underrated = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
+        final listens = topTracksMapListens[item];
+        if (listens == null || listens.isEmpty) return false; // never listened, not underrated
+        if (listens.last > mostRecentListened14DaysMSSE) return false; // recently listened
+        final listensCount = listens.length;
+        if (topListensRatio.of(listensCount) >= 0.50) return false; // alr listened enough
+        if (listensCount < 3 && !isItemLiked(item)) return false; // barely heard, thats discover
+        if (getItemDateAdded(item) > mostRecentAdded7DaysMSSE) return false; // its very recently added
+        return true;
+      }, newRandom());
+      underrated.sortBy((item) => topTracksMapListens[item]?.last ?? 0);
+
+      // -- never or barely listened items, liked ones go to underrated
       final discover = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
         final listens = topTracksMapListens[item];
-        if (listens == null || listens.isEmpty) return true;
-        if (listens.length > 10) return false;
-        int listensCountWithinPeriod = 0;
-        for (int i = listens.length - 1; i >= 0; i--) {
-          final l = listens[i];
-          if (l > within3MonthsDaysMSSE) {
-            listensCountWithinPeriod++;
-            if (listensCountWithinPeriod > 5) break;
-          } else {
-            break;
-          }
-        }
-        return listensCountWithinPeriod <= 5;
+        if (listens != null && listens.length > 2) return false;
+        return !isItemLiked(item);
       }, newRandom());
 
       await _yieldFrame();
@@ -757,6 +751,9 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
   bool isItemFavourite(Track item) => PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(item);
 
   @override
+  int getItemRating(Track item) => item.effectiveRating;
+
+  @override
   List<Track> getFavouritesSample(int count) => PlaylistController.inst.favouritesPlaylist.value.tracks.getRandomSample(count).tracks.toList();
 
   @override
@@ -1144,6 +1141,10 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
 
   @override
   bool isItemFavourite(String item) => YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(item);
+
+  // -- yt ratings are in a db, too slow to read for every item here
+  @override
+  int getItemRating(String item) => 0;
 
   @override
   List<String> getFavouritesSample(int count) => YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.getRandomSample(count).map((e) => e.id).toList();
@@ -1560,33 +1561,26 @@ class _PinnedPlaylistsList<T extends PlaylistItemWithDate, S> extends StatelessW
   }
 }
 
-class _PinnedItemsList extends StatefulWidget {
+class _PinnedItemsList extends StatelessWidget {
   final HomePageItems homepageItem;
 
   const _PinnedItemsList({
     required this.homepageItem,
   });
 
-  @override
-  State<_PinnedItemsList> createState() => _PinnedItemsListState();
-}
-
-class _PinnedItemsListState extends State<_PinnedItemsList> {
-  PinnedItemType? _selectedType;
-
   void _onTypeTap(PinnedItemType? type) {
-    setState(() => _selectedType = type);
+    settings.extra.homePinnedType.save(type);
   }
 
   @override
   Widget build(BuildContext context) {
-    final homepageItem = widget.homepageItem;
     return SliverToBoxAdapter(
       child: Obx(
         (context) {
           final allItems = PinnedController.inst.getPinnedItemsR();
           final presentTypes = <PinnedItemType>{for (final item in allItems) item.type};
-          final selectedType = presentTypes.contains(_selectedType) ? _selectedType : null;
+          final savedType = settings.extra.homePinnedType.valueR;
+          final selectedType = presentTypes.contains(savedType) ? savedType : null;
           final items = selectedType == null ? allItems : allItems.where((e) => e.type == selectedType).toFixedList();
           final typesChips = presentTypes.length < 2
               ? null
@@ -1897,13 +1891,13 @@ class _PlaylistCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28)),
+                        style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.31)),
                         softWrap: false,
                         overflow: TextOverflow.fade,
                       ),
                       Text(
                         subtitle,
-                        style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
+                        style: NText.small.of(context).copyWith(fontSize: getFontSize(0.26)),
                         softWrap: false,
                         overflow: TextOverflow.fade,
                       ),

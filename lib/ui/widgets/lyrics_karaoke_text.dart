@@ -57,6 +57,11 @@ class LyricsKaraokeText extends StatefulWidget {
     this.lineHeight = 1.5,
   });
 
+  static const textHeightBehavior = TextHeightBehavior(
+    applyHeightToFirstAscent: false,
+    applyHeightToLastDescent: false,
+  );
+
   @override
   State<LyricsKaraokeText> createState() => _LyricsKaraokeTextState();
 }
@@ -347,10 +352,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
       maxLines: maxLines,
       ellipsis: maxLines == null ? null : _ellipsis,
       textWidthBasis: TextWidthBasis.parent,
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: false,
-        applyHeightToLastDescent: false,
-      ),
+      textHeightBehavior: LyricsKaraokeText.textHeightBehavior,
     )..layout(minWidth: minWidth, maxWidth: maxWidth);
   }
 

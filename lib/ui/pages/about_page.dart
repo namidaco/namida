@@ -147,100 +147,107 @@ class _AboutPageState extends State<AboutPage> {
       builder: (context, latestVersion) => SuperSmoothListView(
         padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
         children: [
-          SizedBox(height: topPadding),
-          NContainer(
-            margin: const EdgeInsets.symmetric(horizontal: 24.0),
-            decoration: (colors) => BoxDecoration(
-              color: colors.card.withOpacityExt(0.6),
-              borderRadius: BorderRadius.circular(20.0.multipliedRadius),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
-              children: [
-                Column(
-                  children: [
-                    SizedBox(height: topPadding + textTopPadding),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: NamidaAboutListTile(
-                        trailing: const Icon(Broken.code_circle),
-                        leading: Container(
-                          clipBehavior: Clip.antiAlias,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color.fromRGBO(25, 25, 25, 0.8),
-                          ),
-                          child: _CachedAvatar(
-                            asset: _AboutAsset.developerAvatar,
-                            size: 48.0,
-                            fallback: fallbackAvatar,
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: topPadding),
+                  NContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.card.withOpacityExt(0.6),
+                      borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: topPadding + textTopPadding),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: NamidaAboutListTile(
+                            trailing: const Icon(Broken.code_circle),
+                            leading: Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color.fromRGBO(25, 25, 25, 0.8),
+                              ),
+                              child: _CachedAvatar(
+                                asset: _AboutAsset.developerAvatar,
+                                size: 48.0,
+                                fallback: fallbackAvatar,
+                              ),
+                            ),
+                            title: lang.developer,
+                            subtitle: 'MSOB7YY',
+                            link: 'https://github.com/MSOB7YY',
                           ),
                         ),
-                        title: lang.developer,
-                        subtitle: 'MSOB7YY',
-                        link: 'https://github.com/MSOB7YY',
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                top: 0,
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.all(4.0),
+                      width: imageSize,
+                      height: imageSize,
+                      clipBehavior: Clip.none,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color.fromRGBO(25, 25, 25, 0.1),
+                      ),
+                      child: _KuruKuruActivator(
+                        child: GestureDetector(
+                          onLongPress: showFullScene,
+                          child: Image.asset(
+                            enabledIcon.assetPath,
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 4.0),
+                    const NamidaText(
+                      "Namida",
+                      style: NText.large,
+                    ),
+                    if (currentVersionText != '')
+                      latestVersion?.isUpdate() ?? false
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                NamidaText(
+                                  currentVersionText,
+                                  style: NText.small,
+                                ),
+                                const SizedBox(width: 4.0),
+                                const Icon(
+                                  Broken.arrow_up_1,
+                                  size: 8.0,
+                                ),
+                              ],
+                            )
+                          : NamidaText(
+                              currentVersionText,
+                              style: NText.small,
+                            ),
+                    if (buildDateDiff != '')
+                      NamidaText(
+                        buildDateDiff,
+                        style: NText.small,
+                      ),
                   ],
                 ),
-                Positioned(
-                  top: -topPadding,
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.all(4.0),
-                        width: imageSize,
-                        height: imageSize,
-                        clipBehavior: Clip.none,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color.fromRGBO(25, 25, 25, 0.1),
-                        ),
-                        child: _KuruKuruActivator(
-                          child: GestureDetector(
-                            onLongPress: showFullScene,
-                            child: Image.asset(
-                              enabledIcon.assetPath,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4.0),
-                      const NamidaText(
-                        "Namida",
-                        style: NText.large,
-                      ),
-                      if (currentVersionText != '')
-                        latestVersion?.isUpdate() ?? false
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  NamidaText(
-                                    currentVersionText,
-                                    style: NText.small,
-                                  ),
-                                  const SizedBox(width: 4.0),
-                                  const Icon(
-                                    Broken.arrow_up_1,
-                                    size: 8.0,
-                                  ),
-                                ],
-                              )
-                            : NamidaText(
-                                currentVersionText,
-                                style: NText.small,
-                              ),
-                      if (buildDateDiff != '')
-                        NamidaText(
-                          buildDateDiff,
-                          style: NText.small,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           SettingsCard(
             icon: Broken.link_circle,
@@ -761,7 +768,7 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
   int _speedLevel = 0;
 
   void _initAndAnimate() {
-    _controller ??= AnimationController(vsync: this);
+    _controller ??= AnimationController(vsync: this, animationBehavior: AnimationBehavior.preserve);
 
     if (mounted) {
       // _controller?.stop();

@@ -429,17 +429,25 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         ScrollSearchController.inst.showSearchMenu();
         ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
       }
-    } else if (fab.isPlayback) {
-      Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracksAll, shuffle: fab == FABType.shuffle);
+    } else {
+      final quickPlayMode = fab.quickPlayMode;
+      if (quickPlayMode == null) return;
+      final (tracks, source, _) = SelectedTracksController.inst.getCurrentActiveTracksList();
+      if (tracks == null || tracks.isEmpty || source == null) return;
+      quickPlayMode.execute(tracks, source);
     }
   }
 
   void _onLongPress() {
-    final fab = settings.floatingActionButton.value;
-    if (fab == FABType.shuffle) {
-      showAdvancedShuffleDialog(SelectedTracksController.inst.getCurrentAllTracks, QueueSource.allTracksAll);
-    } else if (fab == FABType.play) {
-      showAdvancedPlayDialog(SelectedTracksController.inst.getCurrentAllTracks, QueueSource.allTracksAll);
+    final quickPlayMode = settings.floatingActionButton.value.quickPlayMode;
+    if (quickPlayMode == null) return;
+    final (tracks, source, _) = SelectedTracksController.inst.getCurrentActiveTracksList();
+    if (tracks == null || tracks.isEmpty || source == null) return;
+    switch (quickPlayMode) {
+      case QuickPlayMode.shuffle:
+        showAdvancedShuffleDialog(() => tracks, source);
+      case QuickPlayMode.play || QuickPlayMode.playNext || QuickPlayMode.playLast:
+        showAdvancedPlayDialog(() => tracks, source);
     }
   }
 

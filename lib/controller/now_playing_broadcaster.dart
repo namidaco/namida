@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show mapEquals, visibleForTesting;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/class/progress_span.dart';
@@ -118,9 +119,31 @@ class NowPlayingBroadcaster {
   }
 
   void onItemChanged(MediaItem media, {required bool isPlaying, required int positionMS}) {
+    final previousMedia = _lastMedia;
     _lastMedia = media;
+    if (_sinks.isEmpty) return;
+    final type = getItemEventType(previousMedia, media);
+    final isRepublish = type == null;
+    final eventType = type ?? WebhookEvent.trackChanged;
     final reportedPositionMS = _reportedPositionMS(media, positionMS);
-    _send(media, WebhookEvent.trackChanged, isPlaying, reportedPositionMS);
+    _send(media, eventType, isPlaying, reportedPositionMS, isRepublish: isRepublish);
+  }
+
+  /// null for the same item published again with nothing an event carries changed.
+  @visibleForTesting
+  static WebhookEvent? getItemEventType(MediaItem? previousMedia, MediaItem media) {
+    if (previousMedia == null || previousMedia.id != media.id) return WebhookEvent.trackChanged;
+    final wasFavourite = previousMedia.rating?.hasHeart();
+    final isFavourite = media.rating?.hasHeart();
+    if (wasFavourite != isFavourite) return WebhookEvent.favouriteChanged;
+    final didInfoChange =
+        previousMedia.title != media.title || //
+        previousMedia.artist != media.artist ||
+        previousMedia.album != media.album ||
+        previousMedia.genre != media.genre ||
+        previousMedia.duration != media.duration ||
+        !mapEquals(previousMedia.extras, media.extras);
+    return didInfoChange ? WebhookEvent.trackChanged : null;
   }
 
   void onPlayingChanged(bool isPlaying, {required int positionMS}) {
@@ -147,9 +170,9 @@ class NowPlayingBroadcaster {
     return liveWindow.watchedMS(positionMS, Player.inst.liveJoinPosition);
   }
 
-  void _send(MediaItem media, WebhookEvent type, bool isPlaying, int positionMS) {
+  void _send(MediaItem media, WebhookEvent type, bool isPlaying, int positionMS, {bool isRepublish = false}) {
     if (_sinks.isEmpty) return;
-    final event = _NowPlayingEvent(media, type, isPlaying, positionMS);
+    final event = _NowPlayingEvent(media, type, isPlaying, positionMS, isRepublish: isRepublish);
     for (final sink in _sinks) {
       sink.send(event);
     }
@@ -170,7 +193,11 @@ class _NamidaBroadcastSink extends _NowPlayingSink {
 
   @override
   void send(_NowPlayingEvent event) {
-    final action = event.type == WebhookEvent.trackChanged ? _kActionMetaChanged : _kActionPlayStateChanged;
+    if (event.isRepublish) return;
+    final action = switch (event.type) {
+      WebhookEvent.trackChanged || WebhookEvent.favouriteChanged => _kActionMetaChanged,
+      WebhookEvent.play || WebhookEvent.pause => _kActionPlayStateChanged,
+    };
     final extras = event.toJson();
     NamidaChannel.inst.sendBroadcast(action, extras);
   }
@@ -184,7 +211,7 @@ class _ServerReportSink extends _NowPlayingSink {
   @override
   void send(_NowPlayingEvent event) {
     switch (event.type) {
-      case WebhookEvent.trackChanged:
+      case WebhookEvent.trackChanged || WebhookEvent.favouriteChanged:
         final media = event.media;
         final path = media.extras?[NowPlayingExtras.path] as String?;
         final durationMS = media.duration?.inMilliseconds;
@@ -205,6 +232,7 @@ class _WebhookSink extends _NowPlayingSink {
 
   @override
   void send(_NowPlayingEvent event) {
+    if (event.isRepublish) return;
     if (!events.contains(event.type)) return;
     final body = event.toJson();
     _post(body);
@@ -250,7 +278,10 @@ class _NowPlayingEvent {
   final bool isPlaying;
   final int positionMS;
 
-  _NowPlayingEvent(this.media, this.type, this.isPlaying, this.positionMS);
+  /// only the live state sinks want these, server reports and discord.
+  final bool isRepublish;
+
+  _NowPlayingEvent(this.media, this.type, this.isPlaying, this.positionMS, {this.isRepublish = false});
 
   Map<String, dynamic>? _json;
 
@@ -265,6 +296,7 @@ class _NowPlayingEvent {
       'album': media.album,
       'genre': media.genre,
       'durationMS': media.duration?.inMilliseconds,
+      'favourite': media.rating?.hasHeart(),
       if (extras != null)
         for (final e in extras.entries)
           if (e.key != NowPlayingExtras.lyricInfo) _toJsonKey(e.key): e.value,

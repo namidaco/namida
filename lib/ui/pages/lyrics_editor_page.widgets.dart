@@ -378,7 +378,7 @@ class _LineRow extends StatelessWidget {
       ],
     );
 
-    final VoidCallback? onLineNumberTap = startMS == null ? null : () => state._playLine(index);
+    final VoidCallback? onLineNumberTap = startMS == null ? null : () => state._seekTo(startMS);
 
     // -- the handle stays out of the popup, its long press would race the drag
     final contentWidget = Row(

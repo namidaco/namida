@@ -444,7 +444,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     required Duration? duration,
   }) async {
     final generation = ++_notificationUpdateGeneration;
-    final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
+    final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration, isItemFavourite);
     if (generation != _notificationUpdateGeneration) return;
     final publishedMedia = LyricsIntegrations.prepareMediaItem(media);
     mediaItem.add(publishedMedia);
@@ -458,15 +458,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     required int itemIndex,
     required YoutubeIDToMediaItemCallback? youtubeIdMediaItem,
   }) async {
-    youtubeIdMediaItem ??= (index, ql) {
-      return item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, currentItemDuration.value);
+    youtubeIdMediaItem ??= (index, ql, isFavourite) {
+      return item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, currentItemDuration.value, isFavourite);
     };
     final index = currentIndex.value;
     final ql = currentQueue.value.length;
-    final generation = ++_notificationUpdateGeneration;
-    final media = await youtubeIdMediaItem(index, ql);
-    if (generation != _notificationUpdateGeneration) return;
     final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
+    final generation = ++_notificationUpdateGeneration;
+    final media = await youtubeIdMediaItem(index, ql, isItemFavourite);
+    if (generation != _notificationUpdateGeneration) return;
     final publishedMedia = LyricsIntegrations.prepareMediaItem(media);
     mediaItem.add(publishedMedia);
     playbackState.add(_transformEvent(PlaybackEvent(currentIndex: index), item, isItemFavourite, itemIndex));
@@ -482,11 +482,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   void _refreshNotificationFavouriteStatus() {
     final item = currentItem.value;
     if (item is! YoutubeID) return;
-    final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
-    final index = currentIndex.value;
-    playbackState.add(_transformEvent(PlaybackEvent(currentIndex: index), item, isItemFavourite, index));
-    final media = mediaItem.value;
-    if (media != null) _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
+    refreshNotification(item);
   }
 
   void _refreshPlatformStatusDependersIsPlaying(bool isPlaying) {
@@ -1058,7 +1054,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     onPauseRaw();
     _startPlayErrorSkipCountdown(() {
       NamidaNavigator.inst.closeDialog();
-      if (currentQueue.value.length > 1) skipItem();
+      skipItem();
     });
     NamidaDialogs.inst.showTrackDialog(
       tr,
@@ -2158,7 +2154,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     YoutubeInfoController.current.onVideoPageReset?.call();
 
     if (item.id.isDummyVideoId) {
-      if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
+      if (_willPlayWhenReady) skipItem();
       return;
     }
 
@@ -2171,7 +2167,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
           final refresh = _currentItemDuration.value == null && refreshNoti;
           _currentItemDuration.value = duration;
           if (refresh) {
-            refreshNotification(pi, (index, ql) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
+            refreshNotification(pi, (index, ql, isFavourite) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration, isFavourite));
           }
         }
         return false;
@@ -2184,7 +2180,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       if (checkInterrupted(refreshNoti: false)) return;
       if (info != null) _ytNotificationVideoInfo = info; // we assign cuz later some functions can depend on this
       if (thumbnail != null) _ytNotificationVideoThumbnail = thumbnail;
-      refreshNotification(pi, (index, ql) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
+      refreshNotification(pi, (index, ql, isFavourite) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration, isFavourite));
     }
 
     final hadCachedVideoPageCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
@@ -3182,10 +3178,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     return item.execute(
       selectable: (finalItem) {
         int durMS = finalItem.track.durationMS;
-        return finalItem.toMediaItem(currentIndex.value, currentQueue.value.length, durMS > 0 ? durMS.milliseconds : currentItemDuration.value);
+        return finalItem.toMediaItem(currentIndex.value, currentQueue.value.length, durMS > 0 ? durMS.milliseconds : currentItemDuration.value, null);
       },
       youtubeID: (finalItem) =>
-          finalItem.toMediaItem(finalItem.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, currentIndex.value, currentQueue.value.length, currentItemDuration.value),
+          finalItem.toMediaItem(finalItem.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, currentIndex.value, currentQueue.value.length, currentItemDuration.value, null),
     )!;
   }
 
@@ -3344,7 +3340,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
 
   String toMediaItemId() => track.path;
 
-  Future<MediaItem> toMediaItem(int currentIndex, int queueLength, Duration? duration) async {
+  Future<MediaItem> toMediaItem(int currentIndex, int queueLength, Duration? duration, bool? isFavourite) async {
     final tr = track.toTrackExt();
     final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
     final imagePath = tr.pathToImage;
@@ -3363,6 +3359,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       genre: tr.originalGenre,
       duration: duration ?? Duration(milliseconds: tr.durationMS),
       artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_LAYER),
+      rating: _heartRatingOf(isFavourite),
       extras: {
         NowPlayingExtras.path: tr.path,
         NowPlayingExtras.queueIndex: currentIndex,
@@ -3425,8 +3422,14 @@ extension YoutubeIDToMediaItem on YoutubeID {
       duration: isLiveNow ? null : videoDuration ?? Duration.zero,
       isLive: isLiveNow,
       artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_LAYER),
+      rating: _heartRatingOf(isFavourite),
     );
   }
+}
+
+Rating? _heartRatingOf(bool? isFavourite) {
+  if (isFavourite == null) return null;
+  return Rating.newHeartRating(isFavourite);
 }
 
 Uri _fileToContentUri(String filePath) {
@@ -3475,7 +3478,7 @@ extension PlayableExecuter on Playable {
   }
 }
 
-typedef YoutubeIDToMediaItemCallback = Future<MediaItem> Function(int index, int queueLength);
+typedef YoutubeIDToMediaItemCallback = Future<MediaItem> Function(int index, int queueLength, bool isFavourite);
 
 /// Used to indicate that a file has been cached and should be set as a source.
 class _NextSeekCachedFileData {

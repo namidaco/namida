@@ -424,7 +424,7 @@ class NamidaOnTaps {
     final availableSorts = switch (media) {
       MediaType.album => GroupSortType.forAlbums(),
       MediaType.artist || MediaType.albumArtist || MediaType.composer => GroupSortType.forArtists(media),
-      MediaType.genre || MediaType.style => GroupSortType.forGenres(),
+      MediaType.genre || MediaType.style => GroupSortType.forGenres(media),
       MediaType.language => GroupSortType.forLanguages(),
       MediaType.playlist => GroupSortType.forPlaylists(),
       MediaType.mood || MediaType.tag => GroupSortType.forMoodsTags(),

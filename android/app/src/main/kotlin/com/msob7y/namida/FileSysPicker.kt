@@ -19,6 +19,8 @@ import java.io.Serializable
 object FileSysPicker {
 
   var pendingPickerResult: MethodChannel.Result? = null
+  private var isPickingDirectory = false
+  private var allowTreeUri = false
 
   fun updatePendingResult(result: MethodChannel.Result?) {
     if (pendingPickerResult != null) {
@@ -35,8 +37,10 @@ object FileSysPicker {
     return Uri.parse(path)
   }
 
-  fun pickDirectory(result: MethodChannel.Result?, activity: Activity, requestCode: Int, initialDirectory: String? = null): String? {
+  fun pickDirectory(result: MethodChannel.Result?, activity: Activity, requestCode: Int, initialDirectory: String? = null, allowTreeUri: Boolean = false): String? {
     updatePendingResult(result)
+    isPickingDirectory = true
+    this.allowTreeUri = allowTreeUri
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
         if (initialDirectory != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val uri = pathToDocumentUri(initialDirectory)
@@ -56,6 +60,8 @@ object FileSysPicker {
       initialDirectory: String? = null
   ): String? {
     updatePendingResult(result)
+    isPickingDirectory = false
+    allowTreeUri = false
 
     val intent: Intent
 
@@ -104,7 +110,7 @@ object FileSysPicker {
     return null
   }
 
-  fun onPickerResult(data: Intent?, storageUtils: StorageUtils) {
+  fun onPickerResult(data: Intent?, storageUtils: StorageUtils, safUtils: SafUtils) {
     if (data == null) return
     storageUtils.fillStoragePaths() // for late mounts
 
@@ -117,13 +123,8 @@ object FileSysPicker {
         var currentItem: Int = 0
         while (currentItem < count) {
           val contentUri: Uri? = clipData.getItemAt(currentItem).getUri()
-          val contentUriPath = contentUri?.path
-          val realPath = storageUtils.contentUriToPath(contentUri)
-          if (realPath != null) {
-            files.add(realPath)
-          } else if (contentUriPath != null) {
-            files.add(contentUriPath)
-          }
+          val path = if (contentUri == null) null else resolvePickedUri(contentUri, storageUtils, safUtils)
+          if (path != null) files.add(path)
 
           currentItem++
         }
@@ -135,13 +136,8 @@ object FileSysPicker {
 
     val uri = data.getData()
     if (uri != null) {
-      val uriPath = uri.path
-      val filePath = storageUtils.contentUriToPath(uri)
-      if (filePath != null) {
-        files.add(filePath)
-      } else if (uriPath != null) {
-        files.add(uriPath)
-      }
+      val path = resolvePickedUri(uri, storageUtils, safUtils)
+      if (path != null) files.add(path)
       if (files.isNotEmpty()) {
         finishWithSuccess(files)
       } else {
@@ -156,13 +152,8 @@ object FileSysPicker {
         if (fileUris != null) {
           for (fileUri in fileUris) {
             if (fileUri is Uri) {
-              val contentUri = fileUri.path
-              val realPath = storageUtils.contentUriToPath(fileUri)
-              if (realPath != null) {
-                files.add(realPath)
-              } else if (contentUri != null) {
-                files.add(contentUri)
-              }
+              val path = resolvePickedUri(fileUri, storageUtils, safUtils)
+              if (path != null) files.add(path)
             }
 
             currentItem++
@@ -175,6 +166,20 @@ object FileSysPicker {
     } else {
       finishWithError("unknown_activity", "Unknown activity error, please fill an issue.")
     }
+  }
+
+  // -- folders without a file path (usb drives, other apps) give their tree uri only when allowed
+  private fun resolvePickedUri(uri: Uri, storageUtils: StorageUtils, safUtils: SafUtils): String? {
+    val realPath = storageUtils.contentUriToPath(uri)
+    if (realPath != null) return realPath
+    if (!isPickingDirectory) return uri.path
+    if (!allowTreeUri) return null
+    try {
+      safUtils.persistReadPermission(uri)
+    } catch (_: Exception) {
+      return null
+    }
+    return uri.toString()
   }
 
   private fun getMimeTypes(allowedExtensions: List<String>?): ArrayList<String> {

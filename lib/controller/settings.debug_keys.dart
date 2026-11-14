@@ -40,6 +40,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     artistSinglesExpanded,
     artistEpsExpanded,
     artistsMapGraphLayout,
+    homePinnedType,
     lastPlayedIndex,
     ytAddToPlaylistsTabIndex,
     audioConfigPageIndex,

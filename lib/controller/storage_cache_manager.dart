@@ -37,6 +37,8 @@ class StorageCacheManager {
   static const _kListensHalfLifeDays = 90;
   static const _kListensDecayPerMS = math.ln2 / (_kListensHalfLifeDays * Duration.millisecondsPerDay);
 
+  static final trimmedImageDirs = (videos: AppDirs.YT_THUMBNAILS, channels: AppDirs.YT_THUMBNAILS_CHANNELS);
+
   Future<void> trimExtraFiles() async {
     final priorityDbFileInfo = VideoController.inst.videosPriorityManager.cacheVideosPriorityDB.fileInfo;
     await Future.wait([
@@ -853,10 +855,11 @@ class _ImageTrimmer {
     final maxMB = _imagesMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
+    final trimmedDirs = StorageCacheManager.trimmedImageDirs;
     final paramters = (
       maxBytes: totalMaxBytes,
-      dirPath: AppDirs.YT_THUMBNAILS,
-      extraDirPath: AppDirs.YT_THUMBNAILS_CHANNELS,
+      dirPath: trimmedDirs.videos,
+      extraDirPath: trimmedDirs.channels,
       priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessImageCacheIsolate.thready(paramters);
@@ -884,7 +887,8 @@ class _ImageTrimmer {
   }
 
   Future<void> _trimExcessImageCacheTemp(DbWrapperFileInfo priorityDbInfo) async {
-    final dirPath = FileParts.joinPath(AppDirs.YT_THUMBNAILS, 'temp');
+    final trimmedVideosDir = StorageCacheManager.trimmedImageDirs.videos;
+    final dirPath = FileParts.joinPath(trimmedVideosDir, 'temp');
     if (!await Directory(dirPath).exists()) return;
     final params = (
       dirPath: dirPath,

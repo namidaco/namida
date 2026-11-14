@@ -138,6 +138,8 @@ class QueueCard extends StatelessWidget {
     final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
     final remainingVerticalSpace = height == null ? 48.0 : (height - imageSize).withMinimum(0.0);
     double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
+    final titleFontMultiplier = fullInfo ? 0.28 : 0.31;
+    final subtitleFontMultiplier = fullInfo ? 0.23 : 0.26;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
@@ -201,7 +203,7 @@ class QueueCard extends StatelessWidget {
                                       ?sourceText,
                                     ].joinText(separator: ' - ')
                                   : sourceText ?? queue.source.toText(),
-                              style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28)),
+                              style: NText.medium.of(context).copyWith(fontSize: getFontSize(titleFontMultiplier)),
                               textAlign: TextAlign.start,
                               softWrap: false,
                               overflow: TextOverflow.fade,
@@ -215,7 +217,7 @@ class QueueCard extends StatelessWidget {
                                   queue.tracks.displayTrackKeyword,
                                   queue.tracks.totalDurationFormatted,
                                 ].joinText(separator: ' - '),
-                                style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
+                                style: NText.small.of(context).copyWith(fontSize: getFontSize(subtitleFontMultiplier)),
                                 softWrap: false,
                                 overflow: TextOverflow.fade,
                               ),
@@ -224,7 +226,7 @@ class QueueCard extends StatelessWidget {
                             tag: 'line3_$hero',
                             child: Text(
                               fullInfo ? queue.date.dateAndClockFormattedOriginal : TimeAgoController.dateMSSEFromNow(queue.date),
-                              style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
+                              style: NText.small.of(context).copyWith(fontSize: getFontSize(subtitleFontMultiplier)),
                               softWrap: false,
                               overflow: TextOverflow.fade,
                             ),
