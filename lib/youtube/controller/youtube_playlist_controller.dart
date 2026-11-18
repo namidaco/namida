@@ -254,8 +254,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, SortE
   }
 
   @override
-  Future<bool> renamePlaylist(String playlistName, String newName) async {
-    final didRename = await super.renamePlaylist(playlistName, newName);
+  Future<bool> renamePlaylist(String playlistName, String newName, {bool keepModifiedDate = false}) async {
+    final didRename = await super.renamePlaylist(playlistName, newName, keepModifiedDate: keepModifiedDate);
     if (didRename) {
       QueueController.latestPlayedForSourceManager.move(QueueSourceYoutubeID.ytPlaylist(playlistName), QueueSourceYoutubeID.ytPlaylist(newName));
     }

@@ -35,15 +35,18 @@ class YTHistoryListensMessage extends BaseMessage {
 
 class YTPlaylistsMessage extends BaseMessage {
   final Iterable<YoutubePlaylist> playlists;
+  final PlaylistsSyncExtras extras;
 
   const YTPlaylistsMessage({
     required this.playlists,
+    required this.extras,
     required super.messageInfo,
   }) : super(MessageType.ytPlaylists);
 
   factory YTPlaylistsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return YTPlaylistsMessage(
       playlists: (map['playlists'] as List).map((e) => YoutubePlaylist.fromJson(e, YoutubeID.fromJson, YTSortType.sortListFromJsonList)),
+      extras: PlaylistsSyncExtras.fromMap(map),
       messageInfo: messageInfo,
     );
   }
@@ -51,12 +54,14 @@ class YTPlaylistsMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'playlists': playlists.map((e) => e.toJson((item) => item.toJson(), YTSortType.sortsToJson)).toFixedList(),
+    ...extras.toMap(),
   };
 
   @override
   FutureOr<int> executeOnReceived() async {
     if (SyncUtils.kAllowModification) {
-      return YoutubePlaylistController.inst.importPlaylistsIfNewer(playlists);
+      final controller = YoutubePlaylistController.inst;
+      return extras.importInto(controller, playlists, controller.importPlaylistsIfNewer);
     } else {
       snackyy(message: 'Importing ${playlists.length} yt playlists | ${playlists.map((e) => e.name).toFixedList()}');
       return 0;
@@ -197,35 +202,40 @@ class YTLikesMessage extends BaseMessage {
 
 class YTPlaylistsManifestResponseMessage extends BaseMessage {
   final List<PlaylistManifest> available;
+  final int? orderModifiedDate;
   final SyncBatchRef? batchRef;
 
   const YTPlaylistsManifestResponseMessage({
     required super.messageInfo,
     required this.available,
+    required this.orderModifiedDate,
     required this.batchRef,
   }) : super(MessageType.ytPlaylistsManifestResponse);
 
   factory YTPlaylistsManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return YTPlaylistsManifestResponseMessage(
       available: PlaylistManifest.fromMapAsList(map),
+      orderModifiedDate: PlaylistsManifestResponseMessageUtils.orderModifiedDateFromMap(map),
       batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
+  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, orderModifiedDate, batchRef);
 
   @override
   FutureOr<int> executeOnReceived() async {
     await PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
       messageInfo: messageInfo,
       available: available,
+      otherOrderModifiedDate: orderModifiedDate,
       playlistsManager: YoutubePlaylistController.inst,
       tracksArePaths: false,
       batchRef: batchRef,
-      createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => YTPlaylistsMessage(
+      createPlaylistsMessage: (playlistsToSend, extras, createdMessageInfo) => YTPlaylistsMessage(
         playlists: playlistsToSend,
+        extras: extras,
         messageInfo: createdMessageInfo,
       ),
     );

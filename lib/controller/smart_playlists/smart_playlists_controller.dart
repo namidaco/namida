@@ -163,14 +163,22 @@ class SmartPlaylistsController {
       await create(smartPlaylist);
       return;
     }
-    await _renameArtwork(oldKey, newKey);
-    smartPlaylistsMap.value.remove(oldKey);
     smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
-    alreadyExisting.value = smartPlaylist;
-    smartPlaylistsMap.value[newKey] = alreadyExisting;
-    await _dBManager.delete(oldKey);
+    await _moveToNewKey(alreadyExisting, smartPlaylist);
     await saveToStorage(newKey);
     await _saveOrder();
+  }
+
+  /// the wrapper stays the same, so its place in the list does too.
+  Future<void> _moveToNewKey(SmartPlaylistWrapper wrapper, SmartPlaylist renamed) async {
+    final oldKey = wrapper.value.key;
+    final newKey = renamed.key;
+    await _renameArtwork(oldKey, newKey);
+    final map = smartPlaylistsMap.value;
+    map.remove(oldKey);
+    wrapper.value = renamed;
+    map[newKey] = wrapper;
+    await _dBManager.delete(oldKey);
   }
 
   Future<void> _renameArtwork(SmartPlaylistKey oldKey, SmartPlaylistKey newKey) async {
@@ -227,18 +235,34 @@ class SmartPlaylistsController {
     await _dBManager.put(key, pl?.value.toMap());
   }
 
-  Iterable<SmartPlaylist> buildSyncEntries() => smartPlaylistsMap.value.values.map((e) => e.value);
+  List<SmartPlaylist> buildSyncEntries() => smartPlaylistsMap.value.values.map((e) => e.value).toFixedList();
 
   Map<String, dynamic>? buildSyncOrder() => _orderModifiedDate > 0 ? _buildOrderRow() : null;
 
   /// [incomingWins] skips the newest wins check, ex: restoring a backup.
-  Future<int> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order, bool incomingWins = false}) async {
+  ///
+  /// [incomingPlaylists] are all of the sender's, so a playlist here whose creation date
+  /// matches an incoming one and whose name they don't have anymore was renamed there.
+  Future<int> import(List<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order, bool incomingWins = false}) async {
     int importedCount = 0;
     bool orderChanged = false;
+    late final incomingKeys = incomingPlaylists.map((e) => e.key).toSet();
+    late final localByCreationDate = smartPlaylistsMap.value.values.mapByUniqueKey((e) => e.value.creationDate.millisecondsSinceEpoch);
     for (final incoming in incomingPlaylists) {
       final key = incoming.key;
       if (key == _orderRowKey) continue;
       final local = smartPlaylistsMap.value[key];
+      if (local == null && !incomingWins) {
+        final renamedLocal = localByCreationDate[incoming.creationDate.millisecondsSinceEpoch];
+        if (renamedLocal != null && !incomingKeys.contains(renamedLocal.value.key)) {
+          if (renamedLocal.value.modifiedDate >= incoming.modifiedDate) continue;
+          await _moveToNewKey(renamedLocal, incoming);
+          importedCount++;
+          orderChanged = true;
+          await _dBManager.put(key, incoming.toMap());
+          continue;
+        }
+      }
       if (!incomingWins && local != null && local.value.modifiedDate >= incoming.modifiedDate) continue;
       if (local != null) {
         local.value = incoming;

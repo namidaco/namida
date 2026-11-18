@@ -217,16 +217,21 @@ class RequestMessage extends BaseMessage {
   final MessageRequestType msgRequestType;
   final SyncBatchRef? batchRef;
 
+  /// playlists manifests only, see [SyncDataItem.playlistsOrder].
+  final bool withOrder;
+
   const RequestMessage({
     required super.messageInfo,
     required this.msgRequestType,
     required this.batchRef,
+    this.withOrder = false,
   }) : super(MessageType.messageRequest);
 
   factory RequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return RequestMessage(
       msgRequestType: MessageRequestType.lookupMap[map['msgRequestType']]!,
       batchRef: SyncBatchRef.fromMap(map['br']),
+      withOrder: map['wo'] as bool? ?? false,
       messageInfo: messageInfo,
     );
   }
@@ -235,6 +240,7 @@ class RequestMessage extends BaseMessage {
   Map<String, dynamic> _encodeToMap() => {
     'msgRequestType': msgRequestType.name,
     'br': ?batchRef?.toMap(),
+    if (withOrder) 'wo': true,
   };
 
   @override
@@ -256,9 +262,12 @@ class RequestMessage extends BaseMessage {
       final manifest = PlaylistManifest(
         name: pl.name,
         modifiedDate: pl.modifiedDate,
+        creationDate: pl.canSyncRenames ? pl.creationDate : null,
       );
       available.add(manifest);
     }
+    final canTakeOrder = withOrder && settings.sync.isPlaylistsOrderSelected;
+    final orderModifiedDate = canTakeOrder ? plManager.customOrderModifiedDate : null;
 
     final deviceId = await SyncUtils.currentDeviceId;
     final createdMessageInfo = BaseMessageInfo(senderDeviceId: deviceId, action: .manifest);
@@ -266,11 +275,13 @@ class RequestMessage extends BaseMessage {
       MessageRequestType.playlistsManifest => PlaylistsManifestResponseMessage(
         messageInfo: createdMessageInfo,
         available: available,
+        orderModifiedDate: orderModifiedDate,
         batchRef: batchRef,
       ),
       MessageRequestType.ytPlaylistsManifest => YTPlaylistsManifestResponseMessage(
         messageInfo: createdMessageInfo,
         available: available,
+        orderModifiedDate: orderModifiedDate,
         batchRef: batchRef,
       ),
       MessageRequestType.playerQueue || MessageRequestType.tracksDbFingerprints => throw Exception('playlist manifest only'),
@@ -502,38 +513,82 @@ class ConnectionRequestMessage extends BaseMessage {
 abstract class PlaylistsManifestResponseMessageUtils {
   PlaylistsManifestResponseMessageUtils._();
 
-  static Map<String, dynamic> encodeToMap(List<PlaylistManifest> available, SyncBatchRef? batchRef) => {
+  static Map<String, dynamic> encodeToMap(List<PlaylistManifest> available, int? orderModifiedDate, SyncBatchRef? batchRef) => {
     'available': available.map((e) => e.toMap()).toFixedList(),
+    'omt': ?orderModifiedDate,
     'br': ?batchRef?.toMap(),
   };
+
+  /// null when they don't take our order, see [RequestMessage.withOrder].
+  static int? orderModifiedDateFromMap(Map<String, dynamic> map) => map['omt'] as int?;
 
   static Future<void> sendRequiredPlaylists<T extends PlaylistItemWithDate, E, S>({
     required BaseMessageInfo messageInfo,
     required List<PlaylistManifest> available,
+    required int? otherOrderModifiedDate,
     required PlaylistManager<T, E, S> playlistsManager,
     required bool tracksArePaths,
     required SyncBatchRef? batchRef,
-    required BaseMessage Function(List<GeneralPlaylist<T, S>> playlistsToSend, BaseMessageInfo createdMessageInfo) createPlaylistsMessage,
+    required BaseMessage Function(List<GeneralPlaylist<T, S>> playlistsToSend, PlaylistsSyncExtras extras, BaseMessageInfo createdMessageInfo) createPlaylistsMessage,
   }) async {
     batchRef?.markTransferring();
     try {
-      final alreadyAvailableOnOtherDevice = available;
-      final playlistsToSend = <GeneralPlaylist<T, S>>[];
-      for (final plInLibrary in playlistsManager.playlistsMap.value.values) {
-        final plAlrOnOther = alreadyAvailableOnOtherDevice.firstWhereEff((e) => e.name == plInLibrary.name);
-        if (plAlrOnOther == null || plInLibrary.modifiedDate > plAlrOnOther.modifiedDate) {
-          playlistsToSend.add(plInLibrary);
-        }
-      }
-      if (playlistsToSend.isEmpty) return; // -- they are up to date
+      final required = computeRequiredPlaylists(
+        localPlaylists: playlistsManager.playlistsMap.value,
+        available: available,
+        localOrder: playlistsManager.customIndicesOrderRx.value,
+        localOrderModifiedDate: playlistsManager.customOrderModifiedDate,
+        otherOrderModifiedDate: otherOrderModifiedDate,
+      );
+      final playlistsToSend = required.playlists;
+      final extras = required.extras;
+      if (playlistsToSend.isEmpty && extras.order == null) return; // -- they are up to date
+
       final receiverDeviceId = messageInfo.senderDeviceId;
       final createdMessageInfo = await SyncUtils.createMessageInfo(.add);
-      final msg = createPlaylistsMessage(playlistsToSend, createdMessageInfo);
+      final msg = createPlaylistsMessage(playlistsToSend, extras, createdMessageInfo);
       if (tracksArePaths) await SyncSender.inst.ensureFingerprintsSent(receiverDeviceId);
       await SyncDiscovery.sendMessage(msg, receiverDeviceId);
     } finally {
       batchRef?.markDone();
     }
+  }
+
+  /// playlists they lack or have older, renamed ones carry their old name there.
+  /// a playlist renamed there after our last change is left out, they send it to us instead.
+  @visibleForTesting
+  static ({List<GeneralPlaylist<T, S>> playlists, PlaylistsSyncExtras extras}) computeRequiredPlaylists<T, S>({
+    required Map<String, GeneralPlaylist<T, S>> localPlaylists,
+    required List<PlaylistManifest> available,
+    required List<String>? localOrder,
+    required int localOrderModifiedDate,
+    required int? otherOrderModifiedDate,
+  }) {
+    final otherByName = <String, PlaylistManifest>{for (final e in available) e.name: e};
+    late final otherByCreationDate = available.mapByUniqueKey((e) => e.creationDate);
+    final playlistsToSend = <GeneralPlaylist<T, S>>[];
+    final renamedFromByName = <String, String>{};
+    for (final plInLibrary in localPlaylists.values) {
+      final plAlrOnOther = otherByName[plInLibrary.name];
+      if (plAlrOnOther != null) {
+        if (plInLibrary.modifiedDate > plAlrOnOther.modifiedDate) playlistsToSend.add(plInLibrary);
+        continue;
+      }
+      final plRenamedOnOther = plInLibrary.canSyncRenames ? otherByCreationDate[plInLibrary.creationDate] : null;
+      if (plRenamedOnOther != null && !localPlaylists.containsKey(plRenamedOnOther.name)) {
+        if (plRenamedOnOther.modifiedDate > plInLibrary.modifiedDate) continue;
+        renamedFromByName[plInLibrary.name] = plRenamedOnOther.name;
+      }
+      playlistsToSend.add(plInLibrary);
+    }
+
+    final shouldSendOrder = localOrder != null && otherOrderModifiedDate != null && localOrderModifiedDate > otherOrderModifiedDate;
+    final extras = PlaylistsSyncExtras(
+      renamedFromByName: renamedFromByName,
+      order: shouldSendOrder ? localOrder : null,
+      orderModifiedDate: localOrderModifiedDate,
+    );
+    return (playlists: playlistsToSend, extras: extras);
   }
 }
 
@@ -541,9 +596,13 @@ class PlaylistManifest {
   final String name;
   final int modifiedDate;
 
+  /// null when renames can't be followed, see [GeneralPlaylist.canSyncRenames].
+  final int? creationDate;
+
   const PlaylistManifest({
     required this.name,
     required this.modifiedDate,
+    required this.creationDate,
   });
 
   static List<PlaylistManifest> fromMapAsList(Map<String, dynamic> map) {
@@ -554,11 +613,55 @@ class PlaylistManifest {
     return PlaylistManifest(
       name: map['name'] as String,
       modifiedDate: map['modifiedDate'] as int,
+      creationDate: map['creationDate'] as int?,
     );
   }
 
   Map<String, dynamic> toMap() => {
     'name': name,
     'modifiedDate': modifiedDate,
+    'creationDate': ?creationDate,
   };
+}
+
+/// sent along the playlists: renames done on the sender, and its custom order if it was reordered after ours.
+class PlaylistsSyncExtras {
+  final Map<String, String> renamedFromByName;
+  final List<String>? order;
+  final int orderModifiedDate;
+
+  const PlaylistsSyncExtras({
+    required this.renamedFromByName,
+    required this.order,
+    required this.orderModifiedDate,
+  });
+
+  factory PlaylistsSyncExtras.fromMap(Map<String, dynamic> map) {
+    final orderMap = map['o'] as Map?;
+    return PlaylistsSyncExtras(
+      renamedFromByName: (map['rn'] as Map?)?.cast<String, String>() ?? const {},
+      order: (orderMap?['keys'] as List?)?.cast<String>(),
+      orderModifiedDate: orderMap?['_mt'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    final order = this.order;
+    return {
+      if (renamedFromByName.isNotEmpty) 'rn': renamedFromByName,
+      if (order != null) 'o': {'keys': order, '_mt': orderModifiedDate},
+    };
+  }
+
+  Future<int> importInto<T extends PlaylistItemWithDate, E, S>(
+    PlaylistManager<T, E, S> playlistsManager,
+    Iterable<GeneralPlaylist<T, S>> playlists,
+    Future<int> Function(Iterable<GeneralPlaylist<T, S>> playlists) importPlaylists,
+  ) async {
+    final playlistsToImport = renamedFromByName.isEmpty ? playlists : await playlistsManager.renameSyncedPlaylists(playlists, renamedFromByName);
+    final importedCount = await importPlaylists(playlistsToImport);
+    final order = this.order;
+    if (order != null) playlistsManager.importCustomOrderIfNewer(order, orderModifiedDate);
+    return importedCount;
+  }
 }

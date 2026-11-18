@@ -676,6 +676,12 @@ class _SyncItemsGroupedList extends StatelessWidget {
         itemsYt: const [SyncDataItem.playlistsYt, SyncDataItem.favouritesYt],
       ),
       _SyncItemsGroup(
+        icon: SyncDataItem.playlistsOrder.toIcon(),
+        title: SyncDataItem.playlistsOrder.toText(),
+        items: const [SyncDataItem.playlistsOrder],
+        ytMirrorsMain: true,
+      ),
+      _SyncItemsGroup(
         icon: Broken.refresh,
         title: lang.history,
         items: const [SyncDataItem.history],
@@ -773,6 +779,8 @@ class _SyncItemsGroupTile extends StatelessWidget {
     final ytAllSelected = group.ytMirrorsMain ? allSelected : itemsYt.isNotEmpty && ytSelectedCount == itemsYt.length;
     final ytPartiallySelected = ytSelectedCount > 0 && !ytAllSelected;
 
+    final hasFiles = items.any((e) => e.backupPaths.isNotEmpty);
+
     return Row(
       children: [
         Expanded(
@@ -782,7 +790,7 @@ class _SyncItemsGroupTile extends StatelessWidget {
             titleWidget: _SyncItemTitle(
               title: group.title,
               isHeavy: items.any((e) => e.isHeavy) || itemsYt.any((e) => e.isHeavy),
-              sizeItems: items,
+              sizeItems: hasFiles ? items : const [],
               sizeItemsYt: itemsYt,
               sizesMap: sizesMap,
               extraText: partiallySelected ? '$selectedCount/${items.length}' : null,

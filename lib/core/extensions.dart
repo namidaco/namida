@@ -1128,6 +1128,17 @@ extension IterableExtensions<E> on Iterable<E> {
     }
     return finalList;
   }
+
+  /// null values for keys shared by several items, items with a null key are left out.
+  Map<K, E?> mapByUniqueKey<K>(K? Function(E e) keyOf) {
+    final itemsByKey = <K, E?>{};
+    for (final e in this) {
+      final key = keyOf(e);
+      if (key == null) continue;
+      itemsByKey[key] = itemsByKey.containsKey(key) ? null : e;
+    }
+    return itemsByKey;
+  }
 }
 
 extension DEWidgetsSeparator on Iterable<Widget> {

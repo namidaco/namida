@@ -12,6 +12,7 @@ enum SyncDataItem {
   latestPlayedForSource(needsFingerprints: true, isHeavy: false),
   audioConfigs(needsFingerprints: true, isHeavy: false),
   smartPlaylists(needsFingerprints: false, isHeavy: false),
+  playlistsOrder(needsFingerprints: false, isHeavy: false),
   videosPriority(needsFingerprints: false, isHeavy: false),
   subscriptionsYt(needsFingerprints: false, isHeavy: false),
   queues(needsFingerprints: true, isHeavy: false),
@@ -52,7 +53,7 @@ enum SyncDataItem {
   /// default items to sync. file-based items (except queues) are excluded,
   /// they have no cache map so building their manifests loops all files.
   /// playerQueue & playback are excluded too, they take over live playback.
-  /// settings are excluded, devices usually want their own.
+  /// settings and playlists order are excluded, devices usually want their own.
   static final Set<SyncDataItem> essentialsSet =
       {
           ...SyncDataItem.values,
@@ -71,7 +72,8 @@ enum SyncDataItem {
         ..remove(SyncDataItem.playback)
         ..remove(SyncDataItem.settingsGeneral)
         ..remove(SyncDataItem.settingsPlayer)
-        ..remove(SyncDataItem.settingsYoutube);
+        ..remove(SyncDataItem.settingsYoutube)
+        ..remove(SyncDataItem.playlistsOrder);
 
   static final lookupMap = values.asNameMap();
 
@@ -101,7 +103,7 @@ enum SyncDataItem {
     SyncDataItem.thumbnailsYt => const [AppPathsBackupEnum.YT_THUMBNAILS],
     SyncDataItem.thumbnailsChannelsYt => const [AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS],
     SyncDataItem.playerQueue => const [AppPathsBackupEnum.LATEST_QUEUE],
-    SyncDataItem.playback => const [],
+    SyncDataItem.playlistsOrder || SyncDataItem.playback => const [],
     SyncDataItem.settingsGeneral => const [AppPathsBackupEnum.SETTINGS],
     SyncDataItem.settingsPlayer => const [AppPathsBackupEnum.SETTINGS_PLAYER],
     SyncDataItem.settingsYoutube => const [AppPathsBackupEnum.SETTINGS_YOUTUBE],
@@ -216,10 +218,11 @@ class SyncSender extends RxNotifier {
     _sendingToDeviceIds.add(deviceId);
     _refresh();
     final batch = await SyncBatch.start(deviceId, items, isManual: isManual);
+    final withPlaylistsOrder = batch.items.contains(SyncDataItem.playlistsOrder);
     try {
       for (final item in batch.items) {
         batch.markItemActive(item);
-        final msg = await _buildMessageForItem(item, batch.refFor(item));
+        final msg = await _buildMessageForItem(item, batch.refFor(item), withPlaylistsOrder: withPlaylistsOrder);
         if (msg != null) {
           await _sendItem(item, msg, deviceId);
           if (msg.type.isManifestRequest) continue;
@@ -239,7 +242,7 @@ class SyncSender extends RxNotifier {
     }
   }
 
-  Future<BaseMessage?> _buildMessageForItem(SyncDataItem item, SyncBatchRef batchRef) async {
+  Future<BaseMessage?> _buildMessageForItem(SyncDataItem item, SyncBatchRef batchRef, {required bool withPlaylistsOrder}) async {
     return switch (item) {
       SyncDataItem.history => HistoryListensMessage(
         listens: SyncTrackListens.fromItems(HistoryController.inst.historyTracks),
@@ -253,11 +256,13 @@ class SyncSender extends RxNotifier {
         msgRequestType: .playlistsManifest,
         messageInfo: await SyncUtils.createMessageInfo(.manifest),
         batchRef: batchRef,
+        withOrder: withPlaylistsOrder,
       ),
       SyncDataItem.playlistsYt => RequestMessage(
         msgRequestType: .ytPlaylistsManifest,
         messageInfo: await SyncUtils.createMessageInfo(.manifest),
         batchRef: batchRef,
+        withOrder: withPlaylistsOrder,
       ),
       SyncDataItem.favourites => FavouritesMessage(
         tracks: SyncTrackListens.fromItems(PlaylistController.inst.favouritesPlaylist.value.tracks),
@@ -274,7 +279,8 @@ class SyncSender extends RxNotifier {
             : await DbFileMessage.create(AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO),
       SyncDataItem.latestPlayedForSource => await LatestPlayedForSourceMessage.createForCurrentDevice(),
       SyncDataItem.audioConfigs => await AudioConfigsMessage.createForCurrentDevice(),
-      SyncDataItem.smartPlaylists => await SmartPlaylistsMessage.createForCurrentDevice(),
+      SyncDataItem.smartPlaylists => await SmartPlaylistsMessage.createForCurrentDevice(withOrder: withPlaylistsOrder),
+      SyncDataItem.playlistsOrder => null, // -- goes with the playlists messages
       SyncDataItem.videosPriority =>
         SyncUtils.kUseDbEntriesSync
             ? await DbManifestRequestMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY, batchRef)

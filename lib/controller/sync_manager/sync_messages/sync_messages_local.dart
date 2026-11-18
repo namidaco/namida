@@ -412,7 +412,7 @@ class AudioConfigsMessage extends BaseMessage {
 }
 
 class SmartPlaylistsMessage extends BaseMessage {
-  final Iterable<SmartPlaylist> playlists;
+  final List<SmartPlaylist> playlists;
   final Map<String, dynamic>? order;
 
   const SmartPlaylistsMessage({
@@ -421,10 +421,10 @@ class SmartPlaylistsMessage extends BaseMessage {
     required super.messageInfo,
   }) : super(MessageType.smartPlaylists);
 
-  static Future<SmartPlaylistsMessage> createForCurrentDevice() async {
+  static Future<SmartPlaylistsMessage> createForCurrentDevice({required bool withOrder}) async {
     return SmartPlaylistsMessage(
       playlists: SmartPlaylistsController.inst.buildSyncEntries(),
-      order: SmartPlaylistsController.inst.buildSyncOrder(),
+      order: withOrder ? SmartPlaylistsController.inst.buildSyncOrder() : null,
       messageInfo: await SyncUtils.createMessageInfo(.add),
     );
   }
@@ -439,7 +439,7 @@ class SmartPlaylistsMessage extends BaseMessage {
 
   factory SmartPlaylistsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return SmartPlaylistsMessage(
-      playlists: (map['e'] as List).map(_tryParse).nonNulls,
+      playlists: (map['e'] as List).map(_tryParse).nonNulls.toFixedList(),
       order: (map['o'] as Map?)?.cast<String, dynamic>(),
       messageInfo: messageInfo,
     );
@@ -457,7 +457,8 @@ class SmartPlaylistsMessage extends BaseMessage {
   @override
   FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
-      return SmartPlaylistsController.inst.import(playlists, order: order);
+      final orderToImport = settings.sync.isPlaylistsOrderSelected ? order : null;
+      return SmartPlaylistsController.inst.import(playlists, order: orderToImport);
     } else {
       snackyy(message: 'Importing ${playlists.length} smart playlists | ${playlists.map((e) => e.key).toFixedList()}');
       return 0;
@@ -518,15 +519,18 @@ class SettingsMessage extends BaseMessage {
 
 class PlaylistsMessage extends BaseMessage {
   final Iterable<LocalPlaylist> playlists;
+  final PlaylistsSyncExtras extras;
 
   const PlaylistsMessage({
     required this.playlists,
+    required this.extras,
     required super.messageInfo,
   }) : super(MessageType.playlists);
 
   factory PlaylistsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return PlaylistsMessage(
       playlists: (map['playlists'] as List).map((e) => LocalPlaylist.fromJson(e, TrackWithDate.fromJson, SortType.sortListFromJsonList)),
+      extras: PlaylistsSyncExtras.fromMap(map),
       messageInfo: messageInfo,
     );
   }
@@ -534,6 +538,7 @@ class PlaylistsMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'playlists': playlists.map((e) => e.toJson((item) => item.toJson(), SortType.sortsToJson)).toFixedList(),
+    ...extras.toMap(),
   };
 
   @override
@@ -543,7 +548,8 @@ class PlaylistsMessage extends BaseMessage {
       (pl) => pl.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(senderDeviceId, twd, .playlists)),
     );
     if (SyncUtils.kAllowModification) {
-      return PlaylistController.inst.importSyncedPlaylists(resolved);
+      final controller = PlaylistController.inst;
+      return extras.importInto(controller, resolved, controller.importSyncedPlaylists);
     } else {
       snackyy(message: 'Importing ${resolved.length} playlists | ${resolved.map((e) => e.name).toFixedList()}');
       return 0;
@@ -553,35 +559,40 @@ class PlaylistsMessage extends BaseMessage {
 
 class PlaylistsManifestResponseMessage extends BaseMessage {
   final List<PlaylistManifest> available;
+  final int? orderModifiedDate;
   final SyncBatchRef? batchRef;
 
   const PlaylistsManifestResponseMessage({
     required super.messageInfo,
     required this.available,
+    required this.orderModifiedDate,
     required this.batchRef,
   }) : super(MessageType.playlistsManifestResponse);
 
   factory PlaylistsManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return PlaylistsManifestResponseMessage(
       available: PlaylistManifest.fromMapAsList(map),
+      orderModifiedDate: PlaylistsManifestResponseMessageUtils.orderModifiedDateFromMap(map),
       batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
+  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, orderModifiedDate, batchRef);
 
   @override
   FutureOr<int> executeOnReceived() async {
     await PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
       messageInfo: messageInfo,
       available: available,
+      otherOrderModifiedDate: orderModifiedDate,
       playlistsManager: PlaylistController.inst,
       tracksArePaths: true,
       batchRef: batchRef,
-      createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => PlaylistsMessage(
+      createPlaylistsMessage: (playlistsToSend, extras, createdMessageInfo) => PlaylistsMessage(
         playlists: playlistsToSend,
+        extras: extras,
         messageInfo: createdMessageInfo,
       ),
     );

@@ -24,6 +24,8 @@ class _SyncSettings extends _SettingsKeysWriter {
   late final syncItems = _keySet('selectedSyncItems', SyncDataItem.essentialsSet, item: SyncDataItem.values.asCodec());
   late final syncItemsAdvancedView = _key('syncItemsAdvancedView', false);
 
+  bool get isPlaylistsOrderSelected => syncItems.value.contains(SyncDataItem.playlistsOrder);
+
   void updateDeviceName(String id, String name) {
     if (deviceIdNames.value[id] == name) return;
     deviceIdNames.update((names) => names[id] = name);

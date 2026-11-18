@@ -293,8 +293,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
   }
 
   @override
-  Future<bool> renamePlaylist(String playlistName, String newName) async {
-    final didRename = await super.renamePlaylist(playlistName, newName);
+  Future<bool> renamePlaylist(String playlistName, String newName, {bool keepModifiedDate = false}) async {
+    final didRename = await super.renamePlaylist(playlistName, newName, keepModifiedDate: keepModifiedDate);
     if (didRename) {
       _popPageIfCurrent(() => playlistName);
       QueueController.latestPlayedForSourceManager.move(QueueSource.playlist(playlistName), QueueSource.playlist(newName));
