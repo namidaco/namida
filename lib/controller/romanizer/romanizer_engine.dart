@@ -61,11 +61,12 @@ class RomanizerEngine {
     _pinyin = null;
   }
 
-  static bool containsKana(String text) => _scan(text) & _kana != 0;
+  static int scriptsOf(String text) => _scan(text);
   static bool needsRomanization(String text) => _scan(text) != 0;
   static bool hasAnyScript(String text, int scripts) => _scan(text) & scripts != 0;
 
   static bool scriptsNeedDictionary(int scripts) => scripts & _han != 0;
+  static bool scriptsHaveKana(int scripts) => scripts & _kana != 0;
 
   static int _scan(String text) {
     var flags = 0;

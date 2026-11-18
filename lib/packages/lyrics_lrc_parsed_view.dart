@@ -492,6 +492,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     final initialFontSize = widget.baseFontSize ?? (fullscreen ? 26.0 : 15.0);
     final normalTextStyle = NText.medium.of(context).copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
+    final secondaryLineFontMultiplier = fullscreen ? 0.75 : 0.85;
     late final untimedBaseTextStyle = normalTextStyle.copyWith(fontSize: normalTextStyle.fontSize! * 0.8);
     late final untimedGapHeight = normalTextStyle.fontSize! * 0.8;
     final fullscreenIconButton = fullscreen && widget.canShowToggleFullscreenButton
@@ -694,6 +695,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                       final textWrapper = Lyrics.inst.currentLyricsText.valueR;
                       if (!_checkIfTextEmpty(textWrapper.text)) {
                         final textDirection = textWrapper.isRTL ? TextDirection.rtl : TextDirection.ltr;
+                        final romanizedSegments = Romanizer.inst.plainLyricsSegments(textWrapper);
+                        late final romanizedLineTextStyle = plainLyricsTextStyle.copyWith(fontSize: plainLyricsTextStyle.fontSize! * secondaryLineFontMultiplier);
+                        final lyricsTextSpan = romanizedSegments.isEmpty
+                            ? TextSpan(text: textWrapper.text)
+                            : TextSpan(
+                                children: romanizedSegments.map((e) => TextSpan(text: e.text, style: e.isRomanized ? romanizedLineTextStyle : null)).toFixedList(),
+                              );
                         textChild = Align(
                           key: ObjectKey(textWrapper),
                           // -- Align vip to center widget
@@ -705,8 +713,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                               child: Column(
                                 children: [
                                   SizedBox(height: _paddingVertical),
-                                  Text(
-                                    textWrapper.text,
+                                  Text.rich(
+                                    lyricsTextSpan,
                                     style: plainLyricsTextStyle,
                                     textAlign: alignAtStart ? TextAlign.start : TextAlign.center,
                                   ),
@@ -912,9 +920,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                       final isSecondaryLanguageLine = !isFirst;
 
                                       if (isSecondaryLanguageLine) {
-                                        final multiplier = fullscreen ? 0.75 : 0.85;
                                         textStyle = textStyle.copyWith(
-                                          fontSize: textStyle.fontSize! * multiplier,
+                                          fontSize: textStyle.fontSize! * secondaryLineFontMultiplier,
                                         );
                                         isBgColorDimmed = true;
                                       }

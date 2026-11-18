@@ -57,15 +57,14 @@ class Romanizer {
 
   String Function(int index, String text)? lyricsRomanizer(Lrc lrc) {
     if (!settings.romanizeLyrics.value) return null;
-    _ensureLoaded();
     final lines = lrc.lyrics;
-    var chinese = true;
-    for (var i = 0; i < lines.length; i++) {
-      if (RomanizerEngine.containsKana(lines[i].lyrics)) {
-        chinese = false;
-        break;
-      }
+    var scripts = 0;
+    for (final line in lines) {
+      scripts |= RomanizerEngine.scriptsOf(line.readableText);
     }
+    if (scripts == 0) return null;
+    _ensureLoaded();
+    final chinese = !RomanizerEngine.scriptsHaveKana(scripts);
     final shipped = _findShippedRomanization(lines, chinese);
     if (shipped.isMostlyRomanized) return null;
     final romanizedLines = shipped.romanizedLines;
@@ -134,6 +133,89 @@ class Romanizer {
     if (!hasOwnLatin) return _RomanizationMatcher.matchesAny(romanized, normalizedLatinParts);
     final romanizedWithoutLatin = _engine.romanize(textWithoutLatin, chinese: chinese);
     return _RomanizationMatcher.matchesAny(romanizedWithoutLatin, normalizedLatinLines) || _RomanizationMatcher.matchesAny(romanizedWithoutLatin, normalizedLatinParts);
+  }
+
+  final _plainLyricsSegmentsCache = Expando<List<RomanizedLyricsSegment>>();
+
+  /// empty when no line gets a romanized copy.
+  List<RomanizedLyricsSegment> plainLyricsSegments(LrcText lrcText) {
+    if (!settings.romanizeLyrics.value) return const [];
+    return _plainLyricsSegmentsCache[lrcText] ??= _computePlainLyricsSegments(lrcText.text);
+  }
+
+  /// no timestamps pair plain lines, so latin lines only decide whether the whole text ships its romanization.
+  List<RomanizedLyricsSegment> _computePlainLyricsSegments(String text) {
+    final scripts = RomanizerEngine.scriptsOf(text);
+    if (scripts == 0) return const [];
+    _ensureLoaded();
+    final chinese = !RomanizerEngine.scriptsHaveKana(scripts);
+    final lines = text.split('\n');
+    final linesCount = lines.length;
+    final normalizedLatinLines = <String>[];
+    final romanizableIndices = <int>[];
+    for (var i = 0; i < linesCount; i++) {
+      final line = lines[i];
+      if (RomanizerEngine.needsRomanization(line)) {
+        romanizableIndices.add(i);
+        continue;
+      }
+      final normalized = _RomanizationMatcher.normalize(line, scriptsAsWildcards: false);
+      if (normalized.isNotEmpty) normalizedLatinLines.add(normalized);
+    }
+
+    final hasLatinLines = normalizedLatinLines.isNotEmpty;
+    final romanizableCount = romanizableIndices.length;
+    final romanizedLines = List<String?>.filled(linesCount, null);
+    var matchedCount = 0;
+    for (var k = 0; k < romanizableCount; k++) {
+      final i = romanizableIndices[k];
+      final line = lines[i];
+      final romanized = _engine.romanize(line, chinese: chinese);
+      if (romanized == line) continue;
+      final lineWithoutLatin = line.replaceAll(_latinLettersRegex, '');
+      final hasOwnLatin = lineWithoutLatin.length != line.length;
+      final romanizedWithoutLatin = hasOwnLatin ? _engine.romanize(lineWithoutLatin, chinese: chinese) : null;
+      final isRomanizedByOwnLatin = romanizedWithoutLatin != null && _isRomanizedByOwnLatinPart(line, romanizedWithoutLatin);
+      if (isRomanizedByOwnLatin) {
+        matchedCount++;
+      } else {
+        romanizedLines[i] = romanized;
+        final canStillBeMostlyRomanized = hasLatinLines && (matchedCount + romanizableCount - k) * 2 > romanizableCount;
+        if (canStillBeMostlyRomanized) {
+          final isRomanizedByLatinLine =
+              _RomanizationMatcher.matchesAny(romanized, normalizedLatinLines) ||
+              (romanizedWithoutLatin != null && _RomanizationMatcher.matchesAny(romanizedWithoutLatin, normalizedLatinLines));
+          if (isRomanizedByLatinLine) matchedCount++;
+        }
+      }
+      if (matchedCount * 2 > romanizableCount) return const [];
+    }
+
+    final segments = <RomanizedLyricsSegment>[];
+    final lastIndex = linesCount - 1;
+    var segmentStart = 0;
+    var lineStart = 0;
+    for (var i = 0; i < linesCount; i++) {
+      final lineEnd = lineStart + lines[i].length;
+      lineStart = lineEnd + 1;
+      final romanized = romanizedLines[i];
+      if (romanized == null) continue;
+      final isLast = i == lastIndex;
+      final originalEnd = isLast ? lineEnd : lineStart;
+      final originalText = text.substring(segmentStart, originalEnd);
+      final romanizedText = isLast ? '\n$romanized' : '$romanized\n';
+      segments.add((text: originalText, isRomanized: false));
+      segments.add((text: romanizedText, isRomanized: true));
+      segmentStart = originalEnd;
+    }
+    if (segments.isEmpty) return const [];
+    if (segmentStart < text.length) segments.add((text: text.substring(segmentStart), isRomanized: false));
+    return segments;
+  }
+
+  bool _isRomanizedByOwnLatinPart(String line, String romanizedWithoutLatin) {
+    final ownLatinPart = _RomanizationMatcher.normalize(line, scriptsAsWildcards: false);
+    return _RomanizationMatcher.matchesAny(romanizedWithoutLatin, [ownLatinPart]);
   }
 
   void setLyricsEnabled(bool enabled) {
@@ -304,14 +386,15 @@ class _RomanizationMatcher {
     }
     if (letters == 0) return false;
     final canBeContained = letters >= _minContainedLetters;
+    final canSkipByBigrams = wildcardLetters == 0;
     for (final line in normalizedLines) {
-      if (_isSimilar(pattern, letters, wildcardLetters, line)) return true;
-      if (canBeContained && _isContainedIn(pattern, letters, line)) return true;
+      if (_isSimilar(pattern, letters, wildcardLetters, line, canSkipByBigrams)) return true;
+      if (canBeContained && _isContainedIn(pattern, letters, line, canSkipByBigrams)) return true;
     }
     return false;
   }
 
-  static bool _isSimilar(String pattern, int letters, int wildcardLetters, String line) {
+  static bool _isSimilar(String pattern, int letters, int wildcardLetters, String line, bool canSkipByBigrams) {
     final lineLength = line.length;
     final lineLengthOutsideWildcards = lineLength - wildcardLetters;
     final maxLength = letters > lineLengthOutsideWildcards ? letters : lineLengthOutsideWildcards;
@@ -319,15 +402,44 @@ class _RomanizationMatcher {
     final extraPatternLetters = letters - lineLength;
     final extraLineLetters = lineLengthOutsideWildcards - letters;
     if (extraPatternLetters > maxDistance || extraLineLetters > maxDistance) return false;
+    final minSharedBigrams = maxLength - 1 - 2 * maxDistance;
+    if (canSkipByBigrams && minSharedBigrams > 0 && _countSharedBigrams(pattern, line) < minSharedBigrams) return false;
     return _distance(pattern, line, maxDistance, isContained: false) <= maxDistance;
   }
 
   /// the line can hold more than the romanization, `Akaku tokekonda jouzai (Tu-ru-ru)` or one line romanizing 2 lines.
-  static bool _isContainedIn(String pattern, int letters, String line) {
+  static bool _isContainedIn(String pattern, int letters, String line, bool canSkipByBigrams) {
     final maxDistance = (letters * (1 - _minContainedSimilarity)).floor();
     final extraPatternLetters = letters - line.length;
     if (extraPatternLetters > maxDistance) return false;
+    final minSharedBigrams = letters - 1 - 2 * maxDistance;
+    if (canSkipByBigrams && minSharedBigrams > 0 && _countSharedBigrams(pattern, line) < minSharedBigrams) return false;
     return _distance(pattern, line, maxDistance, isContained: true) <= maxDistance;
+  }
+
+  static final _bigramCounts = Uint16List(26 * 26);
+
+  /// each edit breaks at most 2 bigrams, so a distance within d needs `length - 1 - 2d` shared ones. a-z only, no wildcards.
+  static int _countSharedBigrams(String pattern, String line) {
+    final counts = _bigramCounts;
+    final lineLength = line.length;
+    for (var j = 1; j < lineLength; j++) {
+      final bigram = (line.codeUnitAt(j - 1) - 0x61) * 26 + line.codeUnitAt(j) - 0x61;
+      counts[bigram]++;
+    }
+    var sharedCount = 0;
+    final patternLength = pattern.length;
+    for (var i = 1; i < patternLength; i++) {
+      final bigram = (pattern.codeUnitAt(i - 1) - 0x61) * 26 + pattern.codeUnitAt(i) - 0x61;
+      if (counts[bigram] == 0) continue;
+      counts[bigram]--;
+      sharedCount++;
+    }
+    for (var j = 1; j < lineLength; j++) {
+      final bigram = (line.codeUnitAt(j - 1) - 0x61) * 26 + line.codeUnitAt(j) - 0x61;
+      counts[bigram] = 0;
+    }
+    return sharedCount;
   }
 
   /// levenshtein where a wildcard matches up to its letters for free, [isContained] lets [pattern] start and end anywhere in [line].
@@ -382,3 +494,4 @@ class _RomanizationMatcher {
 }
 
 typedef _ShippedRomanization = ({List<String?>? romanizedLines, bool isMostlyRomanized});
+typedef RomanizedLyricsSegment = ({String text, bool isRomanized});

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lrc/lrc.dart';
 
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -90,6 +91,55 @@ void main() {
   test('a sibling mixing japanese with the romanization still counts', () {
     const sibling = 'いturururu (kataku saikai o)';
     expect(displayedLines('[00:01.00]かたくさいかいを\n[00:01.00]$sibling\n[00:05.00]さくら'), ['かたくさいかいを', sibling, 'iturururu (kataku saikai o)', 'さくら', 'sakura']);
+  });
+
+  test('latin synced lyrics get no romanizer', () {
+    expect(Romanizer.inst.lyricsRomanizer(Lrc.parse('[00:01.00]hello\n[00:02.00]world')), null);
+  });
+
+  group('plain lyrics', () {
+    List<(String, bool)> segments(String text) {
+      final segments = Romanizer.inst.plainLyricsSegments(LrcText.fromText(text));
+      return segments.map((e) => (e.text, e.isRomanized)).toList();
+    }
+
+    test('latin text gets no segments', () {
+      expect(segments('hello\nworld'), isEmpty);
+    });
+
+    test('each romanizable line gets its romanized line below', () {
+      expect(segments('さくら\nhello\nそら'), [('さくら\n', false), ('sakura\n', true), ('hello\nそら', false), ('\nsora', true)]);
+    });
+
+    test('crlf line breaks are kept', () {
+      expect(segments('さくら\r\nhello'), [('さくら\r\n', false), ('sakura\r\n', true), ('hello', false)]);
+    });
+
+    test('romaji alternating with the lines gets none', () {
+      expect(segments('さくら\nsakura\nきみのなは\nkimi no na wa\nあした\nasu'), isEmpty);
+    });
+
+    test('a romaji block after the lines gets none', () {
+      expect(segments('さくら\nきみのなは\nあした\n\nsakura\nkimi no na wa\nasu'), isEmpty);
+    });
+
+    test('a translation keeps every romanized line', () {
+      expect(segments('さくら\ncherry blossoms\nそら\nsky'), [('さくら\n', false), ('sakura\n', true), ('cherry blossoms\nそら\n', false), ('sora\n', true), ('sky', false)]);
+    });
+
+    test('romaji elsewhere in a translated text never removes a romanized line', () {
+      const text = 'さくら\ncherry blossoms\nそら\nsora\nあした\ntomorrow';
+      expect(segments(text), [('さくら\n', false), ('sakura\n', true), ('cherry blossoms\nそら\n', false), ('sora\n', true), ('sora\nあした\n', false), ('ashita\n', true), ('tomorrow', false)]);
+    });
+
+    test('a line carrying its own romaji gets no copy', () {
+      const line = 'かたくさいかいを (kataku saikai o)';
+      expect(segments('$line\nさくら\nそら'), [('$line\nさくら\n', false), ('sakura\n', true), ('そら', false), ('\nsora', true)]);
+    });
+
+    test('latin words of a line never count as its own romaji', () {
+      expect(segments('oh yeah ぼくは'), [('oh yeah ぼくは', false), ('\noh yeah bokuha', true)]);
+    });
   });
 
   group('script toggles', () {
