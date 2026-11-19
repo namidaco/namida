@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
@@ -13,7 +14,10 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/ntheme.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -738,19 +742,20 @@ void main() {
     });
   });
 
+  /// a data frame from [senderId], over the unpaired frame limit with [isBig].
+  Uint8List dirFileFrameFrom(String senderId, {bool isBig = false}) {
+    final msg = DirFileMessage(
+      subtype: AppPathsBackupEnum.VIDEOS_CACHE,
+      fileName: isBig ? 'f' * (70 * 1024) : 'file',
+      mtime: 0,
+      messageInfo: BaseMessageInfo(action: .add, senderDeviceId: senderId),
+    );
+    return jsonFrameOf(msg);
+  }
+
+  int receivedCountFrom(String deviceId) => SyncActionsLog.inst.entries.where((e) => e.deviceId == deviceId).length;
+
   group('decode gate', () {
-    Uint8List dirFileFrameFrom(String senderId) {
-      final msg = DirFileMessage(
-        subtype: AppPathsBackupEnum.VIDEOS_CACHE,
-        fileName: 'file',
-        mtime: 0,
-        messageInfo: BaseMessageInfo(action: .add, senderDeviceId: senderId),
-      );
-      return jsonFrameOf(msg);
-    }
-
-    int receivedCountFrom(String deviceId) => SyncActionsLog.inst.entries.where((e) => e.deviceId == deviceId).length;
-
     test('data from an allowed device id is dropped until its own socket is trusted', () async {
       const senderId = 'allowed-client';
       settings.sync.allowDevice(senderId);
@@ -778,6 +783,41 @@ void main() {
       socket.receive(dirFileFrameFrom(impersonatedId));
       await Future<void>.delayed(Duration.zero);
       expect(receivedCountFrom(impersonatedId), 0);
+    });
+
+    test('a trusted socket takes data frames over the unpaired limit', () async {
+      const senderId = 'allowed-client-big-frame';
+      settings.sync.allowDevice(senderId);
+      final socket = _FakeSocket(isServerSide: true);
+      final session = debugListenAsServer(socket);
+      session.trust(senderId);
+
+      socket.receive(dirFileFrameFrom(senderId, isBig: true));
+      await Future<void>.delayed(Duration.zero);
+      expect(receivedCountFrom(senderId), 1);
+    });
+
+    test('an unpaired socket drops a frame over the limit and reads the connection message right behind it', () async {
+      const peerId = 'unpaired-client-big-frame';
+      final socket = _FakeSocket(isServerSide: true);
+      final session = debugListenAsServer(socket);
+      final connect = messageOf(.connect, peerId, nonce: newHandshake().start());
+
+      socket.receive(Uint8List.fromList([...dirFileFrameFrom(peerId, isBig: true), ...jsonFrameOf(connect)]));
+      await pumpEventQueue();
+      expect(session.peerId, peerId);
+      expect(socket.isClosed, false);
+    });
+
+    test('our client takes a data frame over the unpaired limit in the same read as the accepted reply', () async {
+      const peerId = 'new-server-big-frame';
+      final (session, socket) = await weConnect(peerId);
+      final accepted = messageOf(.accepted, peerId, issuedSecret: sharedSecret);
+
+      socket.receive(Uint8List.fromList([...jsonFrameOf(accepted), ...dirFileFrameFrom(peerId, isBig: true)]));
+      await pumpEventQueue();
+      expect(session.isTrusted, true);
+      expect(receivedCountFrom(peerId), 1);
     });
   });
 
@@ -1368,6 +1408,99 @@ void main() {
       final written = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
       expect(written.containsKey('pairSecrets'), false);
       expect(written['issuedPairSecrets'], containsPair('kept', 'a2VwdA=='));
+    });
+  });
+
+  group('unpaired limits', () {
+    test('unpaired sockets over the cap are closed, a trusted one frees its slot', () async {
+      debugCloseServerSessions();
+      await pumpEventQueue();
+      const unpairedCap = 16;
+      final sockets = List.generate(unpairedCap - 1, (_) => _FakeSocket(isServerSide: true));
+      for (final socket in sockets) {
+        debugAcceptServerSocket(socket);
+      }
+      final trustedSocket = _FakeSocket(isServerSide: true);
+      final trustedSession = debugListenAsServer(trustedSocket);
+      final overCapSocket = _FakeSocket(isServerSide: true);
+      debugAcceptServerSocket(overCapSocket);
+      expect(sockets.any((e) => e.isClosed), false);
+      expect(overCapSocket.isClosed, true);
+
+      trustedSession.trust('capped-client');
+      final freedSlotSocket = _FakeSocket(isServerSide: true);
+      debugAcceptServerSocket(freedSlotSocket);
+      expect(freedSlotSocket.isClosed, false);
+      debugCloseServerSessions();
+      await pumpEventQueue();
+    });
+
+    test('an unpaired socket closes once its time is up, a trusted one stays', () async {
+      final idleSocket = _FakeSocket(isServerSide: true);
+      final idleSession = debugListenAsServer(idleSocket);
+      final trustedSocket = _FakeSocket(isServerSide: true);
+      final trustedSession = debugListenAsServer(trustedSocket);
+      trustedSession.trust('timed-client');
+
+      debugOnUnpairedTimeout(idleSession);
+      debugOnUnpairedTimeout(trustedSession);
+      expect(idleSocket.isClosed, true);
+      expect(trustedSocket.isClosed, false);
+    });
+
+    testWidgets('prompts of unpaired sockets are capped, an open prompt keeps its socket past the timeout', (tester) async {
+      final appTheme = AppThemes.inst.getAppTheme(null, true);
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: namida.rootNavigatorKey,
+          theme: appTheme,
+          home: NTheme(
+            data: appTheme,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+      // -- the prompts were opened in real async, their close callbacks run there too
+      Future<void> frames() async {
+        for (int i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        await tester.runAsync(pumpEventQueue);
+      }
+
+      const promptsCap = 3;
+      final dialogsCount = NamidaNavigator.inst.openedDialogsCount;
+      final connected = await tester.runAsync(() async {
+        return [
+          for (int i = 0; i <= promptsCap; i++) await peerConnects('prompted-client-$i'),
+        ];
+      });
+      await frames();
+      expect(NamidaNavigator.inst.openedDialogsCount, dialogsCount + promptsCap);
+      expect(connected!.take(promptsCap).any((e) => e.$2.isClosed), false);
+      expect(connected.last.$2.isClosed, true);
+
+      final (topSession, topSocket, _) = connected[promptsCap - 1];
+      await tester.runAsync(() async => debugOnUnpairedTimeout(topSession)); // -- it starts its next timer, in real async like the session
+      expect(topSocket.isClosed, false);
+
+      NamidaNavigator.inst.closeDialog();
+      await frames();
+      debugOnUnpairedTimeout(topSession);
+      expect(topSocket.isClosed, true);
+
+      final laterSocket = await tester.runAsync(() async {
+        final (_, socket, _) = await peerConnects('prompted-client-later');
+        return socket;
+      });
+      await frames();
+      expect(laterSocket!.isClosed, false);
+      expect(NamidaNavigator.inst.openedDialogsCount, dialogsCount + promptsCap);
+
+      NamidaNavigator.inst.closeDialog(promptsCap);
+      await frames();
+      debugCloseServerSessions();
+      await tester.runAsync(pumpEventQueue);
     });
   });
 }

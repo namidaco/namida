@@ -102,6 +102,15 @@ class _FrameReader {
   /// a file transfer, capped at 200MB by the files sync messages.
   static const _maxFrameLength = 256 * 1024 * 1024;
 
+  /// only tiny connection messages come before the session trusts its peer, bigger frames are dropped unbuffered.
+  static const _maxUnpairedFrameLength = 64 * 1024;
+
+  int _maxAllowedFrameLength = _maxUnpairedFrameLength;
+  int _bytesToSkip = 0;
+
+  /// the session trusts its peer, see [_PairingSession.trust].
+  void allowLargeFrames() => _maxAllowedFrameLength = _maxFrameLength;
+
   Uint8List _buf = Uint8List(_initialCapacity);
   int _writePos = 0; // how many bytes are in the buffer
   int _readPos = 0; // how far we've consumed
@@ -110,6 +119,7 @@ class _FrameReader {
   int get _available => _writePos - _readPos;
 
   void addBytes(Uint8List data) {
+    if (_bytesToSkip > 0) return _skipThenAdd(data);
     _ensureCapacity(data.length);
 
     _buf.setRange(_writePos, _writePos + data.length, data);
@@ -120,6 +130,29 @@ class _FrameReader {
       _currentProgressRx.value = (_available, _expectedLength);
     } else {
       _currentProgressRx.value = null;
+    }
+  }
+
+  void _skipThenAdd(Uint8List data) {
+    final dataLength = data.length;
+    if (dataLength <= _bytesToSkip) {
+      _bytesToSkip -= dataLength;
+      return;
+    }
+    final rest = Uint8List.sublistView(data, _bytesToSkip);
+    _bytesToSkip = 0;
+    addBytes(rest);
+  }
+
+  /// drops the frame whose header was just read, its bytes that arrive later are dropped in [addBytes].
+  void _skipFrame() {
+    final skipNow = _available.withMaximum(_expectedLength);
+    _readPos += skipNow;
+    _bytesToSkip = _expectedLength - skipNow;
+    _expectedLength = -1;
+    if (_readPos == _writePos) {
+      _readPos = 0;
+      _writePos = 0;
     }
   }
 
@@ -157,14 +190,19 @@ class _FrameReader {
         _expectedLength = (_buf[_readPos] << 24) | (_buf[_readPos + 1] << 16) | (_buf[_readPos + 2] << 8) | _buf[_readPos + 3];
         _readPos += 4;
 
-        if (_expectedLength > _maxFrameLength) {
-          // -- the stream is desynced beyond recovery, drop everything & let the consumer close the socket.
-          _readPos = 0;
-          _writePos = 0;
-          _expectedLength = -1;
-          _buf = Uint8List(_initialCapacity);
-          _streamController.addError(const SocketException('Frame length exceeds the maximum allowed size'));
-          return;
+        if (_expectedLength > _maxAllowedFrameLength) {
+          if (_expectedLength > _maxFrameLength) {
+            // -- the stream is desynced beyond recovery, drop everything & let the consumer close the socket.
+            _readPos = 0;
+            _writePos = 0;
+            _expectedLength = -1;
+            _buf = Uint8List(_initialCapacity);
+            _streamController.addError(const SocketException('Frame length exceeds the maximum allowed size'));
+            return;
+          }
+          _skipFrame();
+          if (_bytesToSkip > 0) return;
+          continue;
         }
 
         var toPreallocate = _expectedLength - _available;
@@ -231,7 +269,11 @@ class _FrameReader {
 
 @visibleForTesting
 // ignore: library_private_types_in_public_api
-_FrameReader debugCreateFrameReader() => _FrameReader();
+_FrameReader debugCreateFrameReader({bool isPaired = true}) {
+  final reader = _FrameReader();
+  if (isPaired) reader.allowLargeFrames();
+  return reader;
+}
 
 // class _FrameReaderSimple {
 //   final _streamController = StreamController<Uint8List>();

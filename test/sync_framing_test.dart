@@ -40,8 +40,8 @@ void main() {
 
   /// feeds [chunks] the way the dart:io read loop does, each next read runs as a microtask right after the previous one.
   /// json payloads are copied on delivery since the real listener decodes them right away, binary ones are kept as delivered.
-  Future<({List<(int, List<int>)> frames, List<Object> errors})> read(List<Uint8List> chunks, {bool closeAfter = false}) async {
-    final reader = debugCreateFrameReader();
+  Future<({List<(int, List<int>)> frames, List<Object> errors})> read(List<Uint8List> chunks, {bool closeAfter = false, bool isPaired = true}) async {
+    final reader = debugCreateFrameReader(isPaired: isPaired);
     final frames = <(int, List<int>)>[];
     final errors = <Object>[];
     reader.frames.listen(
@@ -151,12 +151,102 @@ void main() {
     expectFrames(result.frames, [(kindJson, payload)]);
   });
 
-  test('a frame declared longer than the limit errors the stream', () async {
+  test('a frame declared longer than the limit errors the stream, paired or not', () async {
     const tooLong = 256 * 1024 * 1024 + 1;
     final header = Uint8List.fromList([(tooLong >> 24) & 0xFF, (tooLong >> 16) & 0xFF, (tooLong >> 8) & 0xFF, tooLong & 0xFF, kindJson]);
-    final result = await read([header]);
-    expect(result.frames, isEmpty);
-    expect(result.errors.single, isA<SocketException>());
+    for (final isPaired in [true, false]) {
+      final result = await read([header], isPaired: isPaired);
+      expect(result.frames, isEmpty, reason: 'paired: $isPaired');
+      expect(result.errors.single, isA<SocketException>(), reason: 'paired: $isPaired');
+    }
+  });
+
+  group('unpaired limit', () {
+    const unpairedLimit = 64 * 1024;
+    final smallFrames = [
+      (kindJson, jsonPayload('a', 100)),
+      (kindBinary, binaryPayload(300, 6)),
+      (kindJson, jsonPayload('b', 50)),
+      (kindJson, jsonPayload('c', 10)),
+    ];
+    final atLimitFrame = (kindJson, jsonPayload('y', unpairedLimit - 9));
+    final overLimitFrame = (kindJson, jsonPayload('x', unpairedLimit - 8));
+    final bigBinaryFrame = (kindBinary, binaryPayload(unpairedLimit * 3, 7));
+    final frames = [
+      smallFrames[0],
+      overLimitFrame,
+      smallFrames[1],
+      bigBinaryFrame,
+      smallFrames[2],
+      atLimitFrame,
+      smallFrames[3],
+    ];
+    final unpairedFrames = [smallFrames[0], smallFrames[1], smallFrames[2], atLimitFrame, smallFrames[3]];
+
+    test('the frames sit right at the limit', () {
+      expect(atLimitFrame.$2.length + 1, unpairedLimit);
+      expect(overLimitFrame.$2.length + 1, unpairedLimit + 1);
+    });
+
+    test('a paired reader takes every frame', () async {
+      final result = await read([streamOf(frames)]);
+      expectFrames(result.frames, frames);
+      expect(result.errors, isEmpty);
+    });
+
+    test('an unpaired reader drops frames over the limit and keeps the ones around them, at random reads', () async {
+      final bytes = streamOf(frames);
+      final random = math.Random(11);
+      for (int round = 0; round < 40; round++) {
+        final offsets = <int>[];
+        int offset = 0;
+        while (true) {
+          offset += 1 + random.nextInt(30000);
+          if (offset >= bytes.length) break;
+          offsets.add(offset);
+        }
+        final result = await read(splitAt(bytes, offsets), isPaired: false);
+        expectFrames(result.frames, unpairedFrames, reason: 'round $round');
+        expect(result.errors, isEmpty, reason: 'round $round');
+      }
+    });
+
+    test('an unpaired reader splits right around the dropped frames', () async {
+      final bytes = streamOf(frames);
+      final dropBoundaries = [lengthOfFirst(frames, 1), lengthOfFirst(frames, 2), lengthOfFirst(frames, 3), lengthOfFirst(frames, 4)];
+      for (final boundary in dropBoundaries) {
+        for (int delta = -6; delta <= 6; delta++) {
+          final splitOffset = boundary + delta;
+          final result = await read(splitAt(bytes, [splitOffset]), isPaired: false);
+          expectFrames(result.frames, unpairedFrames, reason: 'split at $splitOffset');
+          expect(result.errors, isEmpty, reason: 'split at $splitOffset');
+        }
+      }
+    });
+
+    test('an unpaired reader never buffers a dropped frame, a paired one does', () {
+      final bytes = frameOf(bigBinaryFrame.$1, bigBinaryFrame.$2);
+      final firstPart = Uint8List.sublistView(bytes, 0, unpairedLimit);
+      for (final isPaired in [true, false]) {
+        final reader = debugCreateFrameReader(isPaired: isPaired);
+        reader.addBytes(firstPart);
+        final progress = reader.currentProgress.value;
+        expect(progress != null, isPaired, reason: 'paired: $isPaired');
+      }
+    });
+
+    test('a reader paired in the middle of a dropped frame drops the rest of it, then takes big frames', () async {
+      final reader = debugCreateFrameReader(isPaired: false);
+      final received = <(int, List<int>)>[];
+      reader.frames.listen((frame) => received.add((frame.$1, Uint8List.fromList(frame.$2))));
+      final bigFrameBytes = frameOf(overLimitFrame.$1, overLimitFrame.$2);
+      final half = bigFrameBytes.length ~/ 2;
+      reader.addBytes(Uint8List.fromList([...frameOf(smallFrames[0].$1, smallFrames[0].$2), ...bigFrameBytes.sublist(0, half)]));
+      reader.allowLargeFrames();
+      reader.addBytes(Uint8List.fromList([...bigFrameBytes.sublist(half), ...streamOf([bigBinaryFrame, smallFrames[1]])]));
+      await Future<void>.delayed(Duration.zero);
+      expectFrames(received, [smallFrames[0], bigBinaryFrame, smallFrames[1]]);
+    });
   });
 
   test('closing in the middle of a frame reports the lost connection', () async {

@@ -78,6 +78,7 @@ class _PairingSession {
   /// opens the decode gate, the returned connection is what gets registered as connected.
   _SocketWrapper trust(String deviceId) {
     trustedIds.add(deviceId);
+    reader.allowLargeFrames();
     return _SocketWrapper(
       deviceId: deviceId,
       socket: socket,
@@ -89,6 +90,20 @@ class _PairingSession {
   Future<void> close() {
     _isClosed = true;
     return writer.closeSocket();
+  }
+
+  /// server side, so idle or dead unpaired sockets can't fill [_ServerSide._kMaxUnpairedSessions]. one with an open prompt stays.
+  static const _kUnpairedTimeout = Duration(seconds: 20);
+
+  /// server side, its approval prompt is open.
+  bool _isAwaitingApproval = false;
+
+  void _closeIfStillUnpairedLater() => Timer(_kUnpairedTimeout, _onUnpairedTimeout);
+
+  void _onUnpairedTimeout() {
+    if (_isClosed || isTrusted) return;
+    if (_isAwaitingApproval) return _closeIfStillUnpairedLater();
+    socket.destroy();
   }
 
   /// a dead socket cleans up through its `onClosed`, nothing to do here.
@@ -195,12 +210,14 @@ class _PairingSession {
 
   /// only this socket hears it, the device stays trusted for when both apps match again.
   Future<void> _rejectVersionMismatch(String clientDeviceName) async {
-    VibratorController.high();
     final reasonMessage = lang.versionMismatchMakeSureBothAppsAreOnTheSameVersion;
     final reply = await ConnectionRequestMessage.createForCurrentDevice(.rejected, reason: reasonMessage);
     await send(reply);
-    await NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+    final server = SyncDiscovery.server;
+    if (!server._canOpenPrompt) return;
+    VibratorController.high();
+    await server._showPrompt(
+      CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
         title: '${lang.connectionRejected} - $clientDeviceName',
@@ -301,42 +318,47 @@ class _PairingSession {
   /// the approval prompt for a device without a pair secret, also shown when a paired one fails its proof.
   /// that one can't be blocked from here, the real device would be blocked with an impostor.
   void _askApproval(String peerId, {List<int>? issuedSecret}) {
+    if (isServerSide && !SyncDiscovery.server._canOpenPrompt) return socket.destroy();
     final isUnprovenPairedDevice = _isUnprovenPairedDevice(peerId);
     final bodyText = _approvalText(isUnprovenPairedDevice);
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        isWarning: true,
-        normalTitleStyle: true,
-        bodyText: bodyText,
-        trailingWidgets: [
-          if (!isUnprovenPairedDevice)
-            NamidaIconButton(
-              icon: Broken.shield_slash,
-              tooltip: () => lang.block.toUpperCase(),
-              onPressed: () async {
-                await SyncDiscovery.server.blockConnection(peerId);
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
-        ],
-        actions: [
-          NamidaButton(
-            text: lang.reject.toUpperCase(),
-            onTap: () async {
-              await _onApprovalRejected(peerId);
+    final dialog = CustomBlurryDialog(
+      isWarning: true,
+      normalTitleStyle: true,
+      bodyText: bodyText,
+      trailingWidgets: [
+        if (!isUnprovenPairedDevice)
+          NamidaIconButton(
+            icon: Broken.shield_slash,
+            tooltip: () => lang.block.toUpperCase(),
+            onPressed: () async {
+              await SyncDiscovery.server.blockConnection(peerId);
               NamidaNavigator.inst.closeDialog();
             },
           ),
-          NamidaButton(
-            text: lang.accept.toUpperCase(),
-            onTap: () async {
-              await _onApprovalAccepted(peerId, issuedSecret);
-              NamidaNavigator.inst.closeDialog();
-            },
-          ),
-        ],
-      ),
+      ],
+      actions: [
+        NamidaButton(
+          text: lang.reject.toUpperCase(),
+          onTap: () async {
+            await _onApprovalRejected(peerId);
+            NamidaNavigator.inst.closeDialog();
+          },
+        ),
+        NamidaButton(
+          text: lang.accept.toUpperCase(),
+          onTap: () async {
+            await _onApprovalAccepted(peerId, issuedSecret);
+            NamidaNavigator.inst.closeDialog();
+          },
+        ),
+      ],
     );
+    if (!isServerSide) {
+      NamidaNavigator.inst.navigateDialog(dialog: dialog);
+      return;
+    }
+    _isAwaitingApproval = true;
+    SyncDiscovery.server._showPrompt(dialog).then((_) => _isAwaitingApproval = false);
   }
 
   /// an unproven paired device gets a warning, its prompt reads like a first pairing otherwise.
@@ -581,7 +603,24 @@ _Handshake debugCreateHandshake({required InternetAddress peerAddress, required 
 
 @visibleForTesting
 // ignore: library_private_types_in_public_api
-_PairingSession debugListenAsServer(Socket socket) => SyncDiscovery.server._onClientSocket(socket);
+_PairingSession debugListenAsServer(Socket socket) => SyncDiscovery.server._openSession(socket);
+
+/// a socket our server accepted, closed when the unpaired ones are at their cap.
+@visibleForTesting
+void debugAcceptServerSocket(Socket socket) => SyncDiscovery.server._onClientSocket(socket);
+
+/// closes every socket of our server, their sessions end once the closes are reported.
+@visibleForTesting
+void debugCloseServerSessions() {
+  for (final session in SyncDiscovery.server._sessions) {
+    session.socket.destroy();
+  }
+}
+
+/// the check that closes an unpaired server socket once its time is up.
+@visibleForTesting
+// ignore: library_private_types_in_public_api
+void debugOnUnpairedTimeout(_PairingSession session) => session._onUnpairedTimeout();
 
 /// a session handshaking with [serverDeviceId], like [_ClientSide.connectToServer] once connected to [dialedAddress].
 @visibleForTesting

@@ -170,11 +170,33 @@ class _ServerSide extends RxNotifier {
     await _refreshFirewallState();
   }
 
-  _PairingSession _onClientSocket(Socket socket) {
+  /// each one holds a socket and a read buffer, trusted ones don't count.
+  static const _kMaxUnpairedSessions = 16;
+
+  void _onClientSocket(Socket socket) {
+    final unpairedCount = _sessions.where((e) => !e.isTrusted).length;
+    if (unpairedCount >= _kMaxUnpairedSessions) return socket.destroy();
+    _openSession(socket);
+  }
+
+  _PairingSession _openSession(Socket socket) {
     final session = _PairingSession.server(socket);
     _sessions.add(session);
     session.listen(onClosed: () => _onSessionClosed(session));
+    session._closeIfStillUnpairedLater();
     return session;
+  }
+
+  /// a peer reconnecting under new ids can't stack prompts.
+  static const _kMaxOpenPrompts = 3;
+  int _openPromptsCount = 0;
+
+  bool get _canOpenPrompt => _openPromptsCount < _kMaxOpenPrompts;
+
+  Future<void> _showPrompt(CustomBlurryDialog dialog) async {
+    _openPromptsCount++;
+    await NamidaNavigator.inst.navigateDialog(dialog: dialog);
+    _openPromptsCount--;
   }
 
   void _onSessionClosed(_PairingSession session) {
