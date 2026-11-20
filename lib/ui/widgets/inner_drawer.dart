@@ -237,6 +237,10 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                           controller.animateTo(_distanceTraveled / context.width);
                         }
                         ..onEnd = (details) {
+                          if (instance.isHandlingCancel) {
+                            _isOpened ? _openDrawer() : _closeDrawer();
+                            return;
+                          }
                           final velocity = details.velocity.pixelsPerSecond.dx;
                           if (velocity > 300) {
                             _openDrawer();
@@ -271,6 +275,20 @@ class _DrawerDragGestureRecognizer extends HorizontalDragGestureRecognizer {
 
   @override
   bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) => super.isPointerPanZoomAllowed(event) && canAcceptPointer(event);
+
+  // -- flutter fires onEnd for cancelled pointers too, ex: android taking the pointer for the back gesture
+  bool isHandlingCancel = false;
+
+  @override
+  void handleEvent(PointerEvent event) {
+    if (event is! PointerCancelEvent) {
+      super.handleEvent(event);
+      return;
+    }
+    isHandlingCancel = true;
+    super.handleEvent(event);
+    isHandlingCancel = false;
+  }
 
   // -- 2x slop so inner scrollables and text selection win first
   @override

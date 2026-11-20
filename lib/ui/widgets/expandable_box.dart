@@ -301,6 +301,7 @@ class SortByMenu extends StatelessWidget {
   final String title;
   final bool isCurrentlyReversed;
   final void Function()? onSortTap;
+  final void Function(BuildContext context)? onSortLongPress;
   final void Function()? onReverseIconTap;
 
   const SortByMenu({
@@ -308,6 +309,7 @@ class SortByMenu extends StatelessWidget {
     required this.popupMenuChild,
     required this.title,
     this.onSortTap,
+    this.onSortLongPress,
     this.onReverseIconTap,
     required this.isCurrentlyReversed,
   });
@@ -327,6 +329,8 @@ class SortByMenu extends StatelessWidget {
         () => NamidaPopupWrapper(
           children: () => popupMenuChild?.children(context) ?? [],
         ).showPopupMenu(context);
+    final onSortLongPress = this.onSortLongPress;
+    final onLongPress = onSortLongPress == null ? null : () => onSortLongPress(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: DecoratedBox(
@@ -348,6 +352,8 @@ class SortByMenu extends StatelessWidget {
                 bottom: 7.0,
               ),
               onTap: onSortTap,
+              onLongPress: onLongPress,
+              enableSecondaryTap: onLongPress != null,
               child: Center(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

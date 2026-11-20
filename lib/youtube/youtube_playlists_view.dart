@@ -279,7 +279,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   builder: (context, listensMap) {
                     final totalVideosCount = listensMap.length;
                     final videos = listensMap.keysSortedByValue
-                        .where((e) => e.isNotEmpty)
+                        .where((e) => !e.isDummyVideoId)
                         .take(100)
                         .map(
                           (e) => YoutubeID(

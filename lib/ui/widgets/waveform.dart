@@ -112,6 +112,7 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
   @override
   Widget build(BuildContext context) {
     final colors = NColorsData.of(context);
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final barRadius = Radius.circular(5.0.multipliedRadius);
     const frontOpacity = 0.43;
     final barColorBehind = colors.onSurface.withOpacityExt(0.16);
@@ -126,7 +127,7 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
         return ObxO(
           rx: WaveformController.inst.currentWaveformUIRx,
           builder: (context, downscaled) {
-            final barWidth = maxWidth / downscaled.length * WaveformComponent.barWidthFraction;
+            final barsLayout = WaveformBarsLayout(maxWidth, downscaled.length, pixelRatio);
             return Center(
               child: AnimatedBuilder(
                 animation: _animation,
@@ -136,7 +137,7 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
                     barColor: barColorBehind,
                     barRadius: barRadius,
                     waveList: downscaled,
-                    barWidth: barWidth,
+                    barsLayout: barsLayout,
                     barMinHeight: widget.barsMinHeight,
                     barMaxHeight: widget.barsMaxHeight,
                     jelly: jelly,
@@ -158,7 +159,7 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
                               barColor: barColorFront,
                               barRadius: barRadius,
                               waveList: downscaled,
-                              barWidth: barWidth,
+                              barsLayout: barsLayout,
                               barMinHeight: widget.barsMinHeight,
                               barMaxHeight: widget.barsMaxHeight,
                               playedPercentage: percentage,
@@ -182,7 +183,7 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
 
 class _NamidaWaveBars extends StatelessWidget {
   final List<double> waveList;
-  final double barWidth;
+  final WaveformBarsLayout barsLayout;
   final double barMinHeight;
   final double barMaxHeight;
   final Color barColor;
@@ -194,7 +195,7 @@ class _NamidaWaveBars extends StatelessWidget {
 
   const _NamidaWaveBars({
     required this.waveList,
-    required this.barWidth,
+    required this.barsLayout,
     required this.barMinHeight,
     required this.barMaxHeight,
     required this.barColor,
@@ -213,7 +214,7 @@ class _NamidaWaveBars extends StatelessWidget {
       willChange: true,
       painter: _NamidaWaveBarsPainter(
         waveList: waveList,
-        barWidth: barWidth,
+        barsLayout: barsLayout,
         barMinHeight: barMinHeight,
         barMaxHeight: barMaxHeight,
         barColor: barColor,
@@ -233,7 +234,7 @@ class _NamidaWaveBars extends StatelessWidget {
 /// by claude
 class _NamidaWaveBarsPainter extends CustomPainter {
   final List<double> waveList;
-  final double barWidth;
+  final WaveformBarsLayout barsLayout;
   final double barMinHeight;
   final double barMaxHeight;
   final Color barColor;
@@ -245,7 +246,7 @@ class _NamidaWaveBarsPainter extends CustomPainter {
 
   _NamidaWaveBarsPainter({
     required this.waveList,
-    required this.barWidth,
+    required this.barsLayout,
     required this.barMinHeight,
     required this.barMaxHeight,
     required this.barColor,
@@ -262,10 +263,9 @@ class _NamidaWaveBarsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final count = waveList.length;
-    if (count == 0 || barWidth <= 0 || !barWidth.isFinite) return;
+    final barWidth = barsLayout.barWidth;
+    if (count == 0 || !barWidth.isFinite) return;
 
-    // -- matches `MainAxisAlignment.spaceEvenly`: equal gaps before, between & after the bars.
-    final gap = (size.width - barWidth * count) / (count + 1);
     final centerY = size.height / 2;
     final paint = Paint()
       ..color = barColor
@@ -286,16 +286,15 @@ class _NamidaWaveBarsPainter extends CustomPainter {
       }
     }
 
-    final barPitch = barWidth + gap;
     final halfBarWidth = barWidth / 2;
     var jellyStretch = jelly?.activeStretch();
     if (jellyStretch != null && jellyStretch.length != count) jellyStretch = null;
     if (jellyStretch != null) maxLeft += halfBarWidth * _WaveformJelly.maxExtraWidth; // -- squashed bars widen past the played edge
-    double left = gap;
     // -- one draw for all bars, impeller gives each drawRRect its own render pass
     // -- skia merges same-paint drawRRects into one draw, a many-contour path is heavier there
     final barsPath = _isImpeller ? Path() : null;
     for (int i = 0; i < count; i++) {
+      final left = barsLayout.leftAt(i);
       if (left > maxLeft) break;
       var barHeight = (heightPercentage * waveList[i]).clampDouble(barMinHeight, barMaxHeight);
       var barLeft = left;
@@ -315,7 +314,6 @@ class _NamidaWaveBarsPainter extends CustomPainter {
       } else {
         canvas.drawRRect(barRRect, paint);
       }
-      left += barPitch;
     }
     if (barsPath != null) canvas.drawPath(barsPath, paint);
   }
@@ -324,7 +322,7 @@ class _NamidaWaveBarsPainter extends CustomPainter {
   bool shouldRepaint(_NamidaWaveBarsPainter oldDelegate) {
     return heightPercentage != oldDelegate.heightPercentage ||
         barColor != oldDelegate.barColor ||
-        barWidth != oldDelegate.barWidth ||
+        !identical(barsLayout, oldDelegate.barsLayout) ||
         barMinHeight != oldDelegate.barMinHeight ||
         barMaxHeight != oldDelegate.barMaxHeight ||
         barRadius != oldDelegate.barRadius ||
@@ -333,6 +331,28 @@ class _NamidaWaveBarsPainter extends CustomPainter {
         !identical(waveList, oldDelegate.waveList) ||
         !identical(jelly, oldDelegate.jelly);
   }
+}
+
+// by claude
+/// bar edges snap to device pixels, otherwise thin bars at a fractional pitch render with uneven widths.
+class WaveformBarsLayout {
+  final double barWidth;
+  final double _firstLeft;
+  final double _pitch;
+  final double _pixelRatio;
+
+  const WaveformBarsLayout._(this.barWidth, this._firstLeft, this._pitch, this._pixelRatio);
+
+  factory WaveformBarsLayout(double width, int count, double pixelRatio) {
+    final exactBarWidth = width / count * WaveformComponent.barWidthFraction;
+    final barWidth = (exactBarWidth * pixelRatio).roundToDouble().withMinimum(1.0) / pixelRatio;
+    // -- matches `MainAxisAlignment.spaceEvenly`: equal gaps before, between & after the bars.
+    final gap = (width - exactBarWidth * count) / (count + 1);
+    final firstLeft = gap + (exactBarWidth - barWidth) / 2;
+    return WaveformBarsLayout._(barWidth, firstLeft, exactBarWidth + gap, pixelRatio);
+  }
+
+  double leftAt(int index) => ((_firstLeft + index * _pitch) * _pixelRatio).roundToDouble() / _pixelRatio;
 }
 
 // by claude

@@ -140,6 +140,7 @@ class VisualizerTile extends StatelessWidget {
     return NamidaPopupItem(
       icon: style.toIcon(),
       title: style.toText(),
+      popOnTap: false,
       onTap: () => _toggle(style),
       trailing: _ExtraSwitch(
         isActive: isEnabled,
@@ -173,6 +174,7 @@ class VisualizerTile extends StatelessWidget {
         hasDividerAbove: true,
         icon: Broken.buy_crypto,
         title: lang.particles,
+        popOnTap: false,
         onTap: _toggleParticles,
         trailing: _ExtraSwitch(
           isActive: hasParticles,
@@ -189,6 +191,7 @@ class VisualizerTile extends StatelessWidget {
         hasDividerAbove: true,
         icon: Broken.colorfilter,
         title: lang.colorPalette,
+        popOnTap: false,
         onTap: _toggleArtworkColors,
         trailing: _ExtraSwitch(
           isActive: settings.visualizerArtworkColors.value,

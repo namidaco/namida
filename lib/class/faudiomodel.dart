@@ -517,6 +517,7 @@ class FTagsSortInfo {
 /// fields the file holds several values of, used as they are instead of splitting their joined text.
 class FTagsMultiValues {
   static const kJoiner = '; ';
+  static const kSeparator = ';';
 
   final List<String>? artists, albums, albumArtists, composers, genres, styles, moods, tags;
 
@@ -564,7 +565,8 @@ class FTagsMultiValues {
 
   /// [text] joined by [kJoiner], spaces around `;` are optional.
   static List<String>? splitJoined(String text) {
-    final values = text.split(';');
+    if (!text.contains(kSeparator)) return null;
+    final values = text.split(kSeparator);
     return valuesOrNull(values);
   }
 

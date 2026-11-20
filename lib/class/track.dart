@@ -996,8 +996,9 @@ extension TrackExtUtils on TrackExtended {
       var link = NamidaLinkUtils.extractYoutubeLink(comment);
       if (link != null) return link;
     }
-    var filename = this.filename;
-    if (filename.isNotEmpty) {
+    // -- a server url's own filename is the address with its params, `_libraryId=` matched as a yt id
+    var filename = isNetwork ? MusicWebServer.baseUrlToFilename(path) : this.filename;
+    if (filename != null && filename.isNotEmpty) {
       var id = NamidaLinkRegex.youtubeIdInFilenameRegex.firstMatch(filename)?.group(1);
       id ??= NamidaLinkUtils.extractYoutubeIdInTrailingBrackets(filename);
       if (id != null) return 'youtu.be/$id';

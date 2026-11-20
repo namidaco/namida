@@ -105,7 +105,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
 
   final _undoStack = <List<_EditorLine>>[];
   final _redoStack = <List<_EditorLine>>[];
-  final _scrollController = ScrollController();
+  final _scrollController = NamidaScrollController.create();
   final _focusNode = FocusNode();
   late final _ticker = createTicker(_onTick);
 

@@ -588,6 +588,7 @@ class YTUtils {
         : videoId == Player.inst.currentVideo?.id
         ? 1
         : null;
+    final isStoppingAfterItems = stopAfterItems != null && Player.inst.isSleepingAfterItems(stopAfterItems);
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -654,12 +655,9 @@ class YTUtils {
       if (videosToPlayAll != null && videosToPlayAll.length > 1) YTUtils._getPlayAllTile(queueSource: queueSource, videos: videosToPlayAll, showPlayAllReverse: true),
       stopAfterItems != null
           ? NamidaPopupItem(
-              icon: Broken.pause,
+              icon: isStoppingAfterItems ? Broken.pause_circle_filled : Broken.pause_circle,
               title: lang.stopAfterThisVideo,
-              enabled: !Player.inst.isSleepingAfterItems(stopAfterItems),
-              onTap: () {
-                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems, isAnchoredToItem: true);
-              },
+              onTap: () => Player.inst.toggleStopAfterItems(stopAfterItems),
             )
           : NamidaPopupItem(
               icon: Broken.play,

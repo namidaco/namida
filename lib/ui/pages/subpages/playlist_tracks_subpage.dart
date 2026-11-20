@@ -796,13 +796,8 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                 sorting: TracksSearchBoxSorting(
                   sort: sort,
                   reverse: sortReverse,
-                  onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
-                    playlist.name,
-                    PlaylistController.inst,
-                    SortType.values,
-                    (sort) => sort.toText(),
-                    (sort) => sort.toIcon(),
-                  ),
+                  onSortTap: () => NamidaOnTaps.inst.onLocalPlaylistTracksSortIconTap(playlist.name),
+                  onSortLongPress: (context) => NamidaOnTaps.inst.onLocalPlaylistTracksSortLongPress(context, playlist.name),
                   onReverseIconTap: (newSortReverse) {
                     PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
                     PlaylistController.inst.resetCanReorder();

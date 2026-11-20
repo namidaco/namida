@@ -325,6 +325,7 @@ class _NamidaStorageMacOS extends NamidaStorage {
 
   @override
   Future<String?> pickDirectory({String? note, String? initialDirectory}) {
+    // ignore: deprecated_member_use
     return FilePicker.getDirectoryPath(
       dialogTitle: note,
       initialDirectory: initialDirectory,
@@ -376,23 +377,13 @@ Future<List<String>> _pickFilesDarwin({
     fileType = FileType.any;
   }
   final customExtensions = hasExtensions ? extensions : null;
-  if (!multiple) {
-    final file = await FilePicker.pickFile(
-      dialogTitle: note,
-      type: fileType,
-      allowedExtensions: customExtensions,
-      initialDirectory: initialDirectory,
-    );
-    final path = file?.path;
-    return path == null ? <String>[] : [path];
-  }
-  final res = await FilePicker.pickFiles(
-    dialogTitle: note,
-    type: fileType,
+  return NamidaStorage._pickPathsWithFilePicker(
+    note: note,
+    multiple: multiple,
+    fileType: fileType,
     allowedExtensions: customExtensions,
     initialDirectory: initialDirectory,
   );
-  return res?.paths.whereType<String>().toFixedList() ?? <String>[];
 }
 
 class _PickedDirectories {

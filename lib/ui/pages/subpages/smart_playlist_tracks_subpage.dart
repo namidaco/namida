@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
-import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
@@ -51,7 +52,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
   RxBaseCore listChangesListenerRx() =>
       SmartPlaylistsController.inst.smartPlaylistsMap.value[widget.smartPlaylistWrapper.value.key] ?? SmartPlaylistsController.inst.smartPlaylistsMap;
 
-  final _controller = ScrollController();
+  final _controller = NamidaScrollController.create();
 
   var _tracks = <Track>[];
 
@@ -78,6 +79,11 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
   Future<void> _editAndRefresh(SmartPlaylist oldSmartPlaylist, SmartPlaylist smartPlaylist) async {
     await SmartPlaylistsController.inst.edit(oldSmartPlaylist, smartPlaylist);
     if (mounted) _reFetchTracks();
+  }
+
+  void _setSorting(SmartPlaylist smartPlaylist, SortChain<SortType> sorting) {
+    final newSmartPlaylist = smartPlaylist.copyWith(sorting: sorting);
+    _editAndRefresh(smartPlaylist, newSmartPlaylist);
   }
 
   @override
@@ -141,17 +147,16 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         reverse: smartPlaylist.sorting.reverse,
                         onSortTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
                           currentSorting: smartPlaylist.sorting,
-                          onChanged: (sorting) => _editAndRefresh(
-                            smartPlaylist,
-                            smartPlaylist.copyWith(sorting: sorting),
-                          ),
+                          onChanged: (sorting) => _setSorting(smartPlaylist, sorting),
+                        ),
+                        onSortLongPress: (context) => NamidaOnTaps.inst.onTracksSortLongPress(
+                          context,
+                          currentSorting: smartPlaylist.sorting,
+                          onChanged: (sorting) => _setSorting(smartPlaylist, sorting),
                         ),
                         onReverseIconTap: (newSortReverse) {
                           final sorting = smartPlaylist.sorting.copyWith(reverse: newSortReverse);
-                          _editAndRefresh(
-                            smartPlaylist,
-                            smartPlaylist.copyWith(sorting: sorting),
-                          );
+                          _setSorting(smartPlaylist, sorting);
                         },
                       ),
                     ),

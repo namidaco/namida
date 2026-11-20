@@ -204,26 +204,21 @@ class NamidaDialogs {
 
     final playlist = PlaylistController.inst.getPlaylist(playlistName);
     if (playlist == null) return;
-    // -- Delete Empty Playlists --
-    if (playlist.tracks.isEmpty) {
-      showDeletePlaylistDialog(playlist);
-    } else {
-      final trackss = playlist.tracks.toTracks();
-      await showGeneralPopupDialog(
-        trackss,
-        playlist.name.translatePlaylistName(),
-        [trackss.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-        playlist.toQueueSource(),
-        thirdLineText: playlist.toTagsAndMoodsText(),
-        playlistName: playlist.name,
-        tracksWithDates: playlist.tracks,
-        extractColor: false,
-        heroTag: 'playlist_${playlist.name}',
-        forceSquared: true,
-        comingFromPlaylistMenu: true,
-        openPlaylistFocusing: openPlaylistFocusing,
-      );
-    }
+    final trackss = playlist.tracks.toTracks();
+    await showGeneralPopupDialog(
+      trackss,
+      playlist.name.translatePlaylistName(),
+      [trackss.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+      playlist.toQueueSource(),
+      thirdLineText: playlist.toTagsAndMoodsText(),
+      playlistName: playlist.name,
+      tracksWithDates: playlist.tracks,
+      extractColor: false,
+      heroTag: 'playlist_${playlist.name}',
+      forceSquared: true,
+      comingFromPlaylistMenu: true,
+      openPlaylistFocusing: openPlaylistFocusing,
+    );
   }
 
   Future<void> showDeletePlaylistDialog(LocalPlaylist playlist, {bool deleteM3uFileOnly = false, bool withUndo = false, void Function()? onM3uFileDeleted}) async {

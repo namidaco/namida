@@ -3,6 +3,8 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/track.dart';
@@ -12,6 +14,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class HistoryController with HistoryManager<TrackWithDate, Track> {
@@ -21,6 +24,9 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     onTopItemsMapModified = TrackTileManager.onTrackItemPropChange;
     latestUpdatedMostPlayedItem.addListener(() => TrackTileManager.rebuildTrackInfo(latestUpdatedMostPlayedItem.value! /* not null bet */));
   }
+
+  @override
+  ScrollController createScrollController() => NamidaScrollController.create();
 
   @override
   double daysToSectionExtent(List<int> days) {

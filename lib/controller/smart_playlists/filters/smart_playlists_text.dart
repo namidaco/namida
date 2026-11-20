@@ -221,11 +221,19 @@ final class SmartPlaylistRuleText
     bool textFn(String t) => _shouldCleanTrackText ? textFnRaw(t.cleanUpForComparison) : textFnRaw(t);
     bool textListFn(List<String> list) => _shouldCleanTrackText ? textListFnRaw(list.map((e) => e.cleanUpForComparison)) : textListFnRaw(list);
 
+    // -- whole text kept so rules saved with the joined text still match
+    bool textOrValuesFn(String text, List<String>? values) {
+      if (values == null || values.length < 2) return textFn(text);
+      return textListFn([text, ...values]);
+    }
+
+    bool joinedTextFn(String text) => textOrValuesFn(text, FTagsMultiValues.splitJoined(text));
+
     return switch (source) {
       SmartPlaylistRuleFilterTextSource.title => textFn(track.title),
       SmartPlaylistRuleFilterTextSource.album => textListFn(track.albumsList),
       SmartPlaylistRuleFilterTextSource.artist => textListFn(track.artistsList),
-      SmartPlaylistRuleFilterTextSource.albumArtist => textFn(track.albumArtist),
+      SmartPlaylistRuleFilterTextSource.albumArtist => textOrValuesFn(track.albumArtist, track.albumArtistsList),
       SmartPlaylistRuleFilterTextSource.composer => textListFn(track.composersList),
       SmartPlaylistRuleFilterTextSource.genre => textListFn(track.genresList),
       SmartPlaylistRuleFilterTextSource.style => textListFn(track.stylesList),
@@ -234,7 +242,7 @@ final class SmartPlaylistRuleText
       SmartPlaylistRuleFilterTextSource.synopsis => textFn(track.synopsis),
       SmartPlaylistRuleFilterTextSource.language => textListFn(track.languagesList),
       SmartPlaylistRuleFilterTextSource.label => textFn(track.label),
-      SmartPlaylistRuleFilterTextSource.releaseType => textFn(track.releaseType),
+      SmartPlaylistRuleFilterTextSource.releaseType => joinedTextFn(track.releaseType),
       SmartPlaylistRuleFilterTextSource.musicalKey => textFn(track.musicalKey),
       SmartPlaylistRuleFilterTextSource.format => textFn(track.format),
       SmartPlaylistRuleFilterTextSource.channels => textFn(track.channels),

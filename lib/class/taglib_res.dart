@@ -179,7 +179,7 @@ class TagLibRes {
 
   static const _kMultiValuedFields = {
     TagLibField.artist, TagLibField.artists, TagLibField.album, TagLibField.albumArtist, TagLibField.composer, //
-    TagLibField.genre, TagLibField.style, TagLibField.mood, TagLibField.tags, //
+    TagLibField.genre, TagLibField.style, TagLibField.mood, TagLibField.tags, TagLibField.releaseType, TagLibField.MUSICBRAINZ_ALBUMTYPE, //
   };
 
   static List<String> _keepMultiValued(String key, List<String>? oldValues, List<String> newValues) {
@@ -299,7 +299,8 @@ class TagLibPropertiesWrapper {
 
   /// 0.0-1.0, null when unrated.
   double? computeRatingPercentage() {
-    final percent = TagRating.percentFromFields(propertiesMap) ?? TagRating.percentFromPopularimeters(popularimeters) ?? _asfRatingPercent();
+    final isAsf = asfSharedUserRating != null;
+    final percent = TagRating.percentFromFields(propertiesMap, isAsf: isAsf) ?? TagRating.percentFromPopularimeters(popularimeters) ?? _asfRatingPercent();
     if (percent == null) return null;
     return percent / 100;
   }

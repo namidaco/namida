@@ -21,6 +21,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
@@ -355,6 +356,7 @@ class _FoldersExpandableBox extends StatelessWidget {
             popupMenuChild: SortByMenuTracks(media: mediaType),
             isCurrentlyReversed: sortReverse,
             onReverseIconTap: () => SearchSortController.inst.sortMedia(mediaType, reverse: !sortReverse),
+            onSortLongPress: (context) => NamidaOnTaps.inst.onSubPageTracksSortLongPress(context, mediaType),
           ),
           textFieldController: textEditingController,
           textFieldHintText: lang.search,

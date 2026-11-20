@@ -724,6 +724,7 @@ class _SettingsController extends _SettingsKeysWriter {
     final presets = mediaItemsTrackSortingPresets.value[media];
     final hasActivePreset = presets?.activeIndex != null;
     if (presets != null && hasActivePreset && !toDefault) {
+      if (presets.activePreset?.value == sorting) return;
       final newPresets = presets.withActiveValue(sorting);
       mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
       return;
@@ -749,12 +750,35 @@ class _SettingsController extends _SettingsKeysWriter {
 
   /// saves the active sorting of [media] as a new preset and selects it.
   void addTrackSortPreset(MediaType media, String name) {
-    final presets = mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
-    if (!presets.canAdd) return;
     final sorting = mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
     final preset = TrackSortPreset(name: name, value: sorting);
+    importTrackSortPreset(media, preset);
+  }
+
+  /// adds [preset] to the presets of [media] and selects it.
+  void importTrackSortPreset(MediaType media, TrackSortPreset preset) {
+    final presets = mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
+    if (!presets.canAdd) return;
     final newPresets = presets.withAdded(preset);
     mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
+  }
+
+  /// presets of the other media types with a chain [media] doesn't have yet, each chain once. a null [media] gives the presets of every type.
+  List<MapEntry<MediaType, TrackSortPreset>> importableTrackSortPresets(MediaType? media, {List<SortType>? allowedSorts}) {
+    final presetsMap = mediaItemsTrackSortingPresets.value;
+    final ownPresets = presetsMap[media]?.presets ?? const <TrackSortPreset>[];
+    final seenChains = {for (final preset in ownPresets) preset.value};
+    final importable = <MapEntry<MediaType, TrackSortPreset>>[];
+    for (final e in presetsMap.entries) {
+      final presetsMedia = e.key;
+      if (presetsMedia == media) continue;
+      for (final preset in e.value.presets) {
+        final sorting = preset.value;
+        if (allowedSorts != null && !sorting.types().every(allowedSorts.contains)) continue;
+        if (seenChains.add(sorting)) importable.add(MapEntry(presetsMedia, preset));
+      }
+    }
+    return importable;
   }
 
   void renameTrackSortPreset(MediaType media, int index, String name) {

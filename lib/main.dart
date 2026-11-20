@@ -303,7 +303,7 @@ Future<bool> _mainAppInitialization() async {
       YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
       ConnectivityController.inst.initialize(),
-      NamidaNavigator.setSystemUIImmersiveMode(false),
+      NamidaChannel.inst.whenActivityAttached(_initActivityState),
       Rhttp.init().then(
         (_) async {
           final proxySettings = NetworkProxyController.inst.rhttpSettings;
@@ -316,7 +316,6 @@ Future<bool> _mainAppInitialization() async {
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
       NamidaDeviceInfo.packageInfoCompleter.future,
-      NamidaChannel.inst.refreshEnabledAppIcon(),
     ].executeAllAndSilentReportErrors();
     NamidaMascots.initialize();
 
@@ -333,7 +332,6 @@ Future<bool> _mainAppInitialization() async {
       Player.inst.refreshNotification();
     }
 
-    NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
     ScrollSearchController.inst.initialize();
     Subtitles.inst.initialize();
     ChaptersController.inst.initialize();
@@ -347,6 +345,13 @@ Future<bool> _mainAppInitialization() async {
     Player.inst.play();
   }
   return shouldShowOnBoarding;
+}
+
+Future<void> _initActivityState() {
+  return [
+    NamidaNavigator.setSystemUIImmersiveMode(false).then((_) => NamidaNavigator.setDefaultSystemUIOverlayStyle()),
+    NamidaChannel.inst.refreshEnabledAppIcon(),
+  ].executeAllAndSilentReportErrors();
 }
 
 Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
@@ -714,7 +719,8 @@ class _NamidaState extends State<Namida> {
       );
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
+    // -- without an activity the resume listener sends them once one attaches
+    if (NamidaChannel.inst.hasActivity) WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
     settings.themeMode.addListener(_refreshSystemBarsColors);
 
     _lastTimeAwareRecheck = DateTime.now();

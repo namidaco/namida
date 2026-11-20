@@ -1630,10 +1630,18 @@ class _AudioOutputSection extends StatelessWidget {
     return switch (status.reason) {
       BitPerfectReasonMessage.active => lang.bitPerfectActiveOn(format: format, device: deviceName),
       BitPerfectReasonMessage.ready => lang.bitPerfectUpTo(format: format),
+      BitPerfectReasonMessage.nativeRate => _nativeRateStatusText(status.sampleRate, deviceName),
       BitPerfectReasonMessage.unsupportedAndroid || BitPerfectReasonMessage.noDevice => lang.bitPerfectNoDevice,
       BitPerfectReasonMessage.unsupportedFormat => lang.bitPerfectUnsupportedFormat,
       BitPerfectReasonMessage.disabled => lang.bitPerfectSubtitle,
     };
+  }
+
+  /// android's mixer runs in float, so only the rate is shown.
+  static String _nativeRateStatusText(int sampleRate, String deviceName) {
+    if (sampleRate == 0) return deviceName;
+    final rateText = _SignalPathFormat.rate(sampleRate);
+    return lang.bitPerfectActiveOn(format: rateText, device: deviceName);
   }
 
   static String _usbDirectStatusText(UsbDirectStatusMessage? status) {
@@ -1687,11 +1695,14 @@ class _AudioOutputSection extends StatelessWidget {
                   child: Obx(
                     (context) {
                       final isEnabled = settings.player.bitPerfect.valueR;
-                      final statusText = isEnabled ? _bitPerfectStatusText(output.bitPerfectStatus.valueR) : lang.bitPerfectSubtitle;
+                      final status = output.bitPerfectStatus.valueR;
+                      final statusText = isEnabled ? _bitPerfectStatusText(status) : lang.bitPerfectSubtitle;
+                      final isNativeRate = isEnabled && status?.reason == BitPerfectReasonMessage.nativeRate;
                       return _OutputModeCard(
                         icon: Broken.flash,
                         title: lang.bitPerfect,
                         statusText: statusText,
+                        statusIcon: isNativeRate ? Broken.danger : null,
                         isEnabled: isEnabled,
                         onTap: () => output.setBitPerfect(!isEnabled),
                       );
@@ -1752,6 +1763,7 @@ class _OutputModeCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String statusText;
+  final IconData? statusIcon;
   final bool isEnabled;
   final VoidCallback onTap;
 
@@ -1759,6 +1771,7 @@ class _OutputModeCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.statusText,
+    this.statusIcon,
     required this.isEnabled,
     required this.onTap,
   });
@@ -1766,6 +1779,27 @@ class _OutputModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgOpacity = isEnabled ? 0.35 : 0.12;
+    final statusIcon = this.statusIcon;
+    final statusTextWidget = NamidaText(
+      statusText,
+      style: NText.small,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+    final statusWidget = statusIcon == null
+        ? statusTextWidget
+        : Row(
+            children: [
+              Icon(
+                statusIcon,
+                size: 14.0,
+              ),
+              const SizedBox(width: 4.0),
+              Expanded(
+                child: statusTextWidget,
+              ),
+            ],
+          );
     return NamidaInkWell(
       animationDurationMS: 200,
       borderRadius: 12.0,
@@ -1801,12 +1835,7 @@ class _OutputModeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4.0),
-          NamidaText(
-            statusText,
-            style: NText.small,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          statusWidget,
         ],
       ),
     );

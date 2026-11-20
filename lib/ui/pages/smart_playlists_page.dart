@@ -28,6 +28,9 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
   const SmartPlaylistsPage({super.key, this.isLibraryTab = false});
 
   static const _tileItemExtent = 68.0;
+  static const _artworkSize = _tileItemExtent - 14.0;
+  static const _handleHorizontalPadding = 10.0;
+  static const _dragAreaWidth = _handleHorizontalPadding * 2 + ThreeLineSmallContainers.enabledWidth + _artworkSize / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -82,45 +85,53 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
                                   ).navigate();
                                 },
                                 onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
-                                child: Row(
+                                child: Stack(
                                   children: [
-                                    NamidaReordererableListener(
-                                      index: i,
-                                      durationMs: 100,
-                                      child: const ColoredBox(
-                                        color: Colors.transparent,
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 10.0),
+                                    Row(
+                                      children: [
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: _handleHorizontalPadding),
                                           child: ThreeLineSmallContainers(
                                             enabled: true,
                                           ),
                                         ),
+                                        ArtworkWidget(
+                                          key: ValueKey(imgFile),
+                                          track: null,
+                                          thumbnailSize: _artworkSize,
+                                          path: imgFile.path,
+                                          forceSquared: true,
+                                          icon: Broken.magicpen,
+                                        ),
+                                        const SizedBox(width: 12.0),
+                                        Expanded(
+                                          child: NamidaText(
+                                            smplWrapper.value.name,
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            overflow: TextOverflow.fade,
+                                            style: NText.medium,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        MoreIcon(
+                                          iconSize: 20.0,
+                                          onPressed: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                      ],
+                                    ),
+                                    Positioned(
+                                      left: 0.0,
+                                      top: 0.0,
+                                      bottom: 0.0,
+                                      width: _dragAreaWidth,
+                                      child: NamidaReordererableListener(
+                                        index: i,
+                                        durationMs: 100,
+                                        child: const ColoredBox(color: Colors.transparent),
                                       ),
                                     ),
-                                    ArtworkWidget(
-                                      key: ValueKey(imgFile),
-                                      track: null,
-                                      thumbnailSize: _tileItemExtent - 14.0,
-                                      path: imgFile.path,
-                                      forceSquared: true,
-                                      icon: Broken.magicpen,
-                                    ),
-                                    const SizedBox(width: 12.0),
-                                    Expanded(
-                                      child: NamidaText(
-                                        smplWrapper.value.name,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        overflow: TextOverflow.fade,
-                                        style: NText.medium,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    MoreIcon(
-                                      iconSize: 20.0,
-                                      onPressed: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
-                                    ),
-                                    const SizedBox(width: 8.0),
                                   ],
                                 ),
                               ),

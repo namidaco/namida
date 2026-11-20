@@ -86,7 +86,8 @@ class _WebDAVServer extends MusicWebServer {
       await _api?.ping();
       return null;
     } on DioException catch (e) {
-      return MusicWebServerError(code: e.response?.statusCode ?? 0, message: e.message ?? e.response?.statusMessage ?? '?');
+      final message = e.message ?? e.response?.statusMessage ?? e.error?.toString() ?? '?';
+      return MusicWebServerError(code: e.response?.statusCode ?? 0, message: message);
     } catch (e) {
       return MusicWebServerError(code: 0, message: 'Unknown Error: $e');
     }

@@ -39,14 +39,18 @@ extension _QueueReplaceConfirmation on Player {
       await _audioHandler.userSkipToQueueItem(currentIndex);
     }
 
+    final canKeepQueue = _audioHandler.canJoinCurrentQueue(queueList[index]);
+
     switch (action) {
       case null:
         return false;
       case _QueueReplaceAction.replace:
         return true;
       case _QueueReplaceAction.keep:
+        if (!canKeepQueue) return true;
         await playKeepingQueue(getItems());
       case _QueueReplaceAction.keepSingle:
+        if (!canKeepQueue) return true;
         await playKeepingQueue([queueList[index]]);
       case _QueueReplaceAction.playNext:
         await addToQueue(getItems(), insertNext: true);

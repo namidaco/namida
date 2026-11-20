@@ -11,6 +11,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -174,6 +175,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   double _smallBoxDrag = 1.0;
   double _bigBoxDrag = 0.0;
 
+  bool _wasPointerCancelled() => MiniPlayerController.inst.ytMiniplayerKey.currentState?.wasPointerCancelled == true;
+
   @override
   Widget build(BuildContext context) {
     final maxHeight = context.height;
@@ -214,7 +217,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         }
                       },
                       onVerticalDragEnd: (d) {
-                        if (1 - _smallBoxDrag > 0.4 || d.velocity.pixelsPerSecond.dy < -250) {
+                        final isCancelled = _wasPointerCancelled();
+                        if (!isCancelled && (1 - _smallBoxDrag > 0.4 || d.velocity.pixelsPerSecond.dy < -250)) {
                           _animateSmallToBig();
                         } else {
                           _animateBigToSmall();
@@ -375,7 +379,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                     },
                     onVerticalDragEnd: (d) {
                       _updateCanScrollQueue(true);
-                      if (_bigBoxDrag > 0.2 || d.velocity.pixelsPerSecond.dy > 250) {
+                      final isCancelled = _wasPointerCancelled();
+                      if (!isCancelled && (_bigBoxDrag > 0.2 || d.velocity.pixelsPerSecond.dy > 250)) {
                         _animateBigToSmall();
                       } else {
                         _animateSmallToBig();

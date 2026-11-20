@@ -27,8 +27,15 @@ mixin YTCardLikeStatusMixin<T extends StatefulWidget> on State<T> {
 
   Future<void> tryFetchLikeStatus() async {
     if (canFetchLikeStatus) {
-      _likeStatusRx.value = await _fetchLikeStatusForVideoCardForce(cardVideoId);
+      final videoId = cardVideoId;
+      final likeStatus = await _fetchLikeStatusForVideoCardForce(videoId);
+      if (videoId == cardVideoId) _likeStatusRx.value = likeStatus;
     }
+  }
+
+  void resetLikeStatus() {
+    _timer?.cancel();
+    _likeStatusRx.value = LikeStatus.unknown;
   }
 
   Future<LikeStatus?> _fetchLikeStatusForVideoCardForce(

@@ -157,7 +157,7 @@ class YoutubeAccountController {
           final ms = patreonSupportTier.toMembershipType();
           membership.userPatreonTier.value = patreonSupportTier;
           membership.userMembershipTypePatreon.value = ms;
-          membership._updateGlobal(ms);
+          membership._updateGlobal();
         } else {
           _pendingRequests['patreon'] = () async => await membership.checkPatreon(showError: false);
         }
@@ -168,7 +168,7 @@ class YoutubeAccountController {
           final ms = supasub.toMembershipType();
           membership.userSupabaseSub.value = supasub;
           membership.userMembershipTypeSupabase.value = ms;
-          membership._updateGlobal(ms);
+          membership._updateGlobal();
         } else {
           final info = await NamicoSubscriptionManager.supabase.getUserSubInCache();
           if (info != null) {
@@ -351,11 +351,12 @@ class _CurrentMembership {
 
   Completer<String?>? redirectUrlCompleter;
 
-  void _updateGlobal(MembershipType ms) {
-    final current = userMembershipTypeGlobal.value;
-    if (current == null || ms.index > current.index) {
-      userMembershipTypeGlobal.value = ms;
-    }
+  /// the higher of both sources, a sign out or a lower tier lowers it.
+  void _updateGlobal() {
+    final patreon = userMembershipTypePatreon.value;
+    final supabase = userMembershipTypeSupabase.value;
+    final isSupabaseHigher = patreon == null || (supabase != null && supabase.index > patreon.index);
+    userMembershipTypeGlobal.value = isSupabaseHigher ? supabase : patreon;
   }
 
   bool _didCancelPatreonSignIn = false;
@@ -398,7 +399,7 @@ class _CurrentMembership {
     userPatreonTier.value = tier;
     final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
-    _updateGlobal(ms);
+    _updateGlobal();
     return true;
   }
 
@@ -411,7 +412,7 @@ class _CurrentMembership {
     userPatreonTier.value = tier;
     final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
-    _updateGlobal(ms);
+    _updateGlobal();
   }
 
   void signOutPatreon() {
@@ -419,14 +420,14 @@ class _CurrentMembership {
     const ms = MembershipType.unknown;
     userPatreonTier.value = null;
     userMembershipTypePatreon.value = ms;
-    _updateGlobal(ms);
+    _updateGlobal();
   }
 
   void _assignSupabaseSub(SupabaseSub sub) {
     userSupabaseSub.value = sub;
     final ms = sub.toMembershipType();
     userMembershipTypeSupabase.value = ms;
-    _updateGlobal(ms);
+    _updateGlobal();
   }
 
   Future<void> checkSupabase(String code, String email) async {
@@ -444,7 +445,7 @@ class _CurrentMembership {
     const ms = MembershipType.unknown;
     userSupabaseSub.value = null;
     userMembershipTypeSupabase.value = ms;
-    _updateGlobal(ms);
+    _updateGlobal();
   }
 
   Future<void> claimSupabase(String code, String email) async {

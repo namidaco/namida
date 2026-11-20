@@ -58,6 +58,32 @@ abstract class NamidaStorage {
   /// a local path the way the ui shows it, the same path unless a platform names its folders differently than the path does.
   String displayPath(String path) => path;
 
+  static Future<List<String>> _pickPathsWithFilePicker({
+    required String? note,
+    required bool multiple,
+    required FileType fileType,
+    required List<String>? allowedExtensions,
+    required String? initialDirectory,
+  }) async {
+    if (!multiple) {
+      final file = await FilePicker.pickFile(
+        dialogTitle: note,
+        type: fileType,
+        allowedExtensions: allowedExtensions,
+        initialDirectory: initialDirectory,
+      );
+      final path = file?.path;
+      return path == null ? <String>[] : [path];
+    }
+    final files = await FilePicker.pickFiles(
+      dialogTitle: note,
+      type: fileType,
+      allowedExtensions: allowedExtensions,
+      initialDirectory: initialDirectory,
+    );
+    return files.map((e) => e.path).nonNulls.toFixedList();
+  }
+
   @visibleForTesting
   static String? debugRewriteMovedPaths(String text, Map<String, String> moves) {
     final migrator = _StoragePathsMigrator.create(moves);

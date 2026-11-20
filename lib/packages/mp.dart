@@ -244,6 +244,11 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _resetValues();
   }
 
+  void onVerticalDragCancel() {
+    animateToState(_wasExpanded);
+    _resetValues();
+  }
+
   late final reverseOpacityAnimation = controller.drive(
     Animatable.fromCallback(
       (value) {
@@ -284,8 +289,19 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   void _onDragUpdate(DragUpdateDetails details) => onVerticalDragUpdate(details.delta.dy);
 
+  bool _wasPointerCancelled = false;
+  bool get wasPointerCancelled => _wasPointerCancelled;
+
+  void _onPointerDown(PointerDownEvent _) => _wasPointerCancelled = false;
+  void _onPointerCancel(PointerCancelEvent _) => _wasPointerCancelled = true;
+
   void _onDragEnd(DragEndDetails details) {
-    if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
+    if (!_isDragManagedInternally) return;
+    if (_wasPointerCancelled) {
+      onVerticalDragCancel();
+      return;
+    }
+    onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
   }
 
   @override
@@ -310,25 +326,29 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
             padding: _contentPadding,
             child: Align(
               alignment: Alignment.bottomCenter,
-              child: ValueConditionBuilder(
-                listenable: controller,
-                condition: _isHeadingToCollapsed,
-                builder: (context, isHeadingToCollapsed, child) => GestureDetector(
-                  onTap: isHeadingToCollapsed ? _onTapWhileCollapsed : null,
-                  onVerticalDragUpdate: _onDragUpdate,
-                  onVerticalDragEnd: _onDragEnd,
-                  child: child,
-                ),
-                child: Material(
-                  clipBehavior: Clip.hardEdge,
-                  type: MaterialType.transparency,
-                  child: FadeTransition(
-                    opacity: dismissPercentageAnimation,
-                    child: ListenableConstrainedBox(
-                      constraints: _heightConstraints,
-                      child: ColoredBox(
-                        color: widget.bgColor,
-                        child: content,
+              child: Listener(
+                onPointerDown: _onPointerDown,
+                onPointerCancel: _onPointerCancel,
+                child: ValueConditionBuilder(
+                  listenable: controller,
+                  condition: _isHeadingToCollapsed,
+                  builder: (context, isHeadingToCollapsed, child) => GestureDetector(
+                    onTap: isHeadingToCollapsed ? _onTapWhileCollapsed : null,
+                    onVerticalDragUpdate: _onDragUpdate,
+                    onVerticalDragEnd: _onDragEnd,
+                    child: child,
+                  ),
+                  child: Material(
+                    clipBehavior: Clip.hardEdge,
+                    type: MaterialType.transparency,
+                    child: FadeTransition(
+                      opacity: dismissPercentageAnimation,
+                      child: ListenableConstrainedBox(
+                        constraints: _heightConstraints,
+                        child: ColoredBox(
+                          color: widget.bgColor,
+                          child: content,
+                        ),
                       ),
                     ),
                   ),

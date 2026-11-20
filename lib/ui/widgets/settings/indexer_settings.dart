@@ -2336,7 +2336,7 @@ class RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProvi
 // }
 
 // class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
-//   final _scrollController = ScrollController();
+//   final _scrollController = NamidaScrollController.create();
 //   bool _isPathsExpanded = false;
 
 //   @override

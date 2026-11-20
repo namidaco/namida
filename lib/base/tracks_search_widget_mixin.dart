@@ -339,6 +339,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
                 presetName: presetName,
                 reverse: sorting.reverse,
                 onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
+                onSortLongPress: (context) => NamidaOnTaps.inst.onSubPageTracksSortLongPress(context, type),
                 onReverseIconTap: (newSortReverse) {
                   final newSorting = sorting.copyWith(reverse: newSortReverse);
                   settings.updateMediaItemsTrackSorting(type, newSorting);
@@ -383,6 +384,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
             title: sorting.presetName ?? sorting.sort?.toText() ?? lang.custom,
             popupMenuChild: null,
             onSortTap: sorting.onSortTap,
+            onSortLongPress: sorting.onSortLongPress,
             isCurrentlyReversed: sorting.reverse,
             onReverseIconTap: () => sorting.onReverseIconTap(!sorting.reverse),
           );
@@ -410,6 +412,7 @@ class TracksSearchBoxSorting {
   final String? presetName;
   final bool reverse;
   final void Function() onSortTap;
+  final void Function(BuildContext context)? onSortLongPress;
   final void Function(bool newSortReverse) onReverseIconTap;
 
   const TracksSearchBoxSorting({
@@ -417,6 +420,7 @@ class TracksSearchBoxSorting {
     this.presetName,
     required this.reverse,
     required this.onSortTap,
+    this.onSortLongPress,
     required this.onReverseIconTap,
   });
 }

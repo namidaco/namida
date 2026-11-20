@@ -793,6 +793,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 playlistName: name,
                                                 onTap: null,
                                                 checkmarkStatus: null,
+                                                showMoreIcon: false,
                                               ),
                                             ),
                                           ),

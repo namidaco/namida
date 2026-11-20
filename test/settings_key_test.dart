@@ -781,6 +781,31 @@ void main() {
       expect(settings.buildJson().containsKey('mediaItemsTrackSortingPresets_v2'), false);
     });
 
+    test('track sort presets import: other types only, chains this type has are skipped, each chain once', () async {
+      await loadFile(settings, {'_v': 2});
+      const yearSorting = SortChain([SortEntry(SortType.year)]);
+      const titleSorting = SortChain([SortEntry(SortType.title)]);
+      const mostPlayedSorting = SortChain([SortEntry(SortType.mostPlayed)]);
+      settings.importTrackSortPreset(MediaType.artist, const TrackSortPreset(name: 'year', value: yearSorting));
+      settings.importTrackSortPreset(MediaType.artist, const TrackSortPreset(name: 'title', value: titleSorting));
+      settings.importTrackSortPreset(MediaType.genre, const TrackSortPreset(name: 'year again', value: yearSorting));
+      settings.importTrackSortPreset(MediaType.genre, const TrackSortPreset(name: 'most played', value: mostPlayedSorting));
+      settings.importTrackSortPreset(MediaType.album, const TrackSortPreset(name: 'title', value: titleSorting));
+
+      List<String> namesOf(List<MapEntry<MediaType, TrackSortPreset>> importable) => importable.map((e) => '${e.key.name}:${e.value.name}').toList();
+
+      expect(namesOf(settings.importableTrackSortPresets(MediaType.album)), ['artist:year', 'genre:most played']);
+      expect(namesOf(settings.importableTrackSortPresets(MediaType.artist)), ['genre:most played']);
+      expect(namesOf(settings.importableTrackSortPresets(MediaType.track)), ['artist:year', 'artist:title', 'genre:most played']);
+      expect(namesOf(settings.importableTrackSortPresets(null)), ['artist:year', 'artist:title', 'genre:most played']);
+      expect(namesOf(settings.importableTrackSortPresets(null, allowedSorts: const [SortType.mostPlayed])), ['genre:most played']);
+
+      settings.importTrackSortPreset(MediaType.album, settings.importableTrackSortPresets(MediaType.album).first.value);
+      expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activePreset?.name, 'year');
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], yearSorting);
+      expect(namesOf(settings.importableTrackSortPresets(MediaType.album)), ['genre:most played']);
+    });
+
     test('track search filter presets: the active one is searched by and edited, the default fields stay', () async {
       await loadFile(settings, {'_v': 2});
       final defaultFilters = settings.trackSearchFilter.value;
@@ -1319,7 +1344,7 @@ void main() {
       settings.extra: {
         settings.extra.recentSearchesEnabled: false, settings.extra.floatingArtworkEffect: false, settings.extra.tiltingCardsEffect: false, //
         settings.extra.reduceAnimations: false, settings.extra.jellysPalette: false, settings.extra.artistAlbumsExpanded: true,
-        settings.extra.artistSinglesExpanded: false, settings.extra.artistEpsExpanded: false, settings.extra.artistsMapGraphLayout: true,
+        settings.extra.artistSinglesExpanded: false, settings.extra.artistsMapGraphLayout: true,
         settings.extra.audioConfigPageIndex: 0,
       },
     };

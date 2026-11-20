@@ -82,14 +82,12 @@ class NamidaOnTaps {
     }
 
     final albums = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
-    final eps = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
-    final singles = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
+    final singlesAndEps = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
     final extras = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
     for (final a in albumIdsMap.entries) {
       if (a.value.albumArtist.contains(name)) {
         final listOfType = switch (a.key.getAlbumType()) {
-          AlbumType.single => singles,
-          AlbumType.ep => eps,
+          AlbumType.single || AlbumType.ep => singlesAndEps,
           AlbumType.normal => albums,
         };
         listOfType.add(a);
@@ -102,8 +100,7 @@ class NamidaOnTaps {
       name: name,
       tracks: tracks,
       albums: albums,
-      eps: eps,
-      singles: singles,
+      singlesAndEps: singlesAndEps,
       extras: extras,
       type: type,
     ).navigate();
@@ -353,11 +350,28 @@ class NamidaOnTaps {
         if (didChange) Indexer.inst.sortMediaTracksSubLists([media]);
       },
       leftActionBuilder: (onBeforeChange, onChanged) => _TrackSortPresetsButton(
-        media: media,
-        onBeforeChange: onBeforeChange,
-        onChanged: onChanged,
+        actions: _TrackSortPresetsActions(
+          media: media,
+          onBeforeChange: onBeforeChange,
+          onChanged: onChanged,
+        ),
       ),
     );
+  }
+
+  void onSubPageTracksSortLongPress(BuildContext context, MediaType media) {
+    final presets = settings.mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
+    final initialSorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    void resortIfChanged(SortChain<SortType> sorting) {
+      if (sorting != initialSorting) Indexer.inst.sortMediaTracksSubLists([media]);
+    }
+
+    final actions = _TrackSortPresetsActions(
+      media: media,
+      onBeforeChange: null,
+      onChanged: resortIfChanged,
+    );
+    actions.toMenu(presets).show(context);
   }
 
   void onTrackSearchFilterTap() {
@@ -458,13 +472,42 @@ class NamidaOnTaps {
     );
   }
 
+  void onLocalPlaylistTracksSortIconTap(String playlistName) {
+    return onPlaylistSubPageTracksSortIconTap(
+      playlistName,
+      PlaylistController.inst,
+      SortType.values,
+      (sort) => sort.toText(),
+      (sort) => sort.toIcon(),
+      leftActionBuilder: (_, loadSorting) => _TrackSortPresetsCopy.buttonOrNull(onPick: loadSorting),
+    );
+  }
+
+  void onLocalPlaylistTracksSortLongPress(BuildContext context, String playlistName) {
+    final pl = PlaylistController.inst.getPlaylist(playlistName);
+    if (pl == null) return;
+    final currentSorts = pl.sortsType ?? const <SortEntry<SortType>>[];
+    final currentSorting = SortChain(currentSorts, reverse: pl.sortReverse);
+    void applySorting(SortChain<SortType> sorting) {
+      PlaylistController.inst.updatePropertyInPlaylist(playlistName, itemsSortType: sorting.entries, itemsSortReverse: sorting.reverse);
+      PlaylistController.inst.resetCanReorder();
+    }
+
+    onTracksSortLongPress(
+      context,
+      currentSorting: currentSorting,
+      onChanged: applySorting,
+    );
+  }
+
   void onPlaylistSubPageTracksSortIconTap<T extends PlaylistItemWithDate, E, S extends Enum>(
     String playlistName,
     PlaylistManager<T, E, SortEntry<S>> playlistManager,
     List<S> allSorts,
     String Function(S sort) sortToText,
-    IconData Function(S sort) sortToIcon,
-  ) {
+    IconData Function(S sort) sortToIcon, {
+    Widget? Function(VoidCallback onBeforeChange, void Function(SortChain<S> sorting) onChanged)? leftActionBuilder,
+  }) {
     final initialpl = playlistManager.getPlaylist(playlistName);
     final initialSorts = initialpl?.sortsType ?? <SortEntry<S>>[];
     final initialReverse = initialpl?.sortReverse ?? false;
@@ -532,6 +575,7 @@ class NamidaOnTaps {
           }
         }
       },
+      leftActionBuilder: leftActionBuilder,
     );
   }
 
@@ -555,7 +599,26 @@ class NamidaOnTaps {
       onDone: () {
         if (newSorting != currentSorting) onChanged(newSorting);
       },
+      leftActionBuilder: (_, loadSorting) => _TrackSortPresetsCopy.buttonOrNull(
+        allowedSorts: allSorts,
+        onPick: loadSorting,
+      ),
     );
+  }
+
+  void onTracksSortLongPress(
+    BuildContext context, {
+    required SortChain<SortType> currentSorting,
+    required void Function(SortChain<SortType> sorting) onChanged,
+  }) {
+    void onPick(TrackSortPreset preset) {
+      final sorting = preset.value;
+      if (sorting != currentSorting) onChanged(sorting);
+    }
+
+    final items = _TrackSortPresetsCopy.itemsOf(null, onPick: onPick);
+    if (items.isEmpty) return;
+    _NamedPresetsMenu.showItems(context, items);
   }
 
   void _onSubPageSortIconTap<S extends Enum>({
@@ -572,7 +635,7 @@ class NamidaOnTaps {
     required void Function(List<SortEntry<S>> activeSorters) onSortChange,
     required void Function(bool reverse) onSortReverseChange,
     required void Function() onDone,
-    Widget Function(VoidCallback onBeforeChange, void Function(SortChain<S> sorting) onChanged)? leftActionBuilder,
+    Widget? Function(VoidCallback onBeforeChange, void Function(SortChain<S> sorting) onChanged)? leftActionBuilder,
   }) {
     final sorters = currentSorting.entries.toList().obs;
     final isReverse = currentSorting.reverse.obs;
@@ -589,7 +652,10 @@ class NamidaOnTaps {
 
     void loadSorting(SortChain<S> sorting) {
       sorters.value = sorting.entries.toList();
-      isReverse.value = sorting.reverse;
+      final reverse = sorting.reverse;
+      if (reverse == isReverse.value) return;
+      onSortReverseChange(reverse);
+      isReverse.value = reverse;
     }
 
     void onActiveSortsChanged(List<S> activeSorts) {
@@ -2311,6 +2377,7 @@ class SussyBaka {
     if (isUnlocked) return onEnable();
     final newEggs = eggs.collectPending();
     EggHunt.announceFound(newEggs);
+    NamidaNavigator.inst.popAllMenus();
     NamidaNavigator.inst.navigateDialog(
       onDismissing: EggHunt.countDismissal,
       dialog: UwuDialog(
@@ -2369,12 +2436,12 @@ bool replaceFunctionForUpdatedPaths(
 }
 
 // by claude
-class _TrackSortPresetsButton extends StatelessWidget {
+class _TrackSortPresetsActions {
   final MediaType media;
-  final VoidCallback onBeforeChange;
+  final VoidCallback? onBeforeChange;
   final void Function(SortChain<SortType> sorting) onChanged;
 
-  const _TrackSortPresetsButton({
+  const _TrackSortPresetsActions({
     required this.media,
     required this.onBeforeChange,
     required this.onChanged,
@@ -2388,13 +2455,13 @@ class _TrackSortPresetsButton extends StatelessWidget {
   void _select(int? index) {
     final activeIndex = settings.mediaItemsTrackSortingPresets.value[media]?.activeIndex;
     if (index == activeIndex) return;
-    onBeforeChange();
+    onBeforeChange?.call();
     settings.selectTrackSortPreset(media, index);
     _reloadSorts();
   }
 
   void _add() {
-    onBeforeChange();
+    onBeforeChange?.call();
     final sorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
     final initialName = sorting.types().map((e) => e.toText()).joinText(separator: ', ');
     _PresetNameDialog.show(
@@ -2407,23 +2474,75 @@ class _TrackSortPresetsButton extends StatelessWidget {
   void _rename(int index, String name) => settings.renameTrackSortPreset(media, index, name);
 
   void _remove(int index) {
-    onBeforeChange();
+    onBeforeChange?.call();
     settings.removeTrackSortPreset(media, index);
     _reloadSorts();
   }
+
+  void _import(TrackSortPreset preset) {
+    onBeforeChange?.call();
+    settings.importTrackSortPreset(media, preset);
+    _reloadSorts();
+  }
+
+  List<NamidaPopupItem> _importItems() => _TrackSortPresetsCopy.itemsOf(media, onPick: _import);
+
+  _NamedPresetsMenu<SortChain<SortType>> toMenu(TrackSortPresets presets) {
+    return _NamedPresetsMenu(
+      presets: presets,
+      defaultIcon: Broken.sort,
+      onSelect: _select,
+      onAdd: _add,
+      onRename: _rename,
+      onRemove: _remove,
+      importItemsBuilder: _importItems,
+    );
+  }
+}
+
+abstract final class _TrackSortPresetsCopy {
+  static List<NamidaPopupItem> itemsOf(MediaType? media, {List<SortType>? allowedSorts, required void Function(TrackSortPreset preset) onPick}) {
+    final importable = settings.importableTrackSortPresets(media, allowedSorts: allowedSorts);
+    return importable
+        .map(
+          (e) => NamidaPopupItem(
+            icon: e.key.toIcon(),
+            title: e.value.name,
+            subtitle: e.key.toText(),
+            onTap: () => onPick(e.value),
+          ),
+        )
+        .toFixedList();
+  }
+
+  static Widget? buttonOrNull({List<SortType>? allowedSorts, required void Function(SortChain<SortType> sorting) onPick}) {
+    void onPickPreset(TrackSortPreset preset) => onPick(preset.value);
+    final items = itemsOf(null, allowedSorts: allowedSorts, onPick: onPickPreset);
+    if (items.isEmpty) return null;
+    return _PresetsButton(
+      title: lang.presets,
+      onTap: (context) => _NamedPresetsMenu.showItems(context, items),
+    );
+  }
+}
+
+class _TrackSortPresetsButton extends StatelessWidget {
+  final _TrackSortPresetsActions actions;
+
+  const _TrackSortPresetsButton({required this.actions});
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
       rx: settings.mediaItemsTrackSortingPresets,
-      builder: (context, presetsMap) => _NamedPresetsButton(
-        presets: presetsMap[media] ?? const TrackSortPresets.empty(),
-        defaultIcon: Broken.sort,
-        onSelect: _select,
-        onAdd: _add,
-        onRename: _rename,
-        onRemove: _remove,
-      ),
+      builder: (context, presetsMap) {
+        final presets = presetsMap[actions.media] ?? const TrackSortPresets.empty();
+        final menu = actions.toMenu(presets);
+        return _PresetsButton(
+          title: menu.activeTitle,
+          onTap: menu.show,
+        );
+      },
     );
   }
 }
@@ -2445,34 +2564,44 @@ class _TrackSearchFilterPresetsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: settings.trackSearchFilterPresets,
-      builder: (context, presets) => _NamedPresetsButton(
-        presets: presets,
-        defaultIcon: Broken.filter_search,
-        onSelect: settings.selectTrackSearchFilterPreset,
-        onAdd: _add,
-        onRename: settings.renameTrackSearchFilterPreset,
-        onRemove: settings.removeTrackSearchFilterPreset,
-      ),
+      builder: (context, presets) {
+        final menu = _NamedPresetsMenu(
+          presets: presets,
+          defaultIcon: Broken.filter_search,
+          onSelect: settings.selectTrackSearchFilterPreset,
+          onAdd: _add,
+          onRename: settings.renameTrackSearchFilterPreset,
+          onRemove: settings.removeTrackSearchFilterPreset,
+        );
+        return _PresetsButton(
+          title: menu.activeTitle,
+          onTap: menu.show,
+        );
+      },
     );
   }
 }
 
-class _NamedPresetsButton<T> extends StatelessWidget {
+class _NamedPresetsMenu<T> {
   final NamedPresets<T> presets;
   final IconData defaultIcon;
   final void Function(int? index) onSelect;
   final VoidCallback onAdd;
   final void Function(int index, String name) onRename;
   final void Function(int index) onRemove;
+  final List<NamidaPopupItem> Function()? importItemsBuilder;
 
-  const _NamedPresetsButton({
+  const _NamedPresetsMenu({
     required this.presets,
     required this.defaultIcon,
     required this.onSelect,
     required this.onAdd,
     required this.onRename,
     required this.onRemove,
+    this.importItemsBuilder,
   });
+
+  String get activeTitle => presets.activePreset?.name ?? lang.defaultLabel;
 
   void _edit(int index, NamedPreset<T> preset) {
     NamidaNavigator.inst.popMenu();
@@ -2484,8 +2613,10 @@ class _NamedPresetsButton<T> extends StatelessWidget {
     );
   }
 
-  List<NamidaPopupItem> _menuItems() {
+  List<NamidaPopupItem> _menuItems(BuildContext context) {
     final activeIndex = presets.activeIndex;
+    final canAdd = presets.canAdd;
+    final importItems = canAdd ? importItemsBuilder?.call() : null;
     return [
       NamidaPopupItem(
         icon: defaultIcon,
@@ -2508,28 +2639,48 @@ class _NamedPresetsButton<T> extends StatelessWidget {
           ),
         ),
       ),
-      if (presets.canAdd)
+      if (canAdd)
         NamidaPopupItem(
           icon: Broken.add,
           title: lang.add,
           onTap: onAdd,
         ),
+      if (importItems != null && importItems.isNotEmpty)
+        NamidaPopupItem(
+          icon: Broken.import,
+          title: lang.import,
+          onTap: () => showItems(context, importItems),
+        ),
     ];
   }
 
-  void _showMenu(BuildContext context) {
-    final popup = NamidaPopupWrapper(childrenDefault: _menuItems);
+  void show(BuildContext context) {
+    final popup = NamidaPopupWrapper(childrenDefault: () => _menuItems(context));
     popup.showPopupMenu(context);
   }
 
+  static void showItems(BuildContext context, List<NamidaPopupItem> items) {
+    final popup = NamidaPopupWrapper(childrenDefault: () => items);
+    popup.showPopupMenu(context);
+  }
+}
+
+class _PresetsButton extends StatelessWidget {
+  final String title;
+  final void Function(BuildContext context) onTap;
+
+  const _PresetsButton({
+    required this.title,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final title = presets.activePreset?.name ?? lang.defaultLabel;
     return NamidaInkWell(
       borderRadius: 6.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       bgColor: const NColors(.secondary, opacity: 0.15),
-      onTap: () => _showMenu(context),
+      onTap: () => onTap(context),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

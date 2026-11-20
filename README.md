@@ -353,6 +353,9 @@ Full installation steps for every platform (which file to pick, dependencies and
 > - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (requested when needed): improve downloads.
 > - `WRITE_SETTINGS` (requested when needed): to set audio as ringtone/etc.
 > - `QUERY_ALL_PACKAGES`: to allow opening custom equalizer apps.
+> - `MODIFY_AUDIO_SETTINGS`: allow bit-perfect to set the output format of usb dacs (Android 14+).
+> - `ACCESS_NETWORK_STATE`: online / offline and wifi / mobile data / etc (for youtube data saver).
+> - `RECEIVE_BOOT_COMPLETED`: used by WorkManager (in the home widget library).
 
 </details>
 

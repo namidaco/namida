@@ -46,7 +46,6 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final namiweenOfferedYear = _key<int?>('namiweenOfferedYear', null);
   late final artistAlbumsExpanded = _key('artistAlbumsExpanded', true);
   late final artistSinglesExpanded = _key('artistSinglesExpanded', false); // cuz no space
-  late final artistEpsExpanded = _key('artistEpsExpanded', false);
   late final artistsMapGraphLayout = _key('artistsMapGraphLayout', true);
   late final homePinnedType = _key<PinnedItemType?>('homePinnedType', null, codec: PinnedItemType.values.asCodec());
 
@@ -135,6 +134,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
     migrateSectionIndex('ytChannelsPageIndex', YTHomePages.channels);
     migrateSectionIndex('ytPlaylistsPageIndex', YTHomePages.playlists);
     if (sectionSources.isNotEmpty) _raw['ytHomeSectionSources'] = sectionSources;
+    _dropKey('artistEpsExpanded');
   }
 
   @override

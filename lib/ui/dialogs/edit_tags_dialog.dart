@@ -840,15 +840,17 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
   }
 
   final tracksExtended = tracksPre.map((e) => e.toTrackExt()).toList();
+  final userFields = settings.tagFieldsToEdit.value;
   final fieldsToEdit = <TagField>{
-    ...settings.tagFieldsToEdit.value.where((f) => f.multiEdit != TagFieldMultiEdit.hidden),
+    ...userFields.where((f) => f.multiEdit != TagFieldMultiEdit.hidden),
     ...TagField.values.where((f) => f.multiEdit != TagFieldMultiEdit.hidden),
   };
   final multiFields = fieldsToEdit.map((f) => _MultiTagField.compute(f, tracksExtended, onFieldEdit)).toList();
   final visibleFields = <_MultiTagField>[];
   final collapsedFields = <_MultiTagField>[];
   for (final f in multiFields) {
-    (f.isEmptyForAll && f.tag.multiEdit == TagFieldMultiEdit.whenHasValues ? collapsedFields : visibleFields).add(f);
+    final isCollapsed = f.isEmptyForAll && f.tag.multiEdit == TagFieldMultiEdit.whenHasValues && !userFields.contains(f.tag);
+    (isCollapsed ? collapsedFields : visibleFields).add(f);
   }
 
   final statsEditor = TrackStatsEditController(tracksPre);

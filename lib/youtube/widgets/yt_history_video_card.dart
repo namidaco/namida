@@ -311,15 +311,17 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     final newVideoId = videoIdWatch.$1;
     videoWatch = videoIdWatch.$2;
 
-    if (newVideoId != videoId && !newVideoId.isDummyVideoId) {
+    if (newVideoId != videoId) {
       videoId = newVideoId;
+      resetLikeStatus();
       final info = widget.info?.call(item);
       if (info != null) {
         refreshState(() => _infoFetcher.assign(info));
         tryFetchLikeStatus();
       } else {
+        // -- dummy ids still reset, otherwise a reused card keeps the previous video
         refreshState(() => _infoFetcher.reset(newVideoId));
-        _infoFetcher.fetchMissing(preferFetchNewInfo: widget.preferFetchNewInfo).whenComplete(tryFetchLikeStatus);
+        if (!newVideoId.isDummyVideoId) _infoFetcher.fetchMissing(preferFetchNewInfo: widget.preferFetchNewInfo).whenComplete(tryFetchLikeStatus);
       }
     } else {
       refreshState();

@@ -21,6 +21,7 @@ class PlaylistTile extends StatelessWidget {
   final bool enableHero;
   final bool? checkmarkStatus;
   final String? extraText;
+  final bool showMoreIcon;
 
   /// the tracks being added, its menu can open the playlist on the first one of them.
   final List<Track>? openPlaylistFocusing;
@@ -33,6 +34,7 @@ class PlaylistTile extends StatelessWidget {
     this.enableHero = true,
     required this.checkmarkStatus,
     this.extraText,
+    this.showMoreIcon = true,
     this.openPlaylistFocusing,
   });
 
@@ -189,10 +191,11 @@ class PlaylistTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 2.0),
                       ],
-                      MoreIcon(
-                        iconSize: 20,
-                        onPressed: _showMenu,
-                      ),
+                      if (showMoreIcon)
+                        MoreIcon(
+                          iconSize: 20,
+                          onPressed: _showMenu,
+                        ),
                       const SizedBox(width: 8.0),
                     ],
                   );

@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:history_manager/history_manager.dart';
 
+import 'package:namida/class/past_time_zone_offsets.dart';
+import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/core/enums.dart';
 
 abstract class HistoryStatsResolver<E> {
@@ -280,7 +282,6 @@ class HistoryStatsSnapshot<E> {
     required int lastDay,
     required Map<int, Map<String, int>> dailyListenTime,
     required List<String> listenTimeKeys,
-    required int totalListenSeconds,
     int topCount = 100,
     int? monthlyTopYear,
   }) async {
@@ -295,13 +296,14 @@ class HistoryStatsSnapshot<E> {
     final weekdays = Int32List(7);
     final weekHours = Int32List(168);
     final months = Int32List(12);
-    final tzOffsetMS = DateTime.now().timeZoneOffset.inMilliseconds;
+    final timeZoneOffsets = PastTimeZoneOffsets(DateTime.now().millisecondsSinceEpoch);
     E? prevSub;
     int repeatListens = 0;
     int firstMinutesSum = 0;
     int lastMinutesSum = 0;
 
     final counts = <E, int>{};
+    final unmeasuredCounts = <E, int>{};
     final dayCounts = <E, int>{};
     final sources = <TrackSource, int>{};
     final monthCounts = monthlyTopYear == null ? null : List.generate(12, (_) => <E, int>{}, growable: false);
@@ -327,6 +329,12 @@ class HistoryStatsSnapshot<E> {
       }
     }
 
+    int? measuredFirstDay;
+    for (final d in dailyListenTime.keys) {
+      if (measuredFirstDay == null || d < measuredFirstDay) measuredFirstDay = d;
+    }
+    final measuredFromDay = measuredFirstDay ?? lastDay + 1;
+
     // -- listens added while yielding would break iterating the live map
     final daysInRange = <MapEntry<int, List<T>>>[];
     for (final entry in map.entries) {
@@ -345,6 +353,7 @@ class HistoryStatsSnapshot<E> {
 
       final monthIndex = HistoryManager.daysSince1970ToDate(day).month - 1;
       final monthMap = monthCounts == null ? null : monthCounts[monthIndex];
+      final isMeasuredDay = day >= measuredFromDay;
       int dayListens = 0;
       int dayMinMS = 0;
       int dayMaxMS = 0;
@@ -361,7 +370,7 @@ class HistoryStatsSnapshot<E> {
         dayListens++;
         final ms = item.dateAddedMS;
 
-        final localMS = ms + tzOffsetMS;
+        final localMS = ms + timeZoneOffsets.offsetMSOf(ms);
         final hour = (localMS ~/ 3600000) % 24;
         final weekday = ((localMS ~/ 86400000) + 4) % 7;
         hours[hour]++;
@@ -378,6 +387,8 @@ class HistoryStatsSnapshot<E> {
 
         final source = item.source;
         sources[source] = (sources[source] ?? 0) + 1;
+        final isMeasured = isMeasuredDay && source == TrackSource.local;
+        if (!isMeasured) unmeasuredCounts[sub] = (unmeasuredCounts[sub] ?? 0) + 1;
 
         if (prevMS == 0 || (prevMS - ms).abs() > sessionGapMS) {
           finalizeSession(prevMS);
@@ -397,8 +408,10 @@ class HistoryStatsSnapshot<E> {
         peakDayListens = dayListens;
         peakDay = day;
       }
-      firstMinutesSum += ((dayMinMS + tzOffsetMS) % 86400000) ~/ 60000;
-      lastMinutesSum += ((dayMaxMS + tzOffsetMS) % 86400000) ~/ 60000;
+      final dayMinLocalMS = dayMinMS + timeZoneOffsets.offsetMSOf(dayMinMS);
+      final dayMaxLocalMS = dayMaxMS + timeZoneOffsets.offsetMSOf(dayMaxMS);
+      firstMinutesSum += (dayMinLocalMS % 86400000) ~/ 60000;
+      lastMinutesSum += (dayMaxLocalMS % 86400000) ~/ 60000;
     }
     finalizeSession(prevMS);
     if (dayCounts.isNotEmpty) _collectObsessions(obsessionByItem, dayCounts, prevDay);
@@ -413,8 +426,6 @@ class HistoryStatsSnapshot<E> {
     final rangeStartMS = HistoryManager.daysSince1970ToMilliseconds(firstDay);
     final allTimeListens = history.topTracksMapListens.value;
 
-    int estimatedSeconds = 0;
-    int knownDurationListens = 0;
     int newItems = 0;
     int oneTimeItems = 0;
     int heavyRotationItems = 0;
@@ -440,11 +451,6 @@ class HistoryStatsSnapshot<E> {
       final item = e.key;
       final count = e.value;
 
-      final dur = resolver.durationSeconds(item);
-      if (dur > 0) {
-        estimatedSeconds += dur * count;
-        knownDurationListens += count;
-      }
       if (count == 1) oneTimeItems++;
       if (count >= heavyRotationCount) heavyRotationItems++;
 
@@ -494,7 +500,8 @@ class HistoryStatsSnapshot<E> {
         for (int i = startIndex; i < allListens.length; i++) {
           final ms = allListens[i];
           if (ms >= rangeEndMS) break;
-          final d = (ms + tzOffsetMS) ~/ 86400000;
+          final localMS = ms + timeZoneOffsets.offsetMSOf(ms);
+          final d = localMS ~/ 86400000;
           if (d == prevDay) continue;
           run = d == prevDay + 1 ? run + 1 : 1;
           prevDay = d;
@@ -555,40 +562,28 @@ class HistoryStatsSnapshot<E> {
     newItemsAll.sort((a, b) => b.count.compareTo(a.count));
     if (newItemsAll.length > topCount) newItemsAll.length = topCount;
 
-    // ---- listen time: exact from daily db when covered, else calibrated estimate ----
-    int listenSeconds = 0;
-    bool listenSecondsExact = false;
-    int? dbFirstDay;
-    for (final d in dailyListenTime.keys) {
-      if (dbFirstDay == null || d < dbFirstDay) dbFirstDay = d;
-    }
-    if (dbFirstDay != null && firstDay >= dbFirstDay) {
-      listenSecondsExact = true;
-      for (int d = firstDay; d <= lastDay; d++) {
-        final row = dailyListenTime[d];
-        if (row == null) continue;
-        for (final k in listenTimeKeys) {
-          listenSeconds += row[k] ?? 0;
-        }
-      }
-    } else if (totalListens > 0) {
-      int allTimeEstimate = 0;
-      int allTimeKnown = 0;
-      int allTimeTotal = 0;
-      for (final e in allTimeListens.entriesSortedByValueCount) {
+    // ---- listen time: daily db where measured, durations for imported and older listens ----
+    final measuredRangeFirstDay = math.max(firstDay, measuredFromDay);
+    int listenSeconds = ListenTimeController.sumSeconds(dailyListenTime, measuredRangeFirstDay, lastDay, listenTimeKeys);
+    final listenSecondsExact = unmeasuredCounts.isEmpty;
+    if (!listenSecondsExact) {
+      int knownSeconds = 0;
+      int knownListens = 0;
+      int unknownListens = 0;
+      for (final e in unmeasuredCounts.entries) {
+        final count = e.value;
         final dur = resolver.durationSeconds(e.key);
-        allTimeTotal += e.value;
         if (dur > 0) {
-          allTimeEstimate += dur * e.value;
-          allTimeKnown += e.value;
+          knownSeconds += dur * count;
+          knownListens += count;
+        } else {
+          unknownListens += count;
         }
       }
-      if (allTimeKnown > 0 && knownDurationListens > 0) {
-        final rangeEstimate = estimatedSeconds * totalListens / knownDurationListens;
-        final fullEstimate = allTimeEstimate * allTimeTotal / allTimeKnown;
-        listenSeconds = totalListenSeconds > 0 && fullEstimate > 0 ? (rangeEstimate * totalListenSeconds / fullEstimate).round() : rangeEstimate.round();
-      } else if (allTimeTotal > 0) {
-        listenSeconds = (totalListenSeconds * totalListens / allTimeTotal).round();
+      listenSeconds += knownSeconds;
+      if (unknownListens > 0) {
+        final secondsPerListen = knownListens > 0 ? knownSeconds / knownListens : _measuredSecondsPerLocalListen(history, dailyListenTime, listenTimeKeys, measuredFirstDay);
+        listenSeconds += (unknownListens * secondsPerListen).round();
       }
     }
 
@@ -717,6 +712,27 @@ class HistoryStatsSnapshot<E> {
       resolver: resolver,
       itemListens: counts,
     );
+  }
+
+  static double _measuredSecondsPerLocalListen<T extends ItemWithDate, E>(
+    HistoryManager<T, E> history,
+    Map<int, Map<String, int>> dailyListenTime,
+    List<String> listenTimeKeys,
+    int? measuredFirstDay,
+  ) {
+    final map = history.historyMap.value;
+    final newestDay = map.keys.firstOrNull;
+    if (measuredFirstDay == null || newestDay == null) return 0;
+    int localListens = 0;
+    for (final entry in map.entries) {
+      if (entry.key < measuredFirstDay) break;
+      for (final item in entry.value) {
+        if (item.source == TrackSource.local) localListens++;
+      }
+    }
+    if (localListens == 0) return 0;
+    final measuredSeconds = ListenTimeController.sumSeconds(dailyListenTime, measuredFirstDay, newestDay, listenTimeKeys);
+    return measuredSeconds / localListens;
   }
 
   static Future<void> _yieldFrame(Stopwatch slice) async {

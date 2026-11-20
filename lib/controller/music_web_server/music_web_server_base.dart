@@ -156,6 +156,44 @@ abstract class MusicWebServer {
     return baseUri.queryParameters['d'];
   }
 
+  /// the last segment of the `d` path, or the whole id for servers with item ids.
+  static String? baseUrlToFilename(String baseUrl) {
+    final idParamIndex = baseUrl.lastIndexOf(_kIdParam);
+    if (idParamIndex < 0) return null;
+    final idStart = idParamIndex + _kIdParam.length;
+    final nextParamIndex = baseUrl.indexOf('&', idStart);
+    final idEnd = nextParamIndex < 0 ? baseUrl.length : nextParamIndex;
+    final filenameStart = _encodedFilenameStart(baseUrl, idStart, idEnd);
+    final filenameEncoded = baseUrl.substring(filenameStart, idEnd);
+    return Uri.decodeQueryComponent(filenameEncoded);
+  }
+
+  static const _kIdParam = '&d=';
+
+  /// after the last `/` or `\`, raw or percent encoded.
+  static int _encodedFilenameStart(String url, int start, int end) {
+    const slash = 0x2F;
+    const backslash = 0x5C;
+    const percent = 0x25;
+    const two = 0x32;
+    const five = 0x35;
+    const lowerF = 0x66;
+    const lowerC = 0x63;
+    const lowerCaseBit = 0x20;
+    for (int i = end - 1; i >= start; i--) {
+      final c = url.codeUnitAt(i);
+      if (c == slash || c == backslash) return i + 1;
+      if (c == percent && i + 2 < end) {
+        final firstHex = url.codeUnitAt(i + 1);
+        final secondHexLower = url.codeUnitAt(i + 2) | lowerCaseBit;
+        final isEncodedSlash = firstHex == two && secondHexLower == lowerF;
+        final isEncodedBackslash = firstHex == five && secondHexLower == lowerC;
+        if (isEncodedSlash || isEncodedBackslash) return i + 3;
+      }
+    }
+    return start;
+  }
+
   static T _executeIfHasServer<T>(String baseUrl, T Function(MusicWebServer s, String id) callback, T Function(MusicWebServer? s, DirectoryIndexServer dir) fallback, {Uri? uri}) {
     String? id;
     final dir = DirectoryIndexServer.parseFromEncodedUrlPath(

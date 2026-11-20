@@ -32,8 +32,10 @@ class TagRating {
   }
 
   /// null when no rating field holds a rating. `RATING` and `FMPS_RATING` come first, then the rest.
-  static int? percentFromFields(Map<String, List<String>> properties) {
-    final percent = _percentOfField(properties, kDefaultField) ?? _percentOfField(properties, kFmpsField);
+  /// [isAsf] skips `RATING`, taglib maps the asf rating attributes to it in their own scale.
+  static int? percentFromFields(Map<String, List<String>> properties, {required bool isAsf}) {
+    final defaultFieldPercent = isAsf ? null : _percentOfField(properties, kDefaultField);
+    final percent = defaultFieldPercent ?? _percentOfField(properties, kFmpsField);
     if (percent != null) return percent;
     for (final field in properties.keys) {
       if (field == kDefaultField || !field.startsWith(kDefaultField)) continue;
@@ -79,6 +81,7 @@ class TagRating {
         final newPopularimeters = popularimetersWith(percent, oldPopularimeters);
         return tagFile.setPopularimeters(newPopularimeters);
       case TagLibTagType.asf:
+        // -- set first so taglib writes `RATING` here and not to a foobar2000 `POPULARIMETER` attribute
         final asfSharedUserRating = asfSharedUserRatingFromPercent(percent);
         return tagFile.setAsfSharedUserRating(asfSharedUserRating);
       case TagLibTagType.xiphComment || TagLibTagType.mp4 || TagLibTagType.ape || TagLibTagType.matroska || TagLibTagType.mod || TagLibTagType.unknown:
@@ -88,11 +91,14 @@ class TagRating {
 
   /// sets [percent] (0 removes the rating) on every rating field of [properties], each keeping its scale.
   /// [kDefaultField] gets the rating when no field holds one and [tagType] has no dedicated rating field.
+  /// asf always gets [kDefaultField] as the `WM/SharedUserRating` value, taglib removes the attribute without it.
   static void applyToFields({required int percent, required Map<String, List<String>> properties, required TagLibTagType tagType}) {
+    final isAsf = tagType == TagLibTagType.asf;
     final defaultScale = _RatingScale.defaultOf(tagType);
     final ratingFields = properties.keys.where(isRatingField).toFixedList(); // -- the map changes below
     var didSetField = false;
     for (final field in ratingFields) {
+      if (isAsf && field == kDefaultField) continue;
       final oldText = properties[field]?.firstOrNull;
       final scale = _RatingScale.ofField(field, oldText, defaultScale: defaultScale);
       if (percent == 0 || scale == null) {
@@ -102,7 +108,16 @@ class TagRating {
       properties[field] = [scale.toText(percent)];
       didSetField = true;
     }
-    if (!didSetField && percent > 0 && defaultScale != null) properties[kDefaultField] = [defaultScale.toText(percent)];
+    if (isAsf) {
+      if (percent > 0) {
+        final asfSharedUserRating = asfSharedUserRatingFromPercent(percent);
+        properties[kDefaultField] = ['$asfSharedUserRating'];
+      } else {
+        properties.remove(kDefaultField);
+      }
+    } else if (!didSetField && percent > 0 && defaultScale != null) {
+      properties[kDefaultField] = [defaultScale.toText(percent)];
+    }
   }
 
   /// keeps each frame's email & counter, a frame without a play count is dropped when clearing.

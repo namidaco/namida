@@ -51,8 +51,46 @@ void main() {
     'json': jsonDecode(jsonEncode(trExt.toJsonWithoutPath())),
   };
 
+  test('the filename from a track url is the last segment of its server path', () {
+    final serverUris = [
+      Uri.parse('https://music.example.com?_libraryId=7e64e319657a9516ec78490da03edccb&namida_t=jellyfin&namida_u=user'),
+      Uri.parse('http://192.168.1.5?_subdir=Music&_p=445&namida_t=smb&namida_u=us%26er'),
+    ];
+    const filenameOfServerPath = {
+      'aad69833f0d24e91a1ca38bae0c117aa': 'aad69833f0d24e91a1ca38bae0c117aa',
+      '/Music/Title [dQw4w9WgXcQ].m4a': 'Title [dQw4w9WgXcQ].m4a',
+      '/Music/sub dir/Ünïcödé & co=1+2%3 #x?.opus': 'Ünïcödé & co=1+2%3 #x?.opus',
+      '/Music/100%2F 100%5C.mp3': '100%2F 100%5C.mp3',
+      r'\Music\a\b.mp3': 'b.mp3',
+      'primary:Music/a.flac': 'a.flac',
+      '/Music/': '',
+    };
+    for (final serverUri in serverUris) {
+      for (final e in filenameOfServerPath.entries) {
+        final serverPath = e.key;
+        final uri = serverUri.replace(
+          queryParameters: {
+            ...serverUri.queryParameters,
+            'd': serverPath,
+          },
+        );
+        final url = uri.toString();
+        expect(Uri.parse(url).queryParameters['d'], serverPath, reason: url);
+        expect(MusicWebServer.baseUrlToFilename(url), e.value, reason: url);
+      }
+    }
+    expect(MusicWebServer.baseUrlToFilename('https://music.example.com?namida_t=smb'), isNull);
+  });
+
   group('jellyfin', () {
     TrackExtended trackOf(Map<String, dynamic> itemJson) => debugJellyfinItemToTrack(itemJson, splitConfig: splitConfig, server: server);
+
+    test('the library id in the server url is never read as a youtube id', () {
+      const libraryServer = 'https://music.example.com?_libraryId=7e64e319657a9516ec78490da03edccb&namida_t=jellyfin&namida_u=user';
+      final track = debugJellyfinItemToTrack({'Id': 'aad69833f0d24e91a1ca38bae0c117aa', 'Name': 'Song', 'Type': 'Audio'}, splitConfig: splitConfig, server: libraryServer);
+      expect(track.youtubeID, '');
+      expect(MusicWebServer.baseUrlToFilename(track.path), 'aad69833f0d24e91a1ca38bae0c117aa');
+    });
 
     test('a fully tagged item is the same after a reload, a title feat artist added once', () {
       final fresh = trackOf({

@@ -438,6 +438,7 @@ class _VisualizerCanvas extends StatelessWidget {
     final repaint = Listenable.merge([driver, fade, baseline]);
     final artworkScale = view.artworkScale;
     final artworkRadius = view.artworkRadius;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final painter = switch (kind) {
       _VisualizerKind.particles => _ParticlesPainter(
         driver: driver,
@@ -473,6 +474,7 @@ class _VisualizerCanvas extends StatelessWidget {
         baseline: baseline,
         waveformScale: view.waveformScale,
         waveformPadding: view.waveformPadding,
+        pixelRatio: pixelRatio,
       ),
       _VisualizerKind.waves => _WavesPainter(
         driver: driver,
@@ -689,6 +691,7 @@ class _MirroredBarsPainter extends _VisualizerPainter {
   final ValueListenable<double> baseline;
   final double waveformScale;
   final double waveformPadding;
+  final double pixelRatio;
 
   _MirroredBarsPainter({
     required super.driver,
@@ -699,6 +702,7 @@ class _MirroredBarsPainter extends _VisualizerPainter {
     required this.baseline,
     required this.waveformScale,
     required this.waveformPadding,
+    required this.pixelRatio,
   });
 
   static const _maxReach = 22.0;
@@ -710,6 +714,8 @@ class _MirroredBarsPainter extends _VisualizerPainter {
     ..strokeCap = StrokeCap.round;
   Size _shadedSize = Size.zero;
   double _shadedStrength = -1.0;
+  WaveformBarsLayout? _barsLayout;
+  Size _barsLayoutSize = Size.zero;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -720,18 +726,25 @@ class _MirroredBarsPainter extends _VisualizerPainter {
     final waveform = WaveformController.inst.currentWaveformUIRx.value;
     final barsCount = waveform.length;
     if (barsCount < 2) return;
-    if (_points.length != barsCount * 4) _points = Float32List(barsCount * 4);
+    if (_points.length != barsCount * 4) {
+      _points = Float32List(barsCount * 4);
+      _barsLayout = null;
+    }
     final points = _points;
 
     const minHeight = WaveformComponent.defaultBarsMinHeight;
     const maxHeight = WaveformComponent.defaultBarsMaxHeight;
     final isWaveformShown = WaveformController.inst.isWaveformUIEnabled.value;
-    final trackWidth = size.width - waveformPadding * 2;
-    final barWidth = trackWidth / barsCount * WaveformComponent.barWidthFraction;
-    final gap = (trackWidth - barWidth * barsCount) / (barsCount + 1);
-    final slot = barWidth + gap;
+    var barsLayout = _barsLayout;
+    if (barsLayout == null || _barsLayoutSize != size) {
+      final trackWidth = size.width - waveformPadding * 2;
+      barsLayout = WaveformBarsLayout(trackWidth, barsCount, pixelRatio);
+      _barsLayout = barsLayout;
+      _barsLayoutSize = size;
+    }
+    final barWidth = barsLayout.barWidth;
     final capRadius = barWidth / 2;
-    final firstX = waveformPadding + gap + capRadius;
+    final centerOffset = waveformPadding + capRadius;
     final middle = size.height - baseline.value;
     final maxReach = _maxReach * waveformScale * presence;
 
@@ -740,7 +753,7 @@ class _MirroredBarsPainter extends _VisualizerPainter {
       final waveformHeight = isWaveformShown ? waveform[i].clampDouble(minHeight, maxHeight) : minHeight;
       final covered = waveformHeight * waveformScale / 2 - capRadius;
       final reach = covered.withMinimum(0.0) + level * maxReach;
-      final x = firstX + i * slot;
+      final x = centerOffset + barsLayout.leftAt(i);
       final at = i * 4;
       points[at] = x;
       points[at + 1] = middle - reach;
@@ -764,7 +777,11 @@ class _MirroredBarsPainter extends _VisualizerPainter {
 
   @override
   bool shouldRepaint(covariant _MirroredBarsPainter oldDelegate) {
-    return oldDelegate.baseline != baseline || oldDelegate.waveformScale != waveformScale || oldDelegate.waveformPadding != waveformPadding || super.shouldRepaint(oldDelegate);
+    return oldDelegate.baseline != baseline ||
+        oldDelegate.waveformScale != waveformScale ||
+        oldDelegate.waveformPadding != waveformPadding ||
+        oldDelegate.pixelRatio != pixelRatio ||
+        super.shouldRepaint(oldDelegate);
   }
 }
 

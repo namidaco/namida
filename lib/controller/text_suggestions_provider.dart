@@ -1,6 +1,7 @@
 // by claude, no mistakes.
 import 'package:flutter/widgets.dart';
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -44,7 +45,7 @@ class TextSuggestionsProvider {
 
     // -- no library grouping for these, a single pass is required.
     TextSuggestionsSource.recordLabel => _buildFromTracks((trExt) => trExt.label),
-    TextSuggestionsSource.releaseType => _buildFromTracks((trExt) => trExt.releaseType),
+    TextSuggestionsSource.releaseType => _buildReleaseTypes(),
     TextSuggestionsSource.musicalKey => _buildFromTracks((trExt) => trExt.musicalKey),
     TextSuggestionsSource.format => _buildFromTracks((trExt) => trExt.format),
     TextSuggestionsSource.channels => _buildFromTracks((trExt) => trExt.channels),
@@ -90,6 +91,31 @@ class TextSuggestionsProvider {
     }
     // -- codes are already lowercase
     return TextSuggestionsValues(codes, codes, labels: labels, searchTexts: searchTexts);
+  }
+
+  static const _kMusicBrainzReleaseTypes = ['album', 'single', 'ep', 'broadcast', 'other'];
+
+  /// library values first, then the musicbrainz primary types not used yet.
+  static TextSuggestionsValues _buildReleaseTypes() {
+    final counts = <String, int>{};
+    void count(String releaseType) => counts[releaseType] = (counts[releaseType] ?? 0) + 1;
+    for (final trExt in Indexer.inst.allTracksMappedByPath.values) {
+      final releaseType = trExt.releaseType;
+      if (releaseType.isEmpty) continue;
+      final releaseTypes = FTagsMultiValues.splitJoined(releaseType);
+      if (releaseTypes == null) {
+        count(releaseType);
+        continue;
+      }
+      for (final value in releaseTypes) {
+        count(value);
+      }
+    }
+    final usedLowercased = counts.keys.map((e) => e.toLowerCase()).toSet();
+    for (final releaseType in _kMusicBrainzReleaseTypes) {
+      if (!usedLowercased.contains(releaseType)) counts[releaseType] = 0;
+    }
+    return _buildFromCounts(counts);
   }
 
   static TextSuggestionsValues _buildFromTracks(String Function(TrackExtended trExt) getValue) {
@@ -431,12 +457,12 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.style ||
     TextSuggestionsSource.mood ||
     TextSuggestionsSource.tags ||
-    TextSuggestionsSource.language => true,
+    TextSuggestionsSource.language ||
+    TextSuggestionsSource.releaseType => true,
     TextSuggestionsSource.explicit ||
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
-    TextSuggestionsSource.releaseType ||
     TextSuggestionsSource.musicalKey ||
     TextSuggestionsSource.format ||
     TextSuggestionsSource.channels ||
@@ -453,11 +479,11 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.genre || TextSuggestionsSource.style => settings.trackGenresSeparators.value,
     TextSuggestionsSource.mood || TextSuggestionsSource.tags => GeneralSplitConfig.buildSeparatorsSet().toList(),
     TextSuggestionsSource.language => Iso639.separators,
+    TextSuggestionsSource.releaseType => const [FTagsMultiValues.kSeparator],
     TextSuggestionsSource.explicit ||
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
-    TextSuggestionsSource.releaseType ||
     TextSuggestionsSource.musicalKey ||
     TextSuggestionsSource.format ||
     TextSuggestionsSource.channels ||

@@ -15,6 +15,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
@@ -186,6 +187,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   onReverseIconTap: () {
                     SearchSortController.inst.sortMedia(MediaType.track, reverse: !sortReverse);
                   },
+                  onSortLongPress: (context) => NamidaOnTaps.inst.onSubPageTracksSortLongPress(context, MediaType.track),
                 ),
                 textFieldController: libraryTab.textSearchControllerR,
                 textFieldHintText: lang.filterTracks,

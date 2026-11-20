@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 8.6.5-beta+261114224
+version: 8.6.7-beta+261120140
 
 environment:
   sdk: ">=3.13.7 <4.0.0"
@@ -28,6 +28,10 @@ dependency_overrides:
     git:
       url: https://github.com/media-kit/media-kit
       path: media_kit
+  wakelock_plus: # -- media_kit_video asks for the pub one
+    git:
+      url: https://github.com/MSOB7YY/wakelock_plus
+      path: wakelock_plus
   android_libcpp_shared: # 0.2.x with the 0.3.1 fix, until mecab_for_dart allows ^0.3.1
     git:
       url: https://github.com/MSOB7YY/android_libcpp_shared
@@ -87,7 +91,10 @@ dependencies:
   calendar_date_picker2:
     git:
       url: https://github.com/MSOB7YY/calendar_date_picker2
-  wakelock_plus: ^1.6.1
+  wakelock_plus:
+    git:
+      url: https://github.com/MSOB7YY/wakelock_plus
+      path: wakelock_plus
   screen_brightness:
     git:
       url: https://github.com/MSOB7YY/screen_brightness
@@ -157,9 +164,10 @@ dependencies:
       url: https://github.com/media-kit/media-kit
       path: media_kit
   # -- git cuz pub ones dont have swift pkg yet
+  # -- fork for linux h/w video (transparent + cpu rendered video)
   media_kit_video:
     git:
-      url: https://github.com/media-kit/media-kit
+      url: https://github.com/MSOB7YY/media-kit
       path: media_kit_video
   media_kit_libs_linux: ^1.2.1
   media_kit_libs_macos_video:
@@ -262,13 +270,12 @@ dependencies:
       url: https://github.com/MSOB7YY/dart_xdg_status_notifier_item
 
   # ---- Linux Packages ----
-  dbus: ^0.7.13
-  file_picker:
-    git:
-      url: https://github.com/miguelpruivo/flutter_file_picker
-      ref: 8dc97859f42ca7ca2d6d347dd7960a3c7b657baf
+  dbus: ^0.8.0
+  file_picker: ^13.4.0
   modern_titlebar_buttons: ^1.1.2
-  anni_mpris_service: ^0.1.0
+  anni_mpris_service:
+    git:
+      url: https://github.com/MSOB7YY/mpris_service
   mecab_for_dart: ^2.0.4
 
 dev_dependencies:

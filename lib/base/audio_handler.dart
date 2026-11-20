@@ -730,23 +730,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     );
   }
 
-  @override
-  FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
-    if (settings.mixedQueue.value || partyGate?.forcesMixedQueue == true) return;
-    if (currentQueue.value.isEmpty) return;
+  bool canJoinCurrentQueue(Q? newItem) {
+    if (settings.mixedQueue.value || partyGate?.forcesMixedQueue == true) return true;
+    if (currentQueue.value.isEmpty) return true;
 
     // this is what keeps local & youtube separated. this shall be removed if mixed playback ever got supported.
     final current = currentItem.value;
+    if (newItem is Selectable && current is! Selectable) return false;
+    if (newItem is YoutubeID && current is! YoutubeID) return false;
+    return true;
+  }
+
+  @override
+  FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
     final newItem = items.firstOrNull;
+    if (canJoinCurrentQueue(newItem)) return;
 
     final wasPlayWhenReady = playWhenReady.value;
-    if (newItem is Selectable && current is! Selectable) {
-      await clearQueue();
-      await onDispose();
-    } else if (newItem is YoutubeID && current is! YoutubeID) {
-      await clearQueue();
-      await onDispose();
-    }
+    await clearQueue();
+    await onDispose();
     setPlayWhenReady(wasPlayWhenReady);
   }
 

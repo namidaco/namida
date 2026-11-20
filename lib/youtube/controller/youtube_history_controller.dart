@@ -2,6 +2,8 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/video.dart';
@@ -10,12 +12,16 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   static YoutubeHistoryController get inst => _instance;
   static final YoutubeHistoryController _instance = YoutubeHistoryController._internal();
   YoutubeHistoryController._internal();
+
+  @override
+  ScrollController createScrollController() => NamidaScrollController.create();
 
   @override
   double daysToSectionExtent(List<int> days) {

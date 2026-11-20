@@ -145,7 +145,8 @@ class _SearchPageState extends State<SearchPage> {
               final srchTxt = ScrollSearchController.inst.searchTextEditingController.text;
               ClipboardController.inst.updateTextInControllerEmpty(srchTxt == '');
               await SearchSortController.inst.prepareResources();
-              SearchSortController.inst.searchAll(srchTxt);
+              // -- not srchTxt, preparing is slow on startup and user may type meanwhile
+              SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
               break;
             case SearchType.youtube:
               ScrollSearchController.inst.currentSearchType.value = SearchType.youtube;

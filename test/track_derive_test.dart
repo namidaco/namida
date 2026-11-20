@@ -476,6 +476,52 @@ void main() {
       const link = 'https://www.youtube.com/watch?v=BBBBBBBBBBB';
       expect(trackOf('Title [dQw4w9WgXcQ].m4a', comment: link).youtubeLink, link);
     });
+
+    group('server tracks', () {
+      final serverUris = [
+        Uri.parse('https://music.example.com?_libraryId=7e64e319657a9516ec78490da03edccb&namida_t=jellyfin&namida_u=user'),
+        Uri.parse('https://music.example.com?namida_t=subsonic&namida_u=user'),
+        Uri.parse('http://192.168.1.5?_subdir=Music&_p=445&namida_t=smb&namida_u=user'),
+        Uri.parse('http://saf').replace(queryParameters: {'_tree': 'content://com.android.externalstorage.documents/tree/primary%3AMusic', 'namida_t': 'saf', 'namida_u': ''}),
+      ];
+      TrackExtended serverTrackOf(Uri serverUri, String serverPath, {String comment = ''}) {
+        final uri = serverUri.replace(
+          queryParameters: {
+            ...serverUri.queryParameters,
+            'd': serverPath,
+          },
+        );
+        return kDummyExtendedTrack.copyWith(path: uri.toString(), comment: comment, generatePathHash: false);
+      }
+
+      test('the id comes from the file name in the server path, never from the server params', () {
+        const idOfServerPath = {
+          'aad69833f0d24e91a1ca38bae0c117aa': '',
+          'al-12345': '',
+          '/Music/Artist - Title.mp3': '',
+          '/Music/Title [dQw4w9WgXcQ].m4a': 'dQw4w9WgXcQ',
+          '/Music/Title v=dQw4w9WgXcQ.m4a': 'dQw4w9WgXcQ',
+          '/Music/sub dir/Ünïcödé & co=1+2%3 [dQw4w9WgXcQ].opus': 'dQw4w9WgXcQ',
+          r'\Music\Title [dQw4w9WgXcQ].m4a': 'dQw4w9WgXcQ',
+          'primary:Music/Title [dQw4w9WgXcQ].m4a': 'dQw4w9WgXcQ',
+          '/id=dQw4w9WgXcQ/Title.m4a': '',
+          '/Music/[dQw4w9WgXcQ]/Title.m4a': '',
+        };
+        for (final serverUri in serverUris) {
+          for (final e in idOfServerPath.entries) {
+            final serverPath = e.key;
+            expect(serverTrackOf(serverUri, serverPath).youtubeID, e.value, reason: '$serverUri $serverPath');
+          }
+        }
+      });
+
+      test('an embedded link keeps priority', () {
+        const link = 'https://www.youtube.com/watch?v=BBBBBBBBBBB';
+        for (final serverUri in serverUris) {
+          expect(serverTrackOf(serverUri, '/Music/Title [dQw4w9WgXcQ].m4a', comment: link).youtubeLink, link, reason: '$serverUri');
+        }
+      });
+    });
   });
 
   test('year parsing', () {

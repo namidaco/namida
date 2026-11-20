@@ -10,6 +10,7 @@ class Broken {
   static const IconData dislike_filled = IconData(0xe900, fontFamily: _fontFamilyFilled);
   static const IconData like_filled = IconData(0xe901, fontFamily: _fontFamilyFilled);
   static const IconData heart_filled = IconData(0xe902, fontFamily: _fontFamilyFilled);
+  static const IconData pause_circle_filled = IconData(0xe903, fontFamily: _fontFamilyFilled);
 
   static const String _fontFamily = 'broken';
 

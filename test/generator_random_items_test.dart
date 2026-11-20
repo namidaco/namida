@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:namida/base/generator_base.dart';
 
 void main() {
-  /// every count the default `length ~/ 12` to `length ~/ 8` range can give, a count of 0 means the whole list.
+  /// every count the default `max * 2 ~/ 3` to `length ~/ 8` range can give, a count of 0 means the whole list.
   Set<int> defaultCounts(int length) {
     if (length <= 2) return {0};
-    final min = length ~/ 12;
     final max = length ~/ 8;
+    final min = max * 2 ~/ 3;
     final counts = <int>{};
     final end = max > min ? max : min + 1;
     for (int count = min; count < end; count++) {
@@ -33,6 +33,13 @@ void main() {
         expect(allowedCounts, contains(result.length), reason: 'length $length gave ${result.length} items');
       }
     }
+  });
+
+  test('the default count is capped for big libraries', () {
+    final list = List.generate(8000, (i) => i);
+    final result = NamidaGeneratorBase.getRandomItems(list).toList();
+    expectLibraryItems(result, 8000);
+    expect(result.length, inInclusiveRange(333, 499));
   });
 
   test('min equal to max gives exactly that many items', () {

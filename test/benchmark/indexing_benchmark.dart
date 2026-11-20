@@ -105,6 +105,17 @@ void main() {
     await runner.run('Track.youtubeLink x${linkTracks.length}', youtubeLinks, warmups: 3, iterations: 15);
     runner.finish();
   }, timeout: Timeout.none);
+
+  test('youtube links of server tracks', () async {
+    final runner = BenchRunner('indexing.server');
+    final tracks = SyntheticLibrary.generate(kBenchTracksCount, root: _kServerBenchRoot);
+    final serverTracks = List.generate(tracks.length, (i) => _serverLinkTrackOf(tracks[i], i), growable: false);
+    List<String> youtubeLinks() => serverTracks.map((e) => e.youtubeLink).toFixedList();
+
+    runner.digest('youtubeLink', youtubeLinks());
+    await runner.run('server Track.youtubeLink x${serverTracks.length}', youtubeLinks, warmups: 3, iterations: 15);
+    runner.finish();
+  }, timeout: Timeout.none);
 }
 
 FAudioModel _audioModelOf(SyntheticTrack track, int index) {
@@ -130,6 +141,25 @@ FAudioModel _audioModelOf(SyntheticTrack track, int index) {
 TrackExtended _linkTrackOf(SyntheticTrack track) {
   final comment = track.comment ?? '';
   return kDummyExtendedTrack.copyWith(path: track.path, comment: comment, generatePathHash: false);
+}
+
+const _kServerBenchRoot = '/Music';
+final _jellyfinServerUri = Uri.parse('https://media.example.ts.net?_libraryId=7e64e319657a9516ec78490da03edccb&namida_t=jellyfin&namida_u=user');
+final _smbServerUri = Uri.parse('http://192.168.1.5?_subdir=Music&_p=445&namida_t=smb&namida_u=user');
+
+/// even: jellyfin item ids, odd: smb file paths.
+TrackExtended _serverLinkTrackOf(SyntheticTrack track, int index) {
+  final comment = track.comment ?? '';
+  final isJellyfin = index.isEven;
+  final serverUri = isJellyfin ? _jellyfinServerUri : _smbServerUri;
+  final serverPath = isJellyfin ? index.toRadixString(16).padLeft(32, '0') : track.path;
+  final uri = serverUri.replace(
+    queryParameters: {
+      ...serverUri.queryParameters,
+      'd': serverPath,
+    },
+  );
+  return kDummyExtendedTrack.copyWith(path: uri.toString(), comment: comment, generatePathHash: false);
 }
 
 String _derivedLine(TrackExtended tr) {

@@ -99,6 +99,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
             final videos = <String>[];
             final ytIds = <YoutubeID>[];
             for (final e in listensMap.keysSortedByValue) {
+              if (e.isDummyVideoId) continue;
               videos.add(e);
               ytIds.add(
                 YoutubeID(
@@ -120,7 +121,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
                   child: timeRangeChips,
                 );
               },
-              itemsCount: listensMap.length,
+              itemsCount: videos.length,
               itemBuilder: (context, i) {
                 final videoID = videos[i];
                 final listens = listensMap[videoID] ?? [];

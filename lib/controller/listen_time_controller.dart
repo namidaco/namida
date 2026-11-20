@@ -115,7 +115,7 @@ class ListenTimeController {
   }
 
   /// sums seconds of [keys] between [firstDay] and [lastDay] inclusive.
-  int sumSeconds(Map<int, Map<String, int>> all, int firstDay, int lastDay, List<String> keys) {
+  static int sumSeconds(Map<int, Map<String, int>> all, int firstDay, int lastDay, List<String> keys) {
     int total = 0;
     if (all.length < lastDay - firstDay) {
       for (final e in all.entries) {

@@ -140,6 +140,12 @@ abstract class NamidaChannel {
   /// so they shouldn't start playback on a cold start.
   Future<bool> consumeTrustedMediaCommand() async => true;
 
+  /// false while android auto/wear run the engine alone, flutter never answers `SystemChrome` calls then.
+  bool get hasActivity => true;
+
+  /// [fn] runs now, or once an activity attaches.
+  Future<void> whenActivityAttached(Future<void> Function() fn) => fn();
+
   final _onResume = <FutureOr<void> Function()>[];
   final _onSuspending = <FutureOr<void> Function()>[];
   final _onDestroy = <FutureOr<void> Function()>[];

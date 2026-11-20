@@ -99,45 +99,61 @@ void main() {
         TagRating.percentFromFields({
           'RATING': ['80'],
           'FMPS_RATING': ['0.2'],
-        }),
+        }, isAsf: false),
         80,
       );
       expect(
         TagRating.percentFromFields({
           'RATING': ['0'],
           'FMPS_RATING': ['0.2'],
-        }),
+        }, isAsf: false),
         20,
       );
       expect(
         TagRating.percentFromFields({
           'RATING WMP': ['3'],
           'FMPS_RATING': ['0.2'],
-        }),
+        }, isAsf: false),
         20,
       );
       expect(
         TagRating.percentFromFields({
           'RATING:USER@MAIL': ['0.4'],
           'TITLE': ['x'],
-        }),
+        }, isAsf: false),
         40,
       );
       expect(
         TagRating.percentFromFields({
           'RATING': ['abc'],
           'RATING MM': ['100'],
-        }),
+        }, isAsf: false),
         100,
       );
       expect(
         TagRating.percentFromFields({
           'FMPS_RATING_AMAROK_SCORE': ['90'],
           '_CUSTOM_RATING': ['10'],
-        }),
+        }, isAsf: false),
         isNull,
       );
-      expect(TagRating.percentFromFields({'RATING': []}), isNull);
+      expect(TagRating.percentFromFields({'RATING': []}, isAsf: false), isNull);
+    });
+
+    test('asf RATING is skipped, it holds the asf rating attributes in their own scale', () {
+      expect(
+        TagRating.percentFromFields({
+          'RATING': ['50'],
+        }, isAsf: true),
+        isNull,
+      );
+      expect(
+        TagRating.percentFromFields({
+          'RATING': ['50'],
+          'FMPS_RATING': ['0.2'],
+        }, isAsf: true),
+        20,
+      );
     });
   });
 
@@ -171,7 +187,7 @@ void main() {
     });
 
     test('tags with a dedicated rating field get no RATING', () {
-      for (final tagType in [TagLibTagType.id3v2, TagLibTagType.asf, TagLibTagType.mod]) {
+      for (final tagType in [TagLibTagType.id3v2, TagLibTagType.mod]) {
         final properties = {
           'TITLE': ['x'],
         };
@@ -180,6 +196,25 @@ void main() {
           'TITLE': ['x'],
         }, reason: tagType.name);
       }
+    });
+
+    test('asf RATING always holds the WM/SharedUserRating value', () {
+      final properties = {
+        'TITLE': ['x'],
+      };
+      apply(80, properties, tagType: TagLibTagType.asf);
+      expect(properties, {
+        'TITLE': ['x'],
+        'RATING': ['${TagRating.asfSharedUserRatingFromPercent(80)}'],
+      });
+
+      apply(55, properties, tagType: TagLibTagType.asf);
+      expect(properties['RATING'], ['${TagRating.asfSharedUserRatingFromPercent(55)}']);
+
+      apply(0, properties, tagType: TagLibTagType.asf);
+      expect(properties, {
+        'TITLE': ['x'],
+      });
     });
 
     test('each existing field keeps its scale', () {
@@ -372,9 +407,11 @@ void main() {
               expect(info.popularimeters, [TagLibPopularimeter(email: TagRating.kPopularimeterEmail, rating: TagRating.popmFromPercent(percent))]);
               expect(ratingFields, isEmpty);
             case TagLibTagType.asf:
+              final asfSharedUserRating = TagRating.asfSharedUserRatingFromPercent(percent);
               expect(info.computeRatingPercentage(), percent / 100);
-              expect(info.asfSharedUserRating, TagRating.asfSharedUserRatingFromPercent(percent));
-              expect(ratingFields, isEmpty);
+              expect(info.asfSharedUserRating, asfSharedUserRating);
+              expect(ratingFields, [TagRating.kDefaultField]);
+              expect(info.propertiesMap[TagRating.kDefaultField], ['$asfSharedUserRating']);
             case TagLibTagType.matroska:
               final stars = (percent / 20).round();
               expect(info.computeRatingPercentage(), stars * 20 / 100);
@@ -416,13 +453,26 @@ void main() {
       });
     }
 
-    test('wma rated by another player is read', () async {
+    test('wma rated by another player is read, and kept when editing other tags', () async {
       final path = copyFixture('wma');
       final file = TagLibFile.open(path)!;
       file.setAsfSharedUserRating(50);
       file.save();
       file.close();
       expect((await read(path)).computeRatingPercentage(), 0.6);
+
+      final error = write(
+        path,
+        null,
+        newProperties: {
+          'ALBUM': ['New Album'],
+        },
+      );
+      expect(error, isNull);
+      final edited = await read(path);
+      expect(edited.album, 'New Album');
+      expect(edited.asfSharedUserRating, 50);
+      expect(edited.computeRatingPercentage(), 0.6);
     });
 
     test('mp3 rated by older namida and another player reads as before, then syncs', () async {

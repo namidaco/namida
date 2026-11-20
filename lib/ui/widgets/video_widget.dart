@@ -1190,15 +1190,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       children: () async {
         final tracks = await Subtitles.inst.ensureDiscovered();
         if (tracks.isEmpty) {
-          return [
-            _getQualityChip(
-              title: lang.none,
-              icon: Broken.text_block,
-              onPlay: (_) {},
-              selected: false,
-              isCached: true,
-            ),
-          ];
+          return isKuru
+              ? []
+              : [
+                  _getQualityChip(
+                    title: lang.none,
+                    icon: Broken.text_block,
+                    onPlay: (_) {},
+                    selected: false,
+                    isCached: true,
+                  ),
+                ];
         }
         return [
           ObxO(

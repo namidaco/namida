@@ -245,9 +245,11 @@ class Player {
 
   bool get isStoppingAfterCurrent => isSleepingAfterItems(1);
 
-  bool toggleStopAfterCurrent() {
-    final shouldStop = !isStoppingAfterCurrent;
-    updateSleepTimerValues(enableSleepAfterItems: shouldStop, sleepAfterItems: shouldStop ? 1 : 0, isAnchoredToItem: shouldStop);
+  bool toggleStopAfterCurrent() => toggleStopAfterItems(1);
+
+  bool toggleStopAfterItems(int itemsCount) {
+    final shouldStop = !isSleepingAfterItems(itemsCount);
+    updateSleepTimerValues(enableSleepAfterItems: shouldStop, sleepAfterItems: shouldStop ? itemsCount : 0, isAnchoredToItem: shouldStop);
     return shouldStop;
   }
 
@@ -1088,7 +1090,8 @@ class Player {
   /// plays [queue] inside the current queue, a single item that's already in it is skipped to instead of being added again.
   Future<void> playKeepingQueue(List<Playable> queue, QueueSourceBase source) async {
     if (queue.isEmpty) return;
-    if (_audioHandler.partyGate != null || currentQueue.value.isEmpty) {
+    final canKeepQueue = _audioHandler.partyGate == null && currentQueue.value.isNotEmpty && _audioHandler.canJoinCurrentQueue(queue.first);
+    if (!canKeepQueue) {
       await playOrPause(0, queue, source);
       return;
     }

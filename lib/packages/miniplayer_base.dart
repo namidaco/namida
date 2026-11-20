@@ -2524,7 +2524,7 @@ class _QueueListChildWrapper extends StatelessWidget {
                     queue: queue,
                     search: MiniPlayerController.inst.queueSearch,
                     itemExtent: queueItemExtent,
-                    itemExtentOf: queueItemExtentBuilder == null ? null : (index) => queueItemExtentBuilder!(queue[index]),
+                    itemExtentOf: queueItemExtentBuilder == null ? null : (index) => index < queue.length ? queueItemExtentBuilder!(queue[index]) : null,
                     itemBuilder: itemBuilder,
                   ),
                   SliverPadding(

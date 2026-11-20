@@ -888,6 +888,7 @@ Future<void> showGeneralPopupDialog(
         )
       : null;
 
+  final hasNoTracks = tracks.isEmpty;
   final hasHeaderTap = isSingle;
 
   if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
@@ -912,6 +913,7 @@ Future<void> showGeneralPopupDialog(
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withOpacityExt(0.47), NText.medium.of(context).color!);
         double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, 34.0);
+        final unavailableBorderColor = hasNoTracks ? colorDelightened : Colors.red;
 
         final openInYtViewWidget = availableYoutubeIDs.isNotEmpty
             ? SmallListTile(
@@ -1127,14 +1129,16 @@ Future<void> showGeneralPopupDialog(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: Colors.red.withOpacityExt(0.3),
+                                      color: unavailableBorderColor.withOpacityExt(0.3),
                                     ),
                                     borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: NamidaText(
-                                      tracksExisting.isEmpty
+                                      hasNoTracks
+                                          ? lang.noTracksFound
+                                          : tracksExisting.isEmpty
                                           ? "${lang.trackNotFound}.\n${lang.promptToChangeTrackPath}"
                                           : "${lang.errorPlayingTrack}.\n${errorPlayingTrack.toString()}",
                                       style: NText.medium,
@@ -1638,21 +1642,12 @@ Future<void> showGeneralPopupDialog(
                                           ? () {
                                               final alreadySleeping = Player.inst.isSleepingAfterItems(stopAfterItems);
                                               return bigIcon(
-                                                Broken.pause_circle,
-                                                iconWidget: Opacity(
-                                                  opacity: alreadySleeping ? 0.6 : 1.0,
-                                                  child: Icon(
-                                                    Broken.pause_circle,
-                                                    color: iconColor,
-                                                  ),
-                                                ),
+                                                alreadySleeping ? Broken.pause_circle_filled : Broken.pause_circle,
                                                 () => lang.stopAfterThisTrack,
-                                                alreadySleeping
-                                                    ? null
-                                                    : () {
-                                                        NamidaNavigator.inst.closeDialog();
-                                                        Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems, isAnchoredToItem: true);
-                                                      },
+                                                () {
+                                                  NamidaNavigator.inst.closeDialog();
+                                                  Player.inst.toggleStopAfterItems(stopAfterItems);
+                                                },
                                               );
                                             }()
                                           : bigIcon(

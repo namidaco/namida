@@ -99,7 +99,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
       _showMembershipChangeSnack(oldMS);
       return true;
     } catch (e, st) {
-      if (e is SubscriptionAlreadyClaimedException && onAlreadyClaimed != null) {
+      if (e is SubscriptionAlreadyClaimedException && e.canReset != false && onAlreadyClaimed != null) {
         onAlreadyClaimed();
       } else {
         _showError('membership change failed', exception: e, stackTrace: st);

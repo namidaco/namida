@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.util.ViewUtils
 import java.io.File
@@ -42,6 +43,7 @@ class NamidaMainActivity : FlutterActivity() {
   private lateinit var channelStorage: MethodChannel
   private lateinit var context: Context
   private var toast: Toast? = null
+  private var isAttachingToRunningEngine = false
 
   private val appChannels by lazy { NamidaAppChannels.get(applicationContext) }
   private val storageUtils: StorageUtils
@@ -64,8 +66,9 @@ class NamidaMainActivity : FlutterActivity() {
       pipBuilder = PictureInPictureParams.Builder()
     }
 
-    
+
     registerNamidaChannels(flutterEngine)
+    if (isAttachingToRunningEngine) channel.invokeMethod("onActivityAttached", null)
   }
 
   /// opens the share chooser as a separate task, otherwise the new app could open replacing namida
@@ -119,6 +122,8 @@ class NamidaMainActivity : FlutterActivity() {
 
     channel.setMethodCallHandler { call, result ->
       when (call.method) {
+        "hasActivity" -> result.success(true)
+
         "showToast" -> {
           try {
             val durInSeconds = call.argument<Number?>("seconds")
@@ -365,6 +370,8 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun provideFlutterEngine(@NonNull context: Context): FlutterEngine {
     this.context = context
+    // -- android auto & wear can start the engine without an activity
+    isAttachingToRunningEngine = FlutterEngineCache.getInstance().contains(AudioServicePlugin.getFlutterEngineId())
     return AudioServicePlugin.getFlutterEngine(context)
   }
 

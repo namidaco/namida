@@ -236,6 +236,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       overlay: miniplayerDimWidget,
     );
 
+    bool canEndRightDrag() {
+      if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage) return false;
+      return _scrollController.hasClients && _scrollController.position.pixels <= 0;
+    }
+
     final rightDragAbsorberWidget = Align(
       alignment: Alignment.centerRight,
       child: SizedBox(
@@ -257,16 +262,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             }
           },
           onPointerCancel: (event) {
+            if (canEndRightDrag()) _mpState?.onVerticalDragCancel();
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               _mpState?.setDragExternally(false);
             });
           },
           onPointerUp: (event) {
-            if (!NamidaNavigator.inst.isInYTCommentsSubpage && !NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
-              if (_scrollController.hasClients && _scrollController.position.pixels <= 0) {
-                _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
-              }
-            }
+            if (canEndRightDrag()) _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
             // thats because the internal GestureDetector executes drag end after Listener's onPointerUp
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               _mpState?.setDragExternally(false);

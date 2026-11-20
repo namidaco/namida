@@ -17,6 +17,19 @@ class _NamidaChannelAndroid extends NamidaChannel {
     _initLiseners();
   }
 
+  bool _hasActivity = true;
+  Future<void> Function()? _onActivityAttached;
+
+  @override
+  bool get hasActivity => _hasActivity;
+
+  @override
+  Future<void> whenActivityAttached(Future<void> Function() fn) async {
+    _hasActivity = await _channel.invokeMethod<bool>('hasActivity') ?? true;
+    if (_hasActivity) return fn();
+    _onActivityAttached = fn;
+  }
+
   @override
   bool get supportsAppIcons => true;
   @override
@@ -202,6 +215,12 @@ class _NamidaChannelAndroid extends NamidaChannel {
 
         case 'onSystemProxyChanged':
           _onSystemProxyChanged?.call();
+
+        case 'onActivityAttached':
+          _hasActivity = true;
+          final onActivityAttached = _onActivityAttached;
+          _onActivityAttached = null;
+          onActivityAttached?.call();
 
         case 'onResume':
           for (final fn in _onResume) {

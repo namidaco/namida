@@ -966,7 +966,7 @@ class AppPaths {
     return existingPaths;
   }
 
-  static const _kNativeLogTags = ['UsbDirectManager', 'UsbAudioDevice', 'UsbAudioStream'];
+  static const _kNativeLogTags = ['AudioOutputManager', 'UsbDirectManager', 'UsbAudioDevice', 'UsbAudioStream'];
 
   /// logcat only gives the app its own lines, from a ring buffer, so these cover the recent sessions only.
   static Future<bool> _writeNativeLogs(File destination) async {

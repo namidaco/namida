@@ -46,8 +46,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
 
   final List<Track> tracks;
   final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> albums;
-  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> eps;
-  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singles;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singlesAndEps;
   final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> extras;
   final MediaType type;
 
@@ -56,8 +55,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
     required this.name,
     required this.tracks,
     required this.albums,
-    required this.eps,
-    required this.singles,
+    required this.singlesAndEps,
     required this.extras,
     required this.type,
   });
@@ -102,8 +100,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
               return NamidaListView(
                 header: _ArtistAlbumsHeader(
                   albums: widget.albums,
-                  eps: widget.eps,
-                  singles: widget.singles,
+                  singlesAndEps: widget.singlesAndEps,
                   extras: widget.extras,
                 ),
                 stickyHeader: TracksSearchWidgetBox(
@@ -215,14 +212,12 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
 
 class _ArtistAlbumsHeader extends StatefulWidget {
   final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> albums;
-  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> eps;
-  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singles;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singlesAndEps;
   final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> extras;
 
   const _ArtistAlbumsHeader({
     required this.albums,
-    required this.eps,
-    required this.singles,
+    required this.singlesAndEps,
     required this.extras,
   });
 
@@ -262,7 +257,7 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
   void _sortAll() {
     final sort = settings.artistAlbumsSort.value;
     final sorting = sort == null ? _ArtistAlbumsHeader.globalSortingOrNewestFirst() : SortChain.of([sort], reverse: settings.artistAlbumsSortReversed.value);
-    for (final list in [widget.albums, widget.eps, widget.singles, widget.extras]) {
+    for (final list in [widget.albums, widget.singlesAndEps, widget.extras]) {
       if (list.length > 1) SearchSortController.inst.sortAlbumsListRaw(list, sorting);
     }
   }
@@ -275,9 +270,8 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
   @override
   Widget build(BuildContext context) {
     final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value;
-    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value;
-    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value;
-    final extrasInitiallyExpanded = widget.albums.isEmpty && widget.eps.isEmpty && widget.singles.isEmpty;
+    final singlesAndEpsInitiallyExpanded = settings.extra.artistSinglesExpanded.value;
+    final extrasInitiallyExpanded = widget.albums.isEmpty && widget.singlesAndEps.isEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -291,23 +285,13 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
             onExpansionChanged: (value) => settings.extra.artistAlbumsExpanded.save(value),
           ),
         ],
-        if (widget.eps.isNotEmpty) ...[
+        if (widget.singlesAndEps.isNotEmpty) ...[
           const SizedBox(height: 6.0),
           _AlbumsRow(
-            title: lang.eps,
-            icon: Broken.music_playlist,
-            albums: widget.eps,
-            initiallyExpanded: epsInitiallyExpanded,
-            onExpansionChanged: (value) => settings.extra.artistEpsExpanded.save(value),
-          ),
-        ],
-        if (widget.singles.isNotEmpty) ...[
-          const SizedBox(height: 6.0),
-          _AlbumsRow(
-            title: lang.singles,
+            title: '${lang.singles} & ${lang.eps}',
             icon: Broken.music_square,
-            albums: widget.singles,
-            initiallyExpanded: singlesInitiallyExpanded,
+            albums: widget.singlesAndEps,
+            initiallyExpanded: singlesAndEpsInitiallyExpanded,
             onExpansionChanged: (value) => settings.extra.artistSinglesExpanded.save(value),
           ),
         ],

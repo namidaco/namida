@@ -54,6 +54,7 @@ class NamidaAppChannels private constructor(private val context: Context) {
   fun handleCall(call: MethodCall, result: MethodChannel.Result, channel: MethodChannel): Boolean {
     when (call.method) {
       "sdk" -> result.success(Build.VERSION.SDK_INT)
+      "hasActivity" -> result.success(false)
       "consumeExitReports" -> {
         CoroutineScope(Dispatchers.IO).launch {
           val reports = try {

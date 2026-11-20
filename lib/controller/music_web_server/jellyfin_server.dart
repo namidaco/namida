@@ -526,7 +526,9 @@ class _JellyfinClientWrapper {
 
     _authCompleter = Completer<MusicWebServerError?>();
     try {
-      _deviceId = await NamidaDeviceInfo.fetchDeviceId() ?? 'namida';
+      final deviceId = await NamidaDeviceInfo.fetchDeviceId();
+      // -- linux id is /etc/machine-id with its trailing newline, a header can't hold it
+      _deviceId = deviceId?.trim() ?? 'namida';
       _version = VersionWrapper.current?.name ?? '1.0.0';
 
       _api.setAuthHeader(deviceId: _deviceId!, version: _version!);
@@ -552,7 +554,7 @@ class _JellyfinClientWrapper {
       return authError;
     } on DioException catch (e) {
       final code = e.response?.statusCode ?? 0;
-      final message = e.response?.statusMessage ?? e.message ?? 'Unknown error';
+      final message = e.response?.statusMessage ?? e.message ?? e.error?.toString() ?? 'Unknown error';
       final authError = MusicWebServerError(code: code, message: message);
       _authCompleter!.complete(authError);
       return authError;
@@ -568,9 +570,10 @@ class _JellyfinClientWrapper {
       await _api.getSystemInfo();
       return null;
     } on DioException catch (e) {
+      final message = e.message ?? e.error?.toString() ?? 'Unknown error';
       return MusicWebServerError(
         code: e.response?.statusCode ?? -1,
-        message: e.message ?? 'Unknown error',
+        message: message,
       );
     }
   }

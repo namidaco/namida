@@ -5,6 +5,47 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+namespace {
+
+// flow launcher injects modifiers without scan codes and flutter keeps Win stuck. other keys would turn into numpad ones.
+// flutter#193675 fixed it for Shift only, remove once the engine covers Ctrl, Alt and Win too.
+void FillMissingModifierScanCode(MSG& msg) {
+  switch (msg.message) {
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+      break;
+    default:
+      return;
+  }
+  const UINT scancode = static_cast<UINT>((msg.lParam >> 16) & 0xFF);
+  if (scancode != 0) {
+    return;
+  }
+  switch (msg.wParam) {
+    case VK_SHIFT:
+    case VK_CONTROL:
+    case VK_MENU:
+    case VK_LWIN:
+    case VK_RWIN:
+      break;
+    default:
+      return;
+  }
+  const UINT mapped = MapVirtualKey(static_cast<UINT>(msg.wParam), MAPVK_VK_TO_VSC_EX);
+  if (mapped == 0) {
+    return;
+  }
+  const bool is_extended = (mapped & 0xFF00) != 0;
+  msg.lParam |= static_cast<LPARAM>(mapped & 0xFF) << 16;
+  if (is_extended) {
+    msg.lParam |= 1 << 24;
+  }
+}
+
+}  // namespace
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
   // Attach to console when present (e.g., 'flutter run') or create a
@@ -36,6 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   ::MSG msg;
   while (::GetMessage(&msg, nullptr, 0, 0)) {
+    FillMissingModifierScanCode(msg);
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }

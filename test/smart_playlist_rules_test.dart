@@ -100,6 +100,9 @@ void main() {
     int year = 0,
     int? bpm,
     String musicalKey = '',
+    String albumArtist = '',
+    List<String> albumArtists = const [],
+    String releaseType = '',
     int discNo = 0,
     List<int> listens = const [],
   }) {
@@ -115,6 +118,9 @@ void main() {
       year: year,
       bpm: bpm,
       musicalKey: musicalKey,
+      albumArtist: albumArtist,
+      albumArtistsList: albumArtists,
+      releaseType: releaseType,
       discNo: discNo,
       generatePathHash: false,
     );
@@ -516,6 +522,39 @@ void main() {
       expect(genres(.notContains, 'ro'), {'genre_empty'});
       expect(genres(.missing), {'genre_empty'});
       expect(genres(.exists), {'genre_multi'});
+    });
+
+    test('joined values match each value and the whole text, negations only when none does', () {
+      final releaseTypeTracks = [
+        addTrack('rt_album_comp', releaseType: 'album; compilation'),
+        addTrack('rt_album', releaseType: 'album'),
+        addTrack('rt_single_remix', releaseType: 'single;remix'),
+        addTrack('rt_none'),
+      ];
+      Set<String> releaseTypes(SmartPlaylistRuleFilterText filter, [String? data]) => resolveAmong(textRule(filter, data, source: .releaseType), releaseTypeTracks);
+      expect(releaseTypes(.isSame, 'album'), {'rt_album_comp', 'rt_album'});
+      expect(releaseTypes(.isSame, 'remix'), {'rt_single_remix'});
+      expect(releaseTypes(.isSame, 'album; compilation'), {'rt_album_comp'});
+      expect(releaseTypes(.isNotSame, 'album'), {'rt_single_remix', 'rt_none'});
+      expect(releaseTypes(.isNotSame, 'album; compilation'), {'rt_album', 'rt_single_remix', 'rt_none'});
+      expect(releaseTypes(.startsWith, 'comp'), {'rt_album_comp'});
+      expect(releaseTypes(.contains, 'album'), {'rt_album_comp', 'rt_album'});
+      expect(releaseTypes(.regexMatch, r'^remix$'), {'rt_single_remix'});
+      expect(releaseTypes(.exists), {'rt_album_comp', 'rt_album', 'rt_single_remix'});
+      expect(releaseTypes(.missing), {'rt_none'});
+      expect(resolveAmong(textRule(.isSame, 'album', source: .releaseType, enableCleanup: false), releaseTypeTracks), {'rt_album_comp', 'rt_album'});
+
+      final albumArtistTracks = [
+        addTrack('aa_multi', albumArtist: 'Alpha; Beta', albumArtists: ['Alpha', 'Beta']),
+        addTrack('aa_single', albumArtist: 'Alpha', albumArtists: ['Alpha']),
+        addTrack('aa_none'),
+      ];
+      Set<String> albumArtists(SmartPlaylistRuleFilterText filter, [String? data]) => resolveAmong(textRule(filter, data, source: .albumArtist), albumArtistTracks);
+      expect(albumArtists(.isSame, 'beta'), {'aa_multi'});
+      expect(albumArtists(.isSame, 'alpha'), {'aa_multi', 'aa_single'});
+      expect(albumArtists(.isSame, 'Alpha; Beta'), {'aa_multi'});
+      expect(albumArtists(.isNotSame, 'beta'), {'aa_single', 'aa_none'});
+      expect(albumArtists(.missing), {'aa_none'});
     });
 
     test('musical key as text', () {

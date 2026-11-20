@@ -85,7 +85,10 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
   void didUpdateWidget(covariant YoutubeVideoCard oldWidget) {
     if (oldWidget.video != widget.video) {
       _initInfo();
-      if (oldWidget.video.id != widget.video.id) tryFetchLikeStatus();
+      if (oldWidget.video.id != widget.video.id) {
+        resetLikeStatus();
+        tryFetchLikeStatus();
+      }
     }
     super.didUpdateWidget(oldWidget);
   }

@@ -38,7 +38,6 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     namiweenOfferedYear,
     artistAlbumsExpanded,
     artistSinglesExpanded,
-    artistEpsExpanded,
     artistsMapGraphLayout,
     homePinnedType,
     lastPlayedIndex,

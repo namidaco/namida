@@ -320,13 +320,15 @@ class MiniPlayerController {
 
   double? _currentItemStart() {
     final index = Player.inst.currentIndex.value;
+    final queue = Player.inst.currentQueue.value;
+    // -- queue listeners run before the index is updated for the new queue
+    if (index >= queue.length) return null;
     final results = queueSearch.results.value;
     final position = queueSearch.positionOf(index);
     if (position == null) return null;
     if (!Dimensions.inst.isMixedPlayerQueue) return _currentItemExtent * position;
     final cached = _mixedCurrentItemStart;
     if (cached != null) return cached;
-    final queue = Player.inst.currentQueue.value;
     int videosCount = 0;
     for (int i = 0; i < position; i++) {
       final queueIndex = results == null ? i : results[i];
@@ -349,7 +351,10 @@ class MiniPlayerController {
     return true;
   }
 
+  bool _wasPointerCancelled = false;
+
   void onPointerDown(PointerDownEvent event) {
+    _wasPointerCancelled = false;
     if (_isModifyingQueue) return;
     if (fromRootToPanel(event.position.dy) >= screenSize.height - _deadSpace) return;
 
@@ -404,11 +409,18 @@ class MiniPlayerController {
     animateMiniplayer(_offset / maxOffset);
   }
 
-  void onPointerUp(PointerUpEvent event) {
+  void onPointerUp(PointerUpEvent event) => _onPointerEnd(toDragStart: false);
+
+  void onPointerCancel(PointerCancelEvent event) {
+    _wasPointerCancelled = true;
+    _onPointerEnd(toDragStart: true);
+  }
+
+  void _onPointerEnd({required bool toDragStart}) {
     if (_offset <= maxOffset || _offset >= (maxOffset * 2)) return;
 
     if (_isInsideQueue()) return;
-    verticalSnapping();
+    verticalSnapping(toDragStart: toDragStart);
   }
 
   void gestureDetectorOnTap() {
@@ -428,6 +440,8 @@ class MiniPlayerController {
 
     animateMiniplayer(_offset / maxOffset);
   }
+
+  void gestureDetectorOnVerticalDragEnd(DragEndDetails details) => verticalSnapping(toDragStart: _wasPointerCancelled);
 
   void gestureDetectorOnHorizontalDragStart(DragStartDetails details) {
     if (_offset > maxOffset) return;
@@ -457,6 +471,11 @@ class MiniPlayerController {
   void gestureDetectorOnHorizontalDragEnd(DragEndDetails details) {
     if (_offset > maxOffset) return;
 
+    if (_wasPointerCancelled) {
+      _snapToCurrent();
+      return;
+    }
+
     final distance = _sPrevOffset - _sOffset;
     final speed = _velocity.getVelocity().pixelsPerSecond.dx;
     const threshold = 1000.0;
@@ -473,8 +492,8 @@ class MiniPlayerController {
     }
   }
 
-  void verticalSnapping() async {
-    final distance = _prevOffset - _offset;
+  void verticalSnapping({bool toDragStart = false}) async {
+    final distance = toDragStart ? 0.0 : _prevOffset - _offset;
 
     if (distance == _headRoom) {
       if (_defaultShouldDismissMiniplayer) {
@@ -484,7 +503,7 @@ class MiniPlayerController {
       }
     }
 
-    final speed = _velocity.getVelocity().pixelsPerSecond.dy;
+    final speed = toDragStart ? 0.0 : _velocity.getVelocity().pixelsPerSecond.dy;
     const threshold = 500.0;
 
     bool shouldSnapToExpanded = false;

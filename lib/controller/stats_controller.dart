@@ -5,7 +5,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/listen_time_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -106,12 +105,6 @@ class StatsController {
     await history.waitForHistoryAndMostPlayedLoad;
     final daily = await ListenTimeController.inst.loadAll();
 
-    final listenTimeMap = Player.inst.totalListenedTimeInSec;
-    int totalListenSeconds = 0;
-    for (final k in keys) {
-      totalListenSeconds += listenTimeMap?[k] ?? 0;
-    }
-
     final snapshot = await HistoryStatsSnapshot.compute(
       history: history,
       resolver: resolver,
@@ -119,7 +112,6 @@ class StatsController {
       lastDay: lastDay,
       dailyListenTime: daily,
       listenTimeKeys: keys,
-      totalListenSeconds: totalListenSeconds,
       monthlyTopYear: monthlyTopYear,
     );
     cache.set(firstDay, lastDay, monthlyTopYear, version, snapshot);
