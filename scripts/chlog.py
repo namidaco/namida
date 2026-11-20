@@ -692,7 +692,7 @@ def render_telegram(cl, version, existing):
     links = [
         ("\U0001f4dd Changelog", "Full Changelog", changelog_url),
         ("\U0001f517 Download", version, release_url),
-        ("\U0001f517 Download (beta/linux)", version + "-beta", snapshots_url),
+        ("\U0001f517 Download (beta)", version + "-beta", snapshots_url),
         ("\U0001f310 Website", "namida.app", "https://namida.app"),
         ("\U0001f4da Docs", "docs.namida.app", "https://docs.namida.app"),
     ]

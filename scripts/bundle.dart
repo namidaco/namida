@@ -24,7 +24,7 @@ void main(List<String> args) async {
   final pubspecParsed = loadYaml(pubspecContent);
   final versionWithBuildNumber = pubspecParsed['version'] as String;
   final versionOnly = versionWithBuildNumber.split('+').first.split('-').first;
-  final buildNumberOnly = versionWithBuildNumber.split('+').last;
+  final isBeta = versionWithBuildNumber.contains('-beta');
 
   print('====> Parsed version: $versionOnly');
 
@@ -37,7 +37,8 @@ void main(List<String> args) async {
     await _execute('flutter', ["pub", "get"]);
   }
 
-  final filename = 'namida-v$versionOnly-beta';
+  final betaSuffix = isBeta ? '-beta' : '';
+  final filename = 'namida-v$versionOnly$betaSuffix';
   String buildOutputPath(String ext) {
     return "${bundleOutputDir.path}/$filename.linux.$ext";
   }
@@ -121,8 +122,12 @@ void main(List<String> args) async {
   }
 
   if (!noAurPublish) {
-    print('====> updating aur files');
-    await _execute('bash', ['../namida_aur/namida-bin/bump.sh', versionOnly, buildNumberOnly]);
+    if (isBeta) {
+      print('====> updating aur files');
+      await _execute('bash', ['scripts/aur_publish.sh', versionWithBuildNumber, buildOutputPath('tar.gz')]);
+    } else {
+      print('====> skipping aur, stable publishes from aur.yml once the release is published');
+    }
   }
 
   // await _execute('dart', ['bump_version.dart', '-y', '--skip-git', versionOnly, buildNumberOnly]);

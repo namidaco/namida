@@ -29,15 +29,13 @@ on:
         type: boolean
         default: true
       linux:
-        description: deb/rpm/tar.gz + AUR (beta only)
+        description: deb/rpm/tar.gz + AUR
         type: boolean
         default: true
       appimage:
-        description: beta only
         type: boolean
         default: true
       flatpak:
-        description: beta only
         type: boolean
         default: true
       macos:
@@ -435,7 +433,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_linux:
-    if: ${{ inputs.is_beta && (inputs.linux || inputs.appimage) && inputs.source_run_id == '' }}
+    if: ${{ (inputs.linux || inputs.appimage) && inputs.source_run_id == '' }}
     needs: [create_release, bundle_docs]
     runs-on: ubuntu-latest
     container:
@@ -526,8 +524,9 @@ jobs:
             build_final/*
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
+      # stable goes to AUR from aur.yml, once the draft is published
       - name: Install SSH key for AUR
-        if: ${{ inputs.linux }}
+        if: ${{ inputs.linux && inputs.is_beta }}
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -535,31 +534,23 @@ jobs:
           name: id_ed25519
 
       - name: Publish to AUR
-        if: ${{ inputs.linux }}
+        if: ${{ inputs.linux && inputs.is_beta }}
         run: |
-          # Parse version string (e.g. 5.6.5-beta+260114196)
-          FULL_VERSION="${{ needs.create_release.outputs.version }}"
-          PKGVER=$(echo "$FULL_VERSION" | sed 's/[-+].*//')
-          BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
-          TARBALL=$(find "$(pwd)/build_final" -name "*.tar.gz" | head -1)
+          TARBALL=$(find "$(pwd)/build_final" -name "*.linux.tar.gz" | head -1)
           if [ -z "$TARBALL" ]; then
             echo "No tarball found in build_final:"
             ls -la build_final/
             exit 1
           fi
-
-          # Clone and Publish AUR package
-          git clone ssh://aur@aur.archlinux.org/namida-bin.git namida-bin
-          cd namida-bin
           # disable root user check for makepkg, very annoying
           sed -i 's/if (( EUID == 0 ))/if (( EUID == -1 ))/' $(which makepkg)
-          bash bump.sh "$PKGVER" "$BUILDNUMBER" "$TARBALL"
+          bash scripts/aur_publish.sh "${{ needs.create_release.outputs.version }}" "$TARBALL"
 
   # AppImage from the arch tarball, packaged with quick-sharun in the pkgforge archlinux container.
   # Bundles everything (glibc, gtk, webkit2gtk, mpv) so nothing is taken from the host.
   # Mirrors https://github.com/pkgforge-dev/Namida-AppImage
   build_appimage:
-    if: ${{ !cancelled() && inputs.is_beta && inputs.appimage && (inputs.source_run_id != '' || needs.build_linux.result == 'success') }}
+    if: ${{ !cancelled() && inputs.appimage && (inputs.source_run_id != '' || needs.build_linux.result == 'success') }}
     needs: [create_release, build_linux]
     runs-on: ubuntu-latest
     container: ghcr.io/pkgforge-dev/archlinux:latest
@@ -613,7 +604,7 @@ jobs:
   #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
   #   - Namida-x86_64-<ver>-flatpak-payload.tar.gz    -> release asset, the source of the Flathub manifest
   build_linux_portable:
-    if: ${{ inputs.is_beta && inputs.flatpak && inputs.source_run_id == '' }}
+    if: ${{ inputs.flatpak && inputs.source_run_id == '' }}
     needs: [create_release, bundle_docs]
     runs-on: ubuntu-24.04
 
@@ -656,7 +647,7 @@ jobs:
   # Flatpak bundle from the portable tarball. libass/libplacebo/ffmpeg/mpv are compiled by the manifest
   # (cached between runs on the manifest hash), the app is dropped in prebuilt.
   build_flatpak:
-    if: ${{ !cancelled() && inputs.is_beta && inputs.flatpak && (inputs.source_run_id != '' || needs.build_linux_portable.result == 'success') }}
+    if: ${{ !cancelled() && inputs.flatpak && (inputs.source_run_id != '' || needs.build_linux_portable.result == 'success') }}
     needs: [create_release, build_linux_portable]
     runs-on: ubuntu-latest
     container:

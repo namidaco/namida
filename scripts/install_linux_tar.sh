@@ -29,11 +29,23 @@ cd "$TEMP_DIR"
 
 # Get latest releases and download URL for .tar.gz
 echo -e "${YELLOW}Fetching release information...${NC}"
-API_URL="https://api.github.com/repos/namidaco/namida-snapshots/releases"
+STABLE_REPO="namidaco/namida"
+BETA_REPO="namidaco/namida-snapshots"
+REPO="$STABLE_REPO"
+if [ "$1" = "--beta" ]; then
+  REPO="$BETA_REPO"
+fi
 
 # Try to find a .tar.gz in the latest 4 releases
-RELEASES_JSON=$(curl -s "$API_URL?per_page=4")
-DOWNLOAD_URL=$(echo "$RELEASES_JSON" | grep "browser_download_url.*\.tar\.gz" | cut -d '"' -f 4 | head -n 1)
+find_tarball_url() {
+  curl -s "https://api.github.com/repos/$1/releases?per_page=4" | grep "browser_download_url.*linux\.tar\.gz" | cut -d '"' -f 4 | head -n 1
+}
+
+DOWNLOAD_URL=$(find_tarball_url "$REPO")
+if [ -z "$DOWNLOAD_URL" ] && [ "$REPO" = "$STABLE_REPO" ]; then
+  echo -e "${YELLOW}No stable Linux build found, installing the latest beta instead${NC}"
+  DOWNLOAD_URL=$(find_tarball_url "$BETA_REPO")
+fi
 
 if [ -z "$DOWNLOAD_URL" ]; then
   echo -e "${RED}Error: Could not find .tar.gz file in the last 4 releases${NC}"

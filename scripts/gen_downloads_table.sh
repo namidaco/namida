@@ -66,14 +66,14 @@ row "Windows" \
   "${PREFIX}-Installer-x86_64.exe|Namida-x86_64-${PREFIXRAW}-Installer.exe" \
   "${PREFIX}-Portable-x86_64.zip|Namida-x86_64-${PREFIXRAW}-Portable.zip"
 
-if [ "$IS_BETA" = "true" ]; then
-  row "Linux" \
-    "${PREFIX}.linux.tar.gz|namida-${PREFIX}.linux.tar.gz" \
-    "${PREFIX}.linux.deb|namida-${PREFIX}.linux.deb" \
-    "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm" \
-    "${PREFIX}.AppImage|Namida-x86_64-${PREFIXRAW}.AppImage" \
-    "${PREFIX}.flatpak|Namida-x86_64-${PREFIXRAW}.flatpak"
+row "Linux" \
+  "${PREFIX}.linux.tar.gz|namida-${PREFIX}.linux.tar.gz" \
+  "${PREFIX}.linux.deb|namida-${PREFIX}.linux.deb" \
+  "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm" \
+  "${PREFIX}.AppImage|Namida-x86_64-${PREFIXRAW}.AppImage" \
+  "${PREFIX}.flatpak|Namida-x86_64-${PREFIXRAW}.flatpak"
 
+if [ "$IS_BETA" = "true" ]; then
   row "macOS" \
     "${PREFIX}-universal.dmg|Namida-${PREFIX}-macos-universal.dmg" \
     "${PREFIX}-arm64.dmg|Namida-${PREFIX}-macos-arm64.dmg" \

@@ -283,11 +283,16 @@ Everything you might expect from a music player, in addition to the following:
 
 <tr>
 <td align="center"><b>Linux</b> <sub><code>new</code></sub></td>
-<td align="center"><i>Soon</i></td>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida/releases/latest"><img src="./some stuff/badge_github.png" height="50"></a>
+    <a href="https://aur.archlinux.org/packages/namida-bin"><img src="./some%20stuff/summaries/pm_aur.svg" height="50" alt="AUR"></a>
+  </div>
+</td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
     <a href="https://github.com/namidaco/namida-snapshots/releases/latest"><img src="./some stuff/badge_github_beta.png" height="50"></a>
-    <a href="https://aur.archlinux.org/packages/namida-bin"><img src="./some%20stuff/summaries/pm_aur.svg" height="50" alt="AUR"></a>
+    <a href="https://aur.archlinux.org/packages/namida-beta-bin"><img src="./some%20stuff/summaries/pm_aur.svg" height="50" alt="AUR Beta"></a>
   </div>
 </td>
 <td align="center"><a href="https://docs.namida.app/installation/#linux-install"><picture><source media="(prefers-color-scheme: dark)" srcset="./some%20stuff/summaries/install_guide_dark.svg"><img src="./some%20stuff/summaries/install_guide_light.svg" width="150" align="absmiddle" alt="Install guide"></picture></a></td>

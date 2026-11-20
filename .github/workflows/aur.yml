@@ -1,0 +1,72 @@
+# Publishes stable Linux releases to AUR (namida-bin), betas go to namida-beta-bin from release_beta.yml.
+#
+# Triggers when a stable release is published (drafts don't count, prereleases are skipped),
+# or manually via workflow_dispatch with a release tag.
+
+name: aur
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag in namidaco/namida (e.g. v8.7.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Sy --noconfirm archlinux-keyring
+          pacman -Su --noconfirm
+          pacman -S --noconfirm --needed base-devel git openssh github-cli
+
+      - name: Resolve release tag
+        id: v
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.v.outputs.tag }}
+          persist-credentials: false
+
+      - name: Download tarball
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: gh release download "$TAG" --repo "${{ github.repository }}" --pattern "*.linux.tar.gz" --dir release_assets
+
+      - name: Setup Git user
+        run: |
+          git config --global user.name "MSOB7YY"
+          git config --global user.email "${{ secrets.EMAIL }}"
+
+      - name: Install SSH key for AUR
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.AUR_KNOWN_HOSTS }}
+          name: id_ed25519
+
+      - name: Publish to AUR
+        run: |
+          VERSION=$(grep -m1 '^version:' pubspec.yaml | awk '{print $2}')
+          TARBALL=$(find "$(pwd)/release_assets" -name "*.linux.tar.gz" | head -1)
+          # disable root user check for makepkg, very annoying
+          sed -i 's/if (( EUID == 0 ))/if (( EUID == -1 ))/' $(which makepkg)
+          bash scripts/aur_publish.sh "$VERSION" "$TARBALL"

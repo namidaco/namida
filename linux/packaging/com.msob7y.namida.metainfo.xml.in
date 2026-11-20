@@ -91,8 +91,8 @@
   </screenshots>
 
   <releases>
-    <release version="@FLUTTER_VERSION@" date="@NAMIDA_RELEASE_DATE@">
-      <url type="details">https://github.com/namidaco/namida-snapshots/releases/tag/@FLUTTER_VERSION@</url>
+    <release version="@FLUTTER_VERSION@" date="@NAMIDA_RELEASE_DATE@" type="@NAMIDA_RELEASE_TYPE@">
+      <url type="details">@NAMIDA_RELEASE_URL@</url>
     </release>
   </releases>
 </component>
