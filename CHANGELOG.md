@@ -1,5 +1,200 @@
 # Namida Changelog
 
+## 20/11/2026
+
+# v8.6.7
+
+### ✨ Highlights:
+
+- **Listening parties**: listen together with friends in sync, with host controls and public rooms on your local network.
+- **Parametric Equalizer, Bit-perfect, USB DAC, Sound effects & Beat Matching crossfade**: any number of bands, AutoEQ import & export and presets, bit-perfect playback with direct USB DAC output on any android and exclusive mode on desktop, crossfeed, virtual surround, 8D, reverb and more, plus crossfades matched by bpm & key.
+- **Effects & Visualizers for player and fullscreen lyrics**: animated backgrounds (fireflies, galaxy, aurora, rain, sakura and more), seasonal effects, visualizers, artwork player background and app wallpaper.
+- **Bookmarks, A-B repeat & Chapters support**: bookmark start & end points to repeat a part, and chapters for local tracks and videos.
+- **YouTube Music section, Remove Sponsorblock & Split by Chapters for downloads and Multi-threaded downloads**: home with moods, explore, charts and new releases, album & artist pages, plus youtube playlists downloaded into library playlists.
+- **Playlist tags and multi-select system**: nested tags, filters, pinned playlists and multi select to tag, pin, merge or export.
+- **Smart playlists, Search & Sort improvements and advanced Play options**: limits by count/duration/size, more rules and multi level sorting for smart playlists, better search ranking with search inside queues and history, diacritics insensitive & numeric sorting with presets, and sort/shuffle/filter or similar tracks in the play dialog.
+- **Discord Rich Presence**: listening status with progress, on desktop and android.
+- **Romanization & Synced Lyrics Editor**: romanized lyrics and sorting (japanese, chinese, korean and more), and word by word syncing on a waveform timeline.
+- **Explicit tracks support**: explicit tag reading & editing, a badge in track tiles and a setting to skip them.
+- **More library sources (ftp/sftp/saf)**: ftp, sftp & storage access framework folders.
+- **Animated namiween theme** (by @[Tsuune](https://t.me/TsunekiHouse)): halloween scene in the about page, halloween effects and art across the app.
+- **UI reworks, Better performance and improved battery usage**: reworked headers, menus and color picker, much faster indexing (especially smb, sftp & webdav), faster ffmpeg, lower gpu usage and less battery use while idle.
+- **iOS & macOS support (beta)**: ipa for sideloading with an AltStore/SideStore source, macOS dmg, ios widget, live activity lyrics and lyrics in the macos menu bar.
+- Easter eggs, network proxy support, integrations for automation apps, scrobblers & webhooks, and a lot more.
+- **Android 8.0 or newer is now required.**
+
+### 🎉 New Features:
+
+- ea7b50b, c7be831, a2f046d: listening parties - use host repeat mode in party - public party rooms on local network
+- e369507: parametric equalizer, bit-perfect, usb dac & improved audio quality - any bands count/type, autoeq import & export, presets, usb direct on any android, exclusive mode on desktop, audio path view, mono audio and more
+- 9551532, adb5df9, 728efcb: effects, visualizers and backgrounds - fireflies/galaxy/aurora/rain/sakura and more, seasonal effects, multiple visualizers, artwork player background, app wallpaper - ambient lights, bokeh, mesh gradient, visualizer for tracks without lyrics
+- 3fc7373, 41e0585, 0a5b461: romanization for lyrics and sorting - romanization toggles per language - romanization for plain lyrics
+- efa10db: playlist tags & multi-select - nested tags, filter & exclude, group by tags, pinned playlists, youtube playlists support, multi select to tag/pin/merge/export/delete
+- cb5244c, fa63949: beat matching crossfade - bpm & key detection, beat matched crossfades, tempo/key aware shuffle, writing bpm to tags
+- 7fa5e99: synced lyrics editor - word by word syncing, waveform timeline, duets/background vocals/translations
+- a0f81a2: reworked multiple tracks tags editor
+- 525bf45: remove sponsorblock & split by chapters for downloads
+- 770aaad, d3e292d, a68cc8a, d093daf, 3903bb5, 11a5121, f4d3893, e251038: diacritics insensitive and numeric sorting - advanced sort for albums/artists/genres/playlists, romanization & ignore prefixes toggles - presets, reverse per sort, last played & favourites sorts, moods/tags sorting
+- 6ec4713, 91c462c, 12dedd7, 58eb2a7, 611d20e: easter eggs as namiga currency - unlock supporter features, hints in about page - more easter eggs - death loop egg - 67
+- 8689949: chapters for local tracks and videos
+- 5c54130, a0cc64c: bookmarks - bookmark start & end points with a-b repeat
+- e601d94, 6a0d4c5: more sound effects - crossfeed, virtual surround, compressor, echo, 8D, chorus, reverb and more
+- d8b225e, ce17b1d: ftp, sftp & storage access framework folders
+- e919b38, 90dc8f5: youtube music section - home with moods, explore, charts and new releases, album/artist pages, music mode in search, full playlists instead of mixes and more
+- bbfbb05: namiween - animated halloween scene in about page, halloween effects and art across the app (by @[Tsuune](https://t.me/TsunekiHouse))
+- 03dff33: gesture actions for track and video thumbnails
+- 3dc34d6: languages library tab
+- 462465b: discord rich presence - listening status with progress, desktop and android, new integrations section
+- c5f762d: network proxy support
+- cf1eb7d: explicit tracks support
+- 14e25c2, 25ccd5d, deadf7c, 0a31bf1: ios & macos support - unsigned ipa for sideloading, altstore/sidestore source, macos dmg for arm64/x86_64, ios widget, live activity lyrics, control center button, lyrics in macos menu bar and more
+
+### 🛠️ Bug fixes & Improvements:
+
+- core:
+  - cb8efd7, 15c4041, e80c922: multi threaded youtube downloads - youtube playlist caching and downloads into library playlists - redesigned playlist downloads header, folder picker, live filename preview, better artist/title extraction and more
+  - ceea4e6: rewrite settings keys
+  - 9ba0769: better isolate ports logic & fix possible leaks
+
+- perf:
+  - 4c06874: faster ffmpeg on all platforms - android 8.0 or newer is now required
+  - 18b8cdd: improve json encode/decode speed
+  - f8aaa19: improve sync message performance and speed
+  - 896d6a3, 6c63dbc: much faster indexing, especially smb, sftp & webdav
+  - b130ba6: load only the newest queues on startup
+  - fbb8be9: share files in place instead of copying them to cache first
+  - 96e2c84: rework file browser listing and folder sizes
+  - 6909c23: miniplayer animations without per frame rebuilds
+  - 79de006: faster all channels videos fetching
+  - 2914fa0: reduce ui lag while downloading playlists
+  - ff3a194, 6fd35f5: smoother blur, glow and miniplayer parallax
+  - 3701d09, e916708: smoother track switching and color changes
+  - 75bfacc, a348cd3, f43091f: lower gpu usage - lighter background and floating effects
+  - 543c609: smoother history scrolling
+  - c925940: youtube audio cache lookup without folder scans
+  - ad6099c: less work on the main isolate
+
+- chore:
+  - d42965d, 4317858: audio/video variants for tracks tab, grouped nav slots - library tab variants always available when videos are included
+  - 50bd9d1: library tab for smart playlists
+  - 153869a, f02a146, 00f7a13, 49e036c: library refresh improvements - detect modified files - faster files listing on windows - indexing percentage counts jellyfin and subsonic tracks - filtered files no longer show as new, correct duration for mislabeled files and more - missing tracks page improvements - more rename kinds, typos/plurals, several suggestions to pick from, track not found dialog too
+  - 6e2e9a2, aaa9203: library headers and menus ui/ux improvements - type switcher chips, reverse inside sort button, folders filter/sort/hierarchy menus, search results count and more
+  - 5b2ffb6: oldest year for albums, years range for artists
+  - a1d04d7: hashtags, notification menu, improved styles rendering & more
+  - 61f422a: render youtube styled captions
+  - c4d62f5: miniplayer chapters redesign & single chapter downloads
+  - e997ae1, 00a2ac3: youtube navigation and search improvements
+  - 5e2fe81: youtube channel groups redesign - groups sheet with search, group filter in channels page, import subscriptions from takeout
+  - d08a8ee: not interested & don't recommend channel for yt/ytm home
+  - 8520eb7, e8d1b53, 34713ea, 8d5c457, 4cbd91c, dd5ac4d: smart playlists and play options improvements - limit by count/duration/size, per artist/album/genre/folder rules, listens per month, daily random sort, top rated only play option, exclude from advanced shuffle and more - multi level sorting for smart playlists - pin to home, maximum source (ex: new genre every day), compare by year/month/weekday/clock, dates relative to now, year-only or month-only dates and more
+  - 8cd7770, 06445ec, 3db2c3c, 7c2776f: subpage header styles and artwork improvements - collage styles, fullscreen gallery, back cover flip, instant folder covers
+  - 139207c, dd9e3c3: import favourites and playlists from exports - apple music data import
+  - 005656c: customizable notification buttons
+  - 57e7933: cache filter for youtube offline search
+  - a6c1621: offline docs
+  - 10971d8: rewrite zoomable image viewer
+  - 5483e37: artists discover map is now in 2d space
+  - a2a95e6, 6c1676a: artists display separator and album artists splitting
+  - 3ed2bf6: backup history before importing & rework import progress dialog
+  - 3682f38: select cached items by priority when clearing cache
+  - 538491c: quick settings tile for shuffle
+  - a9c6dd4: album card quick play modes
+  - 2dfe842: sleep timer & sound control quick tiles in settings
+  - c699944, 14f886d: settings and onboarding ui/ux improvements
+  - 0108b2e: expanded settings fab with animated label
+  - 0fc99dd: settings search improvements
+  - 82accb6: option flag to keep the last video frame while the next video loads
+  - 4e742e6: video start offset for local tracks
+  - 11d3b59: choose lyrics read/save location
+  - 09c2869: karaoke for the simple lyrics line and line synced lyrics
+  - db95681, 50a21cf: lyrics picker improvements - lyrics in use indicator, embed lyrics into track, prioritize embedded toggle - copy lyrics line on long press
+  - 04a215a, c2fd107, 9db95fb, 1d62ba4, 4a910f1: lyrics improvements - configurable animations, status bar lyrics, swipe to skip, ignore fetched lyrics
+  - 657d98f, 2e7cef8: lyrics headers, verse gaps and editor improvements - plus tap a line number to play, editor font scale
+  - e8363db: better issue reporting
+  - c8b3bcc, 5315a2a: connect by ip & network diagnostics for sync - sync activity feedback
+  - d0b115d, 2613e3f: alphabetic scrollbar labels - plus years/dates/counts for non alphabetic sorts - scrollbar settings improvements
+  - 9900a0e, 0c97335, 8717d8a, 5810f91: play & queue options rework - sort/shuffle/filter in play dialog, similar tracks, ask before replacing, queue auto scroll
+  - f8b6859, 731a3af: playlist customizations - descriptions, pinned on home, restore custom order
+  - e6c7815, 26792f4: integrations for automation apps, scrobblers and webhooks
+  - 84daaee, a1c65bc: server playback reports and nested folders
+  - 93fc55a: backup restore merges with current data
+  - 98208cf: create playlists from stats and your year
+  - c9cf6c4, 33b7c51, ad49b56, 74aea2d, 40af61a, e56832f: search ranking and history search - search inside queues, searched fields picker with presets - weak matches collapsed, less relevant items behind a card, listens boost in filter tracks dialog and more - search matches sort tags too (like romanized names in the artist sort tag)
+  - 31c8db9: search bar improvements
+  - 02fa065: audio config presets
+  - a0d27f1: external files improvements
+  - 4cccc50: lossless files check
+  - 2e48bc5, 1a9671c: check marks redesign
+  - 3d1e11a: modes for shuffle button - shuffle on/off, shuffle next or shuffle all, chosen mode shown on the button
+  - 21d0b42, 6940cbf: (desktop) shortcuts improvements - redesigned dialog with search, inline global shortcuts recording with conflict warning, AltGr typing in text fields and more
+  - 42577e9: color picker redesign - tones/recent/suggested/preset swatches, hex/rgb/hsl input, wide layout on desktop
+  - 4806081: picture in picture now supports lyrics/artwork
+  - b6d6be3, 0f986ea, e2d12a3, d2140bc: app icons improvements - windows support, custom background and themed icon on android, beta badge on snapshot clone - more app icons
+  - 6e6358a: allow coupon reset in a new device
+  - 07ff63e: artwork editing options - paste from clipboard, search online, youtube thumbnail, folder cover, crop, remove
+  - 60d3627: duplicate tracks rework and view excluded tracks lists - matched by title/artist/duration, best quality copy kept, duplicated/.nomedia/filtered tracks lists
+  - 3c6cc59: clear cache dialog rework
+  - 9ca5682: artwork editing improvements
+  - 72860b2: music videos matching improvements
+  - d15a7b3: device wallpaper colors improvements
+  - e83da92, 034577a: folder page header design & update `.info.txt` on library refresh - folders view improvements
+  - f3cf430: confirm before discarding a comment or reply
+  - f9ae37d: split composers using artist separators
+  - ba499f6: log why the previous session died
+  - 9452d9f: option flag to disable resume ui
+  - d7438bb, ce90593: snackbar ui/ux improvements - only on actionable snackbars, pauses on hover/unfocus, smooth refill
+  - 7cb5be8: pinch to zoom and lyrics font scale improvements - pinch no longer loses to scrolling, lyrics font scale buttons
+  - b1c7892: sleep timer presets
+  - 214b129: reduce animations flag (hidden)
+  - 6340313: stop after current track shortcuts
+  - c4c0828: jelly waveform
+  - 66d48ac, 672ba85: playlists and m3u improvements - name/moods/tags/description in m3u headers, edits from other apps kept, open playlists from add to playlist dialog, export selected to a folder and more
+  - f72ba2f: opening external files improvements - choose play/next/last/ask/menu for opened files, txt files open their links
+  - a1212a3: reorderable lists ui/ux improvements
+  - e2dbcca: better cache auto sort and listens ratio - plus similar tracks less dominated by most played, lost partners by each track's listening pace
+  - 8437612: saved files visibility in other apps
+  - 968346f: now ago home mix
+  - 1732ed6: rename track files
+  - 27e79a5: ignore leading symbols while sorting
+  - 3422237: (linux) mpris metadata additions (file location, lyrics)
+  - e6b3666, d4d69d8, f7b2668, 421f211, e86d0a2, 17fed4f, b425c20: various fixes and tweaks - fix battery usage when idle, musical key smart playlist rule, bpm x2/÷2 in tag editor, fill empty only for multiple tags editing, easier scrollbar grab flag and more - custom eq package, jelly mascot options, fix linux flatpak using older version
+
+- fix:
+  - d2190e9: tracks search ranking for multi-artist and partial matches
+  - 53c31f4: library grids lag and artworks reloading
+  - 4be3f88: crash on some devices
+  - d6ce91f: (windows) app not responding or crashing on close for some devices
+  - 198f7ae, 6a9e797, 79d5ad9: playback, equalizer and queue issues
+  - 134f575: playback and party fixes
+  - 0fcd6eb, dd56131, d4bc7ff: indexing, tags and separators handling
+  - 4a9d0f8, 6fb4064, 36dcc50, 5e61062, 355ca6f, 7d7e1f6: sync reliability and pairing - sync paths and queues - sync of tracks not indexed yet on the other device and sync server fixes - sync limits for unpaired devices - playlists sync
+  - 1be13f8: full metadata for subsonic and jellyfin servers
+  - 7fa7a8f: embedded lyrics for server tracks
+  - 77469b2: webdav stream caching
+  - 2431b07, 827756b: playlists, smart playlists and m3u files
+  - 287cc95, ca18bfb: history, imports and most played ranges - possible duplicated listens after sync
+  - fd04d2b: ftp folders fixes and improvements
+  - 1e96571: yt live streams rework
+  - 9e8a1b1: yt fixes
+  - 85e9121: old stream restarting before switching quality for yt
+  - eb9844d, 03796b1: listening party fixes
+  - 1e8a090: improve ratings saved to tags
+  - b3abd76: home widget compact controls overflowing
+  - 7fd2593, e04abc8: smooth word synced lyrics sweep - lyrics timing and editor issues
+  - f647e90: minor fixes for mixed queue player
+  - 5cb84bf: (desktop) gapless and crossfade playback
+  - 56baaff: usb dac follows android volume, bit-perfect status while idle
+  - 9295efe: wallpaper bleeding outside pages
+  - 3e2e452, ddf585b: backup and restore issues
+  - 27a5730: album artwork missing when no embedded art
+  - e54b5aa: (linux) appimage library conflicts on newer distros
+  - a491059: safer data files saving
+  - 312eac9: ffmpeg tag editing fixes
+  - 77953bf: range and select all fixes
+  - 5405038: nested menu theme not following dialog theme
+  - 56ba445: improve history import matching
+  - 607ad1b, 54e149f, 92da9c3, fac63c1, 0cc7a14, 3dab764, 8e250fe, dc2c96c, b514eb5, 6c1295d, 807573a, 289ca50, 21cc3ba, f80715c, 3a0078d, acb1e16, 2b97a32, 7b40ac4, 2914db2, c8b7cc5, e0247a2, 2af554d, 7833fa0: various fixes and tweaks - million fixes and changes - library and ui fixes
+
 ## 19/09/2026
 
 # v7.1.2

@@ -55,6 +55,9 @@ H_HIGHLIGHTS = "### ✨ Highlights:"
 H_FEATURES = "### \U0001f389 New Features:"
 H_FIXES = "### \U0001f6e0️ Bug fixes & Improvements:"
 TITLE = "# Namida Changelog"
+TG_HIGHLIGHTS = "**✨ Highlights:**"
+TG_BULLET = "• "
+TG_RULE = "============"
 
 MAIN_REPO = "namidaco/namida"
 SNAPSHOTS_REPO = "namidaco/namida-snapshots"
@@ -73,6 +76,20 @@ ISSUE_TAIL_RE = re.compile(
     re.IGNORECASE,
 )
 ENTRY_RE = re.compile(r"^(?P<indent>\s*)- (?P<hashes>[0-9a-f]{7,40}(?:,\s*[0-9a-f]{7,40})*): (?P<text>.*)$")
+SUBSECTION_RE = re.compile(r"^- ([a-z]+):$")
+PLATFORM_LEAD_RE = re.compile(r"^\([a-z]+\)\s*")
+CATCH_ALL_WORD_RE = re.compile(r"[a-z]+")
+CATCH_ALL_WORDS = frozenset((
+    "various", "minor", "small", "general", "final", "some", "more", "other", "misc", "ui", "ux", "and", "n",
+    "fix", "fixes", "fixed", "tweak", "tweaks", "improvement", "improvements", "adjustment", "adjustments", "changes", "cleanup",
+))
+BETA_ENTRY_RE = re.compile(r"^- (?P<prefix>[a-z]+)(?:\((?P<platform>[a-z]+)\))?: (?P<text>.+?) \| (?P<links>.*\S)$")
+BETA_URL_ENTRY_RE = re.compile(r"^- (?P<links>(?:\S+/commit/[0-9a-f]{7,40},?\s+)+)(?P<prefix>[a-z]+)(?:\((?P<platform>[a-z]+)\))?: (?P<text>.*\S)$")
+BETA_NESTED_RE = re.compile(r"^\s+- (?P<text>.*\S)$")
+COMMIT_LINK_RE = re.compile(r"/commit/([0-9a-f]{7,40})")
+VERSION_TAG_RE = re.compile(r"^v?\d+\.\d+\.\d+")
+MD_LINK_RE = re.compile(r"\[([^\]]*)\]\((?!<)([^)\s]+)\)")
+RELEASE_TAG_RE = re.compile(r"/releases/tag/([^)>\s]+)")
 ISSUE_URL_RE = re.compile(r"https?://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
 
 
@@ -248,6 +265,11 @@ def resolve_rev(rev):
     return (full or rev)[:7]
 
 
+def changelog_platform(platform):
+    """android is the default platform, so it isn't shown."""
+    return None if platform in (None, "android") else platform
+
+
 def parse_commit(full_hash, message):
     lines = message.split("\n")
     m = SUBJECT_RE.match(lines[0].strip())
@@ -289,12 +311,11 @@ def parse_commit(full_hash, message):
         except ValueError:
             score = None
 
-    platform = m.group("platform")
     return Commit(
         hash=full_hash,
         short=full_hash[:7],
         prefix=m.group("prefix"),
-        platform=None if platform in (None, "android") else platform,
+        platform=changelog_platform(m.group("platform")),
         text=text,
         bullets=bullets,
         topic=(trailers.get("topic") or [None])[-1],
@@ -350,12 +371,12 @@ class Entry:
     closes: list = field(default_factory=list)
     refs: list = field(default_factory=list)
     topic: str = None
-    commits: list = field(default_factory=list)
+    bullets_of: dict = field(default_factory=dict)
 
     def absorb(self, commit):
         if commit.short not in self.hashes:
             self.hashes.append(commit.short)
-            self.commits.append(commit)
+            self.bullets_of[commit.short] = commit.bullets
         for b in commit.bullets:
             if b not in self.bullets:
                 self.bullets.append(b)
@@ -420,6 +441,151 @@ def build_entries(commits):
     return entries
 
 
+def parse_beta_body(body):
+    """`- prefix(platform): text | links` lines of a beta release body (older ones: `- url prefix: text`),
+    the nested `  - ` lines become bullets."""
+    found = []
+    for line in body.replace("\r\n", "\n").split("\n"):
+        if line.startswith("<details") or line.strip() == "---":
+            break
+        m = BETA_ENTRY_RE.match(line) or BETA_URL_ENTRY_RE.match(line)
+        if m:
+            prefix = m.group("prefix")
+            if prefix not in CHANGELOG_PREFIXES:
+                continue
+            found.append(Entry(
+                key="",
+                section=prefix,
+                text=m.group("text").strip(),
+                platform=changelog_platform(m.group("platform")),
+                hashes=list(dict.fromkeys(h[:7] for h in COMMIT_LINK_RE.findall(m.group("links")))),
+            ))
+            continue
+        nested = BETA_NESTED_RE.match(line)
+        if nested and found:
+            found[-1].bullets.append(nested.group("text"))
+    return found
+
+
+def topic_key(section, topic):
+    return "topic:%s:%s" % (topic_class(section), topic)
+
+
+def topic_class(section):
+    """fixes and perf of a topic stay in their own section, its feat/core/chore entries join into one."""
+    return section if section in ("fix", "perf") else "main"
+
+
+def is_catch_all(text):
+    """a subject made only of words like various/minor/fixes/tweaks."""
+    words = CATCH_ALL_WORD_RE.findall(PLATFORM_LEAD_RE.sub("", text.lower()))
+    return bool(words) and all(w in CATCH_ALL_WORDS for w in words)
+
+
+def entry_rank(text, score):
+    """catch-all entries go after the rest of their section."""
+    return -1 if is_catch_all(text) else score
+
+
+def join_beta_group(group, text=None):
+    """one entry out of beta entries of one topic, named by a feature or else the highest score.
+    a catch-all group gets the given text and drops the generic subjects of its members."""
+    lead = max(group, key=lambda e: (e.section == "feat", e.score))
+    joined_text = text or lead.text
+    joined_platform = None if text else lead.platform
+    joined = Entry(key=lead.key, section=lead.section, text=joined_text, platform=joined_platform, score=lead.score)
+    joined.topic = next((e.topic for e in group if e.topic), None)
+    for e in [lead] + [e for e in group if e is not lead]:
+        same_text = e.text.lower() == joined.text.lower()
+        added = e.bullets if e.bullets or same_text or is_catch_all(e.text) else [e.text]
+        added = [b for b in added if b not in joined.bullets]
+        joined.bullets.extend(added)
+        joined.bullets_of[e.hashes[0]] = added
+        joined.hashes.extend(e.hashes)
+        joined.score = max(joined.score, e.score)
+    return joined
+
+
+def build_beta_entries(commits, bodies, in_beta_build):
+    """entries worded like the beta notes. beta entries of one topic or with the same text join into one,
+    and the catch-all entries of a section join into one various line. commits and bodies oldest first.
+    commits that a beta build had but its notes left out go to various, newer ones keep their own text.
+    returns the entries, the left out commits and the newer ones."""
+    by_short = {c.short: c for c in commits}
+    groups, group_of_key, listed = [], {}, set()
+    for body in bodies:
+        for beta in parse_beta_body(body):
+            shorts = [h for h in beta.hashes if h in by_short and h not in listed]
+            if not shorts:
+                continue
+            listed.update(shorts)
+            own = [by_short[h] for h in shorts]
+            beta.hashes = shorts
+            beta.score = max(c.effective_score for c in own)
+            beta.topic = next((c.topic for c in own if c.topic), None)
+            beta.key = "text:%s:%s:%s" % (beta.section, beta.platform, beta.text.lower())
+            keys = [beta.key]
+            if beta.topic:
+                keys.append(topic_key(beta.section, beta.topic))
+            index = next((group_of_key[k] for k in keys if k in group_of_key), None)
+            if index is None:
+                index = len(groups)
+                groups.append([])
+            groups[index].append(beta)
+            for k in keys:
+                group_of_key.setdefault(k, index)
+
+    catch_all_of_class = {}
+    for index, group in enumerate(groups):
+        if any(is_catch_all(e.text) for e in group):
+            catch_all_of_class.setdefault(topic_class(group[0].section), []).append(index)
+    first_catch_all = {i: indices[0] for indices in catch_all_of_class.values() for i in indices}
+    entries, entry_of_group = [], {}
+    for index, group in enumerate(groups):
+        first = first_catch_all.get(index)
+        if first is None:
+            entry = join_beta_group(group)
+        elif first == index:
+            indices = catch_all_of_class[topic_class(group[0].section)]
+            entry = join_beta_group([e for i in indices for e in groups[i]], VARIOUS_TEXT)
+        else:
+            entry_of_group[index] = entry_of_group[first]
+            continue
+        entry_of_group[index] = entry
+        entries.append(entry)
+
+    entry_of_hash = {h: e for e in entries for h in e.hashes}
+    left_out, rest = [], []
+    for c in commits:
+        if c.short in entry_of_hash or c.prefix not in CHANGELOG_PREFIXES:
+            continue
+        amended = next((entry_of_hash[h] for h in c.amends if h in entry_of_hash), None)
+        if amended:
+            amended.hashes.append(c.short)
+            entry_of_hash[c.short] = amended
+        elif in_beta_build(c):
+            left_out.append(c)
+        else:
+            rest.append(c)
+    if left_out:
+        entries.append(Entry(key="left-out", section="fix", text=VARIOUS_TEXT, score=0, hashes=[c.short for c in left_out]))
+    for entry in build_entries(rest):
+        index = None
+        if entry.topic and entry.score > 0:
+            index = group_of_key.get(topic_key(entry.section, entry.topic))
+        if index is None:
+            entries.append(entry)
+            continue
+        target = entry_of_group[index]
+        for h in entry.hashes:
+            added = [b for b in entry.bullets_of.get(h, ()) if b not in target.bullets]
+            target.bullets.extend(added)
+            target.bullets_of[h] = added
+            target.hashes.append(h)
+        target.score = max(target.score, entry.score)
+    return entries, left_out, rest
+
+
 class Changelog:
     """top-of-file section of CHANGELOG.md, parsed into editable lines."""
 
@@ -455,6 +621,19 @@ class Changelog:
                 for h in m.group("hashes").split(","):
                     found[h.strip()[:7]] = i
         return found
+
+    def line_sections(self):
+        """section of each line: feat under the features heading, else the `- name:` subsection it sits in."""
+        sections, current = [], None
+        for line in self.section:
+            if line.startswith("### "):
+                current = "feat" if line.strip() == H_FEATURES else None
+            else:
+                m = SUBSECTION_RE.match(line.rstrip())
+                if m:
+                    current = m.group(1)
+            sections.append(current)
+        return sections
 
     def heading_index(self, heading):
         for i, line in enumerate(self.section):
@@ -492,7 +671,7 @@ class Changelog:
         end = self.next_heading(start)
         found, header = None, "- %s:" % name
         for i in range(start + 1, end):
-            if re.match(r"^- [a-z]+:$", self.section[i].rstrip()):
+            if SUBSECTION_RE.match(self.section[i].rstrip()):
                 if found is not None:
                     return (found, i)
                 if self.section[i].rstrip() == header:
@@ -503,7 +682,7 @@ class Changelog:
             return None
         at, rank = end, SECTIONS.index(name)
         for i in range(start + 1, end):
-            m = re.match(r"^- ([a-z]+):$", self.section[i].rstrip())
+            m = SUBSECTION_RE.match(self.section[i].rstrip())
             if m and m.group(1) in SECTIONS and SECTIONS.index(m.group(1)) > rank:
                 at = i
                 break
@@ -532,18 +711,25 @@ def insert_line(cl, entry, meta_of, indent):
         start, end = cl.subsection(entry.section)
     end = trim_end(cl.section, start, end)
     family = entry.topic.split("-")[0] if entry.topic else None
+    rank = entry_rank(entry.text, entry.score)
     at, family_at = end, None
     for i in range(start, end):
         m = ENTRY_RE.match(cl.section[i])
         if not m:
             continue
         hashes = [h.strip()[:7] for h in m.group("hashes").split(",")]
-        meta = next((meta_of[h] for h in hashes if h in meta_of), None)
-        if family and meta and meta[1] and meta[1].split("-")[0] == family:
+        metas = [meta_of[h] for h in hashes if h in meta_of]
+        if not metas:
+            continue
+        line_topic = next((t for _, t in metas if t), None)
+        line_score = max(s for s, _ in metas)
+        line_text = m.group("text").split(" - ")[0]
+        line_rank = entry_rank(line_text, line_score)
+        if family and line_rank >= 0 and line_topic and line_topic.split("-")[0] == family:
             family_at = i + 1
-        if at == end and meta and meta[0] < entry.score:
+        if at == end and line_rank < rank:
             at = i
-    if family_at is not None:
+    if family_at is not None and rank >= 0:
         at = family_at
     cl.section.insert(at, "%s- %s" % (indent, entry.render()))
     return at
@@ -552,20 +738,24 @@ def insert_line(cl, entry, meta_of, indent):
 def merge_entries(cl, entries, commits):
     meta_of = {c.short: (c.effective_score, c.topic) for c in commits}
     present = cl.hashes()
-    by_topic = {}
+    sections = cl.line_sections()
+    topic_of_line = {}
     for h, i in present.items():
         topic = meta_of.get(h, (0, None))[1]
-        if topic:
-            by_topic.setdefault(topic, i)
+        if topic and i not in topic_of_line:
+            topic_of_line[i] = topic
+    by_topic = {}
+    for i, topic in topic_of_line.items():
+        by_topic.setdefault(topic_key(sections[i], topic), i)
 
     added, extended, various = [], [], []
-    for entry in entries:
+    for entry in sorted(entries, key=lambda e: -entry_rank(e.text, e.score)):
         if entry.score == 0:
             various.extend(h for h in entry.hashes if h not in present)
             continue
-        line_index = by_topic.get(entry.topic) if entry.topic else None
-        if line_index is None:
-            line_index = next((present[h] for h in entry.hashes if h in present), None)
+        line_index = next((present[h] for h in entry.hashes if h in present), None)
+        if line_index is None and entry.topic:
+            line_index = by_topic.get(topic_key(entry.section, entry.topic))
         if line_index is None:
             at = insert_line(cl, entry, meta_of, "" if entry.section == "feat" else "  ")
             added.append(entry)
@@ -573,7 +763,7 @@ def merge_entries(cl, entries, commits):
             by_topic = {t: (i + 1 if i >= at else i) for t, i in by_topic.items()}
             present.update((h, at) for h in entry.hashes)
             if entry.topic:
-                by_topic[entry.topic] = at
+                by_topic[topic_key(entry.section, entry.topic)] = at
             continue
         m = ENTRY_RE.match(cl.section[line_index])
         if not m:
@@ -582,12 +772,12 @@ def merge_entries(cl, entries, commits):
         listed = {h[:7] for h in hashes}
         parts = [p.strip() for p in m.group("text").split(" - ")]
         changed = False
-        for commit in entry.commits:
-            if commit.short in listed:
+        for h in entry.hashes:
+            if h in listed:
                 continue  # already folded in, its text may have been reworded by hand
-            hashes.append(commit.short)
+            hashes.append(h)
             changed = True
-            for b in commit.bullets:
+            for b in entry.bullets_of.get(h, ()):
                 if b not in parts:
                     parts.append(b)
         if changed:
@@ -600,7 +790,10 @@ def merge_entries(cl, entries, commits):
         target = None
         for i in range(start, end):
             m = ENTRY_RE.match(cl.section[i])
-            if m and m.group("text").strip().endswith(VARIOUS_TEXT):
+            if not m:
+                continue
+            text = m.group("text")
+            if text.strip().endswith(VARIOUS_TEXT) or text.split(" - ")[0].strip() == VARIOUS_TEXT:
                 target = i
         if target is None:
             cl.section.insert(end, "  - %s: %s" % (", ".join(various), VARIOUS_TEXT))
@@ -671,22 +864,44 @@ def telegram_bullets(highlights):
         if not m:
             bullets.append(text.rstrip("."))
             continue
-        lead, rest = m.group(1).strip(), m.group(2).strip()
+        lead, rest = m.group(1).strip(), MD_LINK_RE.sub(r"\1", m.group(2)).strip()
         if rest and not rest.startswith(":"):
             lead += " " + re.split(r"[,.:–-]", rest, 1)[0]
         bullets.append(lead.strip().rstrip(","))
     return bullets
 
 
+def discord_line(line):
+    """telegram markdown to discord: a real heading, `-` bullets and links in <> so they don't embed."""
+    if line.strip() == TG_HIGHLIGHTS:
+        return "### ✨ Highlights:"
+    if line.startswith(TG_BULLET):
+        line = "- " + line[len(TG_BULLET):]
+    return MD_LINK_RE.sub(r"[\1](<\2>)", line)
+
+
 def render_telegram(cl, version, existing):
-    bullets = telegram_bullets(highlight_lines(cl))
-    more = "...and a lot more"
-    telegram_part, _, discord_part = existing.partition("\n# Discord")
-    intro = between(telegram_part, "# Telegram", "**✨").strip()
-    outro = between(telegram_part, more, "============").strip()
-    discord_intro = between("# Discord" + discord_part, "# Discord", "### ✨").strip() or intro
-    discord_outro = between(discord_part, more, "\U0001f4dd Changelog").strip() or outro
+    """the telegram part stays as written, its bullets are drafted from the highlights only for a new file or a
+    new version. the links follow the version, and the discord part is built from the telegram part."""
+    lines = existing.partition("\n# Discord")[0].split("\n")
+    rule_at = next((i for i, l in enumerate(lines) if l.strip() == TG_RULE), len(lines))
+    body = lines[:rule_at]
+    bullet_ats = [i for i, l in enumerate(body) if l.startswith(TG_BULLET)]
+    old_version = RELEASE_TAG_RE.search(existing)
+    is_same_version = old_version is not None and old_version.group(1) == version
     changelog_url = "https://github.com/%s/blob/main/CHANGELOG.md" % MAIN_REPO
+
+    intro = between("\n".join(body), "# Telegram", TG_HIGHLIGHTS).strip() or "TODO intro"
+    bullets = [TG_BULLET + b for b in telegram_bullets(highlight_lines(cl))]
+    footer = ["...and a lot more, [see all changes here](%s)" % changelog_url, "", "TODO thanks"]
+    if bullet_ats:
+        if is_same_version:
+            bullets = body[bullet_ats[0]:bullet_ats[-1] + 1]
+        written_footer = "\n".join(body[bullet_ats[-1] + 1:]).strip("\n")
+        if written_footer.strip():
+            footer = written_footer.split("\n")
+    telegram = intro.split("\n") + ["", TG_HIGHLIGHTS, ""] + bullets + [""] + footer
+
     release_url = "https://github.com/%s/releases/tag/%s" % (MAIN_REPO, version)
     snapshots_url = "https://github.com/%s/releases" % SNAPSHOTS_REPO
     links = [
@@ -696,21 +911,12 @@ def render_telegram(cl, version, existing):
         ("\U0001f310 Website", "namida.app", "https://namida.app"),
         ("\U0001f4da Docs", "docs.namida.app", "https://docs.namida.app"),
     ]
-    out = ["# Telegram", ""]
-    out += [intro or "TODO intro", ""]
-    out += ["**✨ Highlights:**", ""]
-    out += ["• " + b for b in bullets]
-    out += ["", "%s, [see all changes here](%s)" % (more, changelog_url), ""]
-    out += [outro or "TODO thanks", ""]
-    out += ["============"]
-    out += ["%s: [%s](%s)" % (label, text, url) for label, text, url in links]
-    out += ["============", "", "# Discord", ""]
-    out += [discord_intro or "TODO intro", ""]
-    out += ["### ✨ Highlights:", ""]
-    out += ["- " + b for b in bullets]
-    out += ["", "%s, [see all changes here](<%s>)" % (more, changelog_url), ""]
-    out += [discord_outro or "TODO thanks", ""]
-    out += ["%s: [%s](<%s>)" % (label, text, url) for label, text, url in links]
+    out = ["# Telegram", ""] + telegram + ["", TG_RULE]
+    out += ["%s: [%s](%s)" % link for link in links]
+    out += [TG_RULE, "", "# Discord", ""]
+    out += [discord_line(l) for l in telegram]
+    out += [""]
+    out += ["%s: [%s](<%s>)" % link for link in links]
     return render_markdown(out)
 
 
@@ -721,7 +927,19 @@ def cmd_stable(args):
     cl = Changelog(read(path))
     rev = args.since or default_range(cl, version)
     commits = load_commits(rev_range=rev)
-    entries = build_entries(commits)
+    releases, newest_bump, left_out, not_in_betas = None, None, [], []
+    if args.from_betas and commits:
+        releases = fetch_beta_releases(commits)
+        newest_tag = releases[-1][0] if releases else None
+        newest_bump = version_bump_commit(newest_tag) if newest_tag else None
+
+        def in_beta_build(commit):
+            return newest_bump is not None and git_ok("merge-base", "--is-ancestor", commit.hash, newest_bump)
+
+        bodies = [body for _, body in releases]
+        entries, left_out, not_in_betas = build_beta_entries(commits, bodies, in_beta_build)
+    else:
+        entries = build_entries(commits)
     date_text = args.date or datetime.now().strftime("%d/%m/%Y")
 
     if cl.version != version:
@@ -759,6 +977,17 @@ def cmd_stable(args):
     report("added     %d entries" % len(added))
     report("extended  %d entries" % len(extended))
     report("various   %d commits" % len(various))
+    if releases is not None:
+        newest_text = releases[-1][0] if releases else "none"
+        report("betas     %d releases, newest %s" % (len(releases), newest_text))
+        if releases and newest_bump is None:
+            report("no commit set pubspec.yaml to %s, so nothing counts as left out of the beta notes" % newest_text)
+        shown_left_out = [c for c in left_out if c.effective_score > 0]
+        if shown_left_out:
+            report("left out of the beta notes, in various: %s" % ", ".join("%s (%s)" % (c.short, c.text) for c in shown_left_out))
+        own_text = [c for c in not_in_betas if c.effective_score > 0]
+        if own_text:
+            report("newer than the betas, worded from the commit: %s" % ", ".join("%s (%s)" % (c.short, c.text) for c in own_text))
     skipped = [c for c in commits if c.prefix not in CHANGELOG_PREFIXES]
     if skipped:
         report("skipped   %s" % ", ".join("%s (%s)" % (c.short, c.prefix or "unparsed") for c in skipped))
@@ -775,14 +1004,44 @@ def cmd_stable(args):
     report("still manual: highlights wording, telegram intro/thanks, namida_docs")
 
 
-def fetch_release_date(repo):
-    url = "https://api.github.com/repos/%s/releases/latest" % repo
-    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github.v3+json"})
+def github_get(path):
+    req = urllib.request.Request("https://api.github.com/" + path, headers={"Accept": "application/vnd.github.v3+json"})
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         req.add_header("Authorization", "Bearer " + token)
     with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.load(resp).get("published_at")
+        return json.load(resp)
+
+
+def fetch_release_date(repo):
+    return github_get("repos/%s/releases/latest" % repo).get("published_at")
+
+
+def fetch_beta_releases(commits):
+    """(tag, body) of the snapshots releases published since the oldest commit, oldest first."""
+    oldest_epoch = int(git("log", "-1", "--format=%ct", commits[0].hash).strip())
+    after = datetime.fromtimestamp(oldest_epoch, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    found, page = [], 1
+    while True:
+        releases = github_get("repos/%s/releases?per_page=100&page=%d" % (SNAPSHOTS_REPO, page))
+        for r in releases:
+            published = r.get("published_at") or ""
+            if published > after and not r.get("draft") and VERSION_TAG_RE.match(r["tag_name"]):
+                found.append((r["tag_name"], r.get("body") or ""))
+        if len(releases) < 100:
+            break
+        last_published = releases[-1].get("published_at") or ""
+        if last_published <= after:
+            break
+        page += 1
+    found.reverse()
+    return found
+
+
+def version_bump_commit(version):
+    """the commit that set pubspec.yaml to this full version, ex: `8.6.7-beta+261120140`."""
+    found = git("log", "--reverse", "--format=%H", "-S", "version: " + version, "--", "pubspec.yaml").split()
+    return found[0] if found else None
 
 
 def cmd_beta(args):
@@ -1856,6 +2115,7 @@ def main():
     stable.add_argument("--since", help="explicit rev range, defaults to the current version's commits")
     stable.add_argument("--date", help="section date, defaults to today (dd/mm/yyyy)")
     stable.add_argument("--version", help="defaults to pubspec.yaml")
+    stable.add_argument("--from-betas", action="store_true", help="take the entries from the snapshots release notes, commits no beta lists keep their own text")
     stable.add_argument("--dry-run", action="store_true")
     stable.set_defaults(func=cmd_stable)
 
