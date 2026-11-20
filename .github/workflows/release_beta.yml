@@ -564,10 +564,24 @@ jobs:
         uses: pkgforge-dev/anylinux-setup-action@b2d1ce4216f71162e00ae58fa11ee9aeb723d0d5 # v5
 
       - name: Install runtime dependencies
+        shell: bash
         run: |
           pacman -S --needed --noconfirm mpv webkit2gtk-4.1
           # smaller builds of the biggest libraries, from pkgforge-dev/archlinux-pkgs-debloated
-          get-debloated-pkgs --add-common --prefer-nano ffmpeg-mini webkit2gtk-4.1-mini
+          get-debloated-pkgs --add-common --prefer-nano ffmpeg-mini webkit2gtk-4.1-mini | tee "$RUNNER_TEMP/debloated.log"
+          # debloated builds lag behind arch soname bumps, stale ones go back to the stock package
+          DEBLOATED_PKGS=$(grep -oE "[^/]+-$(uname -m)\.pkg\.tar\.zst" "$RUNNER_TEMP/debloated.log" | sed -E 's/-[^-]+-[^-]+\.pkg\.tar\.zst$//' | sort -u)
+          STALE=()
+          for PKG in $DEBLOATED_PKGS; do
+            MISSING=$(pacman -Qlq "$PKG" | grep -E '^/usr/lib/[^/]+\.so(\.[0-9]+)*$' | xargs -r ldd 2>/dev/null | awk '/not found/ {print $1}' | sort -u | paste -sd' ' || true)
+            if [ -n "$MISSING" ]; then
+              echo "::warning::stale debloated $PKG (missing $MISSING), using the stock package"
+              STALE+=("$PKG")
+            fi
+          done
+          if [ ${#STALE[@]} -gt 0 ]; then
+            pacman -S --noconfirm "${STALE[@]}"
+          fi
 
       - uses: actions/download-artifact@v7
         with:
